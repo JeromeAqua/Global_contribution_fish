@@ -32,43 +32,36 @@ B = ones(P.n); B = B/sum(sum(B));
 J = ones(P.n); J = J/sum(sum(J));
 
 
+Cday = P.n*P.C*sum(C,2)'; % [gC m^-3] Average concentration in each layer during day for copepod
+Cnight = P.n*P.C*sum(C,1); % [gC m^-3] Average concentration in each layer during night
+Fday = P.n*P.F*sum(F,2)'; % [gC m^-3] Average concentration in each layer during day for forage fish
+Fnight = P.n*P.F*sum(F,1); % [gC m^-3] Average concentration in each layer during night
+Aday = P.n*P.A*sum(A,2)'; % [gC m^-3] Average concentration in each layer during day for top predator
+Anight = P.n*P.A*sum(A,1); % [gC m^-3] Average concentration in each layer during night
+Bday = P.n*P.B*sum(B,2)'; % [gC m^-3] Average concentration in each layer during day for bathypelagic fish
+Bnight = P.n*P.B*sum(B,1); % [gC m^-3] Average concentration in each layer during night
+Mday = P.n*P.M*sum(M,2)'; % [gC m^-3] Average concentration in each layer during day for mesopelagic fish
+Mnight = P.n*P.M*sum(M,1); % [gC m^-3] Average concentration in each layer during night
+Jday = P.n*P.J*sum(J,2)'; % [gC m^-3] Average concentration in each layer during day for tactile predator
+Jnight = P.n*P.J*sum(J,1); % [gC m^-3] Average concentration in each layer during night
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function OUT = Clearance(predator,day,Q) %Clearance rate for each strategy (matrix) as a function of day - Q here is our Parameter file
-OUT = zeros(n);
-
-if strcmp(predator,'forage')
-    if day==1
-        Vis = P.RF*sqrt(P.LD./(P.KF+Q.LD))'; % [m] Depth-dependent visual range of forage fish during daytime
-        OUT = P.gamma*pi*P.uF*P.MSDF.*repmat(Vis,1,P.n).^2; % [m^3 day^-1]
-    elseif day==0
-        Vis = P.RF*sqrt(P.LN./(P.KF+P.LN)); % [m] Depth-dependent visual range of forage fish during daytime
-        OUT = P.gamma*pi*P.uF*P.MSDF.*repmat(Vis,P.n,1).^2; % [m^3 day^-1]
-    end
-    
-    
-
-
-
-
-end
-
-
+%Denominators for ingestion rates calculations
+NF1 = P.IDF + P.EDF.*(pref('forage','detritus')*repmat(P.D',1,n)+pref('forage','copepod')*repmat(Cday',1,n)+...
+                      pref('forage','benthos')*repmat(P.Benthos',1,n)+pref('forage','meso')*repmat(Mday',1,n)); % [gC day^-1] Denominator for ingestion function of forage fisg during day
+NF0 = P.INF + P.ENF.*(pref('forage','detritus')*repmat(P.D,n,1)+pref('forage','copepod')*repmat(Cday,n,1)+...
+                      pref('forage','benthos')*repmat(P.Benthos,n,1)+pref('forage','meso')*repmat(Mday,n,1)); % [gC day^-1] Denominator for the ingestion function
+NA1 =
+NA0 = 
+                  
+                  
+                  
+%Ingestion functions
+IFC1 = P.IDF.*P.EDF*pref('forage','copepod')*repmat(Cday',1,n)./NF1; % [gC day^-1] Ingestion rate of copepods during daytime by forage fish
+IFC0 = 
+IFD1 = 
+IFD0 = 
+IFB1 = 
+IFB0 =
+IFM1 = 
+IFM0 = ...;

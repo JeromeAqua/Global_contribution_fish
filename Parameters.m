@@ -22,8 +22,8 @@ P.O2 = 0 + 5*(1-tanh(max(0,(P.zi-100)/150))) + P.zi*3/P.ZMAX; % [mgO2/L] Oxygen 
 P.z0 = 60; % [m] Mixed layer depth for the resources
 P.zm = 30; % [m] Sharpness of the transition to from the mixed layer to depleted layers
 P.R  = 0.1*(1-tanh((P.zi-P.z0)/P.zm))/2; % [gC / m3] Resource concentration
-P.D = 0.02*P.zi.^-0.86; % [gC / m^3] Resources concentration
-P.B = 0.02*exp(P.zi-P.zi(end)); % [gC / m^3] Bottom resources
+P.D = 0.02*P.zi.^-0.86; % [gC / m^3] Detritus concentration
+P.Benthos = 0.02*exp(P.zi-P.zi(end)); % [gC / m^3] Bottom resources
 
 %Useful functions
 speed = @(l) 3600*24*0.9112*l^0.825; % [m/day] (max) size-dependent swimming speed for fish and copepods, l in m
@@ -61,7 +61,7 @@ P.KF = 1; % [W/m^2] Half-saturation constant for light for forage fish
 P.fF = 0.65; % [-] Assimilation efficiency for forage fish
 P.tF = 0.5; % [day^-1] SMR at P.TF XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 P.mF = 0.9; % [day^-1] MMR at P.TF XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-[P.SMRF, P.MSNF, P.MSDF, P.MaskF] = Metabolicscope('forage',P); % [day^-1, day^-1, -] Metabolic scope during day, during night, and mask of available strategies
+[P.SMRF, P.MSNF, P.MSDF, P.MaskF] = Metabolicscope('forage',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, metabolic scope during day, during night, and mask of available strategies
 P.MSDF = max(0,P.MSDF)/max(max(P.MSDF)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 P.MSNF = max(0,P.MSNF)/max(max(P.MSNF)); % [-] same de-unitization
 
@@ -77,7 +77,7 @@ P.KA = 10^-2; % [W/m^2] Half-saturation constant for light for top predator
 P.fA = 0.65; % [-] Assimilation efficiency for top predator
 P.tA = 0.5; % [day^-1] SMR at P.TA XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 P.mA = 0.9; % [day^-1] MMR at P.TA XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-[P.SMRA, P.MSNA, P.MSDA, P.MaskA] = Metabolicscope('top',P); % [day^-1, day^-1, -] Metabolic scope during day, during night, and mask of available strategies
+[P.SMRA, P.MSNA, P.MSDA, P.MaskA] = Metabolicscope('top',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
 P.MSDA = max(0,P.MSDA)/max(max(P.MSDA)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 P.MSNA = max(0,P.MSNA)/max(max(P.MSNA)); % [-] same de-unitization
 
@@ -92,7 +92,7 @@ P.RJ = 0.2; % [m] Sensing range for tactile predator
 P.fJ = 0.39; % [-] Assimilation efficiency for tactile predator
 P.tJ = 0.5; % [day^-1] SMR at P.TJ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 P.mJ = 0.9; % [day^-1] MMR at P.TJ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-[P.SMRJ, P.MSNJ, P.MSDJ, P.MaskJ] = Metabolicscope('tactile',P); % [day^-1, day^-1, -] Metabolic scope during day, during night, and mask of available strategies
+[P.SMRJ, P.MSNJ, P.MSDJ, P.MaskJ] = Metabolicscope('tactile',P); % [day^-1, day^-1, day^-1, -] Metabolic scope during day, during night, and mask of available strategies
 P.MSDJ = max(0,P.MSDJ)/max(max(P.MSDJ)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 P.MSNJ = max(0,P.MSNJ)/max(max(P.MSNJ)); % [-] same de-unitization
 
@@ -108,7 +108,7 @@ P.KM = 10^-6; % [W/m^2] Half-saturation constant for light for mesopelagic fish
 P.fM = 0.65; % [-] Assimilation efficiency for mesopelagic fish
 P.tM = 0.5; % [day^-1] SMR at P.TM XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 P.mM = 0.9; % [day^-1] MMR at P.TM XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-[P.SMRM, P.MSNM, P.MSDM, P.MaskM] = Metabolicscope('meso',P); % [day^-1, day^-1, -] Metabolic scope during day, during night, and mask of available strategies
+[P.SMRM, P.MSNM, P.MSDM, P.MaskM] = Metabolicscope('meso',P); % [day^-1, day^-1, day^-1, -] epth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
 P.MSDM = max(0,P.MSDM)/max(max(P.MSDM)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 P.MSNM = max(0,P.MSNM)/max(max(P.MSNM)); % [-] same de-unitization
 
@@ -124,7 +124,7 @@ P.KB = 10^-10; % [W/m^2] Half-saturation constant for light for bathypelagic fis
 P.fB = 0.65; % [-] Assimilation efficiency for bathypelagic fish
 P.tB = 0.5; % [day^-1] SMR at P.TB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 P.mB = 0.9; % [day^-1] MMR at P.TB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-[P.SMRB, P.MSNB, P.MSDB, P.MaskB] = Metabolicscope('bathy',P); % [day^-1, day^-1, -] Metabolic scope during day, during night, and mask of available strategies
+[P.SMRB, P.MSNB, P.MSDB, P.MaskB] = Metabolicscope('bathy',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
 P.MSDB = max(0,P.MSDB)/max(max(P.MSDB)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 P.MSNB = max(0,P.MSNB)/max(max(P.MSNB)); % [-] same de-unitization
 
@@ -230,4 +230,26 @@ P.ENC = pi*(2*P.lC)^2*P.uF*P.MSNC; % [m^3 day^-1] Clearance rate of copepod duri
 P.EDJ = pi*0.089*(P.lJ/2)^2*P.uJ*P.MSDJ; % [m^3 day^-1] Clearance rate of tactile predator during day - 0.089 is the filtering efficiency for jellyfish
 P.ENJ = pi*0.089*(P.lJ/2)^2*P.uJ*P.MSNJ; % [m^3 day^-1] Clearance rate of tactile predator during night
             
+%% STRATEGY-DEPENDENT STANDARD METABOLIC COST
+P.metC = repmat(P.SMRC',1,P.n)*P.sigma + repmat(P.SMRC,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for copepod
+P.metA = repmat(P.SMRA',1,P.n)*P.sigma + repmat(P.SMRA,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for top predator
+P.metM = repmat(P.SMRM',1,P.n)*P.sigma + repmat(P.SMRM,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for mesopelagic fish
+P.metF = repmat(P.SMRF',1,P.n)*P.sigma + repmat(P.SMRF,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for forage fish
+P.metB = repmat(P.SMRB',1,P.n)*P.sigma + repmat(P.SMRB,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for bathypelagic fish
+P.metJ = repmat(P.SMRJ',1,P.n)*P.sigma + repmat(P.SMRJ,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for tactile predator
+
+%% STRATEGY-DEPENDENT MAXIMUM INGESTION RATES
+Imax = @(l)  3.6*10^-4*l.^2.55; % [gC day^-1] maximum ingestion rate for copepod and fish (no imax for tactile, functional response type I)
+
+P.IDF = Imax(P.lF)*MSDF; % [gC day^-1] Strategy-specific max ingestion rate for forage fish
+P.INF = Imax(P.lF)*MSNF; % [gC day^-1] Strategy-specific max ingestion rate for forage fish
+P.IDA = Imax(P.lA)*MSDA; % [gC day^-1] Strategy-specific max ingestion rate for top predator
+P.INA = Imax(P.lA)*MSNA; % [gC day^-1] Strategy-specific max ingestion rate for top predator
+P.IDM = Imax(P.lM)*MSDM; % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish
+P.INM = Imax(P.lM)*MSNM; % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish
+P.IDB = Imax(P.lB)*MSDB; % [gC day^-1] Strategy-specific max ingestion rate for bathypelagic fish
+P.INB = Imax(P.lB)*MSNB; % [gC day^-1] Strategy-specific max ingestion rate for bathypelagic fish
+P.IDC = Imax(P.lC)*MSDC; % [gC day^-1] Strategy-specific max ingestion rate for copepod
+P.INC = Imax(P.lC)*MSNC; % [gC day^-1] Strategy-specific max ingestion rate for copepod
+
 end
