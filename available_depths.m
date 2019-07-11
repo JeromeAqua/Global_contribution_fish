@@ -9,15 +9,15 @@ zi = (zext(2:end)+zext(1:end-1))/2; % [m] Average depth of each water layer, the
 T =  4+18*(1-tanh(max(0,(zi-100)/500))); % [degree C] temperature as a function of depth
 O2 = 0 + 5*(1-tanh(max(0,(zi-100)/150))) + zi*3/ZMAX; % [mgO2/L] Oxygen concentration in the water column
 
-% %% Plot environmental conditions
-% subplot(121)
-% plot(T,zi)
-% set(gca,'ydir','reverse')
-% subplot(122)
-% plot(O2,zi)
-% set(gca,'ydir','reverse')
-% hold on
-% plot([2 2],[zi(1) zi(end)])
+%% Plot environmental conditions
+subplot(121)
+plot(T,zi)
+set(gca,'ydir','reverse')
+subplot(122)
+plot(O2,zi)
+set(gca,'ydir','reverse')
+hold on
+plot([2 2],[zi(1) zi(end)])
 %% Metabolic rates
 
 T0 = 0.1; % [day^-1] standard metabolic rate of fish at 15 degrees

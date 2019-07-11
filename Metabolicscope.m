@@ -52,7 +52,7 @@ end
     
 % Establish where can fish go / what is their metabolic scope at day and at night
 %Day position changes with lines, night position changes with columns
-MASK = ones(P.n,P.n); % [-] Logical matrix too see what strategies are viable
+MASK = ones(P.n); % [-] Logical matrix too see what strategies are viable
 ms = MS(P.T,P.O2); % [day^-1] column of the metabolic scopes at each depth
 MSN = repmat(ms,P.n,1); % [day^-1] Metabolic scope during night
 MSD = repmat(ms',1,P.n); % [day^-1] Metabolic scope during day
