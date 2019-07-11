@@ -241,15 +241,15 @@ P.metJ = repmat(P.SMRJ',1,P.n)*P.sigma + repmat(P.SMRJ,P.n,1)*(1-P.sigma); % [da
 %% STRATEGY-DEPENDENT MAXIMUM INGESTION RATES
 Imax = @(l)  3.6*10^-4*l.^2.55; % [gC day^-1] maximum ingestion rate for copepod and fish (no imax for tactile, functional response type I)
 
-P.IDF = Imax(P.lF)*MSDF; % [gC day^-1] Strategy-specific max ingestion rate for forage fish
-P.INF = Imax(P.lF)*MSNF; % [gC day^-1] Strategy-specific max ingestion rate for forage fish
-P.IDA = Imax(P.lA)*MSDA; % [gC day^-1] Strategy-specific max ingestion rate for top predator
-P.INA = Imax(P.lA)*MSNA; % [gC day^-1] Strategy-specific max ingestion rate for top predator
-P.IDM = Imax(P.lM)*MSDM; % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish
-P.INM = Imax(P.lM)*MSNM; % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish
-P.IDB = Imax(P.lB)*MSDB; % [gC day^-1] Strategy-specific max ingestion rate for bathypelagic fish
-P.INB = Imax(P.lB)*MSNB; % [gC day^-1] Strategy-specific max ingestion rate for bathypelagic fish
-P.IDC = Imax(P.lC)*MSDC; % [gC day^-1] Strategy-specific max ingestion rate for copepod
-P.INC = Imax(P.lC)*MSNC; % [gC day^-1] Strategy-specific max ingestion rate for copepod
+P.IDF = Imax(P.lF)*P.MSDF; % [gC day^-1] Strategy-specific max ingestion rate for forage fish
+P.INF = Imax(P.lF)*P.MSNF; % [gC day^-1] Strategy-specific max ingestion rate for forage fish
+P.IDA = Imax(P.lA)*P.MSDA; % [gC day^-1] Strategy-specific max ingestion rate for top predator
+P.INA = Imax(P.lA)*P.MSNA; % [gC day^-1] Strategy-specific max ingestion rate for top predator
+P.IDM = Imax(P.lM)*P.MSDM; % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish
+P.INM = Imax(P.lM)*P.MSNM; % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish
+P.IDB = Imax(P.lB)*P.MSDB; % [gC day^-1] Strategy-specific max ingestion rate for bathypelagic fish
+P.INB = Imax(P.lB)*P.MSNB; % [gC day^-1] Strategy-specific max ingestion rate for bathypelagic fish
+P.IDC = Imax(P.lC)*P.MSDC; % [gC day^-1] Strategy-specific max ingestion rate for copepod
+P.INC = Imax(P.lC)*P.MSNC; % [gC day^-1] Strategy-specific max ingestion rate for copepod
 
 end
