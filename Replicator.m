@@ -117,47 +117,69 @@ IJ = P.fJ*(P.sigma*(IJC1+IJM1)+(1-P.sigma)*(IJC0+IJM0))/P.wJ; % [day^-1] Total a
 IM = P.fM*(P.sigma*(IMD1+IMC1)+(1-P.sigma)*(IMD0+IMC0))/P.wM; % [day^-1] Total assimilation rate per individual per strategy for mesopelagic fish
 IB = P.fB*(P.sigma*(IBD1+IBb1+IBC1+IBM1)+(1-P.sigma)*(IBD0+IBb0+IBC0+IBM0))/P.wB; % [day^-1] Total assimilation rate per individual per strategy for bathypelagic fish
 
-%Mortality rates - we calculate the mortality rate imposed by all strategies (predators) at each depth before redistributing it equally among prey
+%Mortality rates due to predation - we calculate the mortality rate imposed by all strategies (predators) at each depth before redistributing it equally among prey
+%Copepod
+mCday = IFC1*P.n^2*P.F.*F/P.wF + IJC1*P.n^2*P.J.*J/P.wJ + IMC1*P.n^2*P.M.*M/P.wM + IBC1*P.n^2*P.B.*B/P.wB; % [gC m^-3 day^-1] size n*n How much each strategy eats copepods during daytime
+mCD = (sum(mCday,2)./Cday')'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
+MortDa = C.*repmat(mCD',1,P.n); % [day^-1] Mortality rate experienced by the different copepod strategies during daytime
+
+mCnight = IFC0*P.n^2*P.F.*F/P.wF + IJC0*P.n^2*P.J.*J/P.wJ + IMC0*P.n^2*P.M.*M/P.wM + IBC0*P.n^2*P.B.*B/P.wB; % [gC m^-3 day^-1]
+mCN = sum(mCnight,1)./Cnight; % [day^-1]
+MortNi = C.*repmat(mCN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
+
+MortC = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
+
 %Forage fish
 mFday = IAF1*P.n^2*P.A.*A/P.wA; % [gC m^-3 day^-1] size n*n How much each strategy eats forage fish during daytime
 mFD = (sum(mFday,2)./Fday')'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
-MortD = F.*repmat(mFD',1,P.n); % [day^-1] Mortality rate experienced by the different forage fish strategies during daytime
+MortDa = F.*repmat(mFD',1,P.n); % [day^-1] Mortality rate experienced by the different forage fish strategies during daytime
 
 mFnight = IAF0*P.n^2*P.A*A/P.wA; % [gC m^-3 day^-1]
 mFN = sum(mFnight,1)./Fnight; % [day^-1]
-MortN = F.*repmat(mFN,P.n,1); % [day^-1] Mortality rate experienced by the different forage fish strategies during nighttime
+MortNi = F.*repmat(mFN,P.n,1); % [day^-1] Mortality rate experienced by the different forage fish strategies during nighttime
 
-MortF = P.sigma*MortD + (1-P.sigma)*MortN; % [day^-1] Total mortality rate experienced by the different forage fish strategies
+MortF = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different forage fish strategies
 
 %Forage fish
 mFday = IAF1*P.n^2*P.A.*A/P.wA; % [gC m^-3 day^-1] size n*n How much each strategy eats forage fish during daytime
 mFD = (sum(mFday,2)./Fday')'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
-MortD = F.*repmat(mFD',1,P.n); % [day^-1] Mortality rate experienced by the different forage fish strategies during daytime
+MortDa = F.*repmat(mFD',1,P.n); % [day^-1] Mortality rate experienced by the different forage fish strategies during daytime
 
 mFnight = IAF0*P.n^2*P.A*A/P.wA; % [gC m^-3 day^-1]
 mFN = sum(mFnight,1)./Fnight; % [day^-1]
-MortN = F.*repmat(mFN,P.n,1); % [day^-1] Mortality rate experienced by the different forage fish strategies during nighttime
+MortNi = F.*repmat(mFN,P.n,1); % [day^-1] Mortality rate experienced by the different forage fish strategies during nighttime
 
-MortF = P.sigma*MortD + (1-P.sigma)*MortN; % [day^-1] Total mortality rate experienced by the different forage fish strategies
+MortF = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different forage fish strategies
 
 %Tactile predator
 mJday = IAJ1*P.n^2*P.A.*A/P.wA; % [gC m^-3 day^-1] size n*n How much each strategy eats tactile pred during daytime
 mJD = (sum(mJday,2)./Jday')'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
-MortD = J.*repmat(mJD',1,P.n); % [day^-1] Mortality rate experienced by the different tactile pred strategies during daytime
+MortDa = J.*repmat(mJD',1,P.n); % [day^-1] Mortality rate experienced by the different tactile pred strategies during daytime
 
 mJnight = IAJ0*P.n^2*P.A*A/P.wA; % [gC m^-3 day^-1]
 mJN = sum(mJnight,1)./Jnight; % [day^-1]
-MortN = J.*repmat(mJN,P.n,1); % [day^-1] Mortality rate experienced by the different tactile pred strategies during nighttime
+MortNi = J.*repmat(mJN,P.n,1); % [day^-1] Mortality rate experienced by the different tactile pred strategies during nighttime
 
-MortJ = P.sigma*MortD + (1-P.sigma)*MortN; % [day^-1] Total mortality rate experienced by the different tactile predator strategies
+MortJ = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different tactile predator strategies
+
+%Mesopelagic fish
+mMday = IFM1*P.n^2*P.F.*F/P.wF + IJM1*P.n^2*P.J.*J/P.wJ + IAM1*P.n^2*P.A.*A/P.wA + IBM1*P.n^2*P.B.*B/P.wB; % [gC m^-3 day^-1] size n*n How much each strategy eats mesopelagic during daytime
+mMD = (sum(mMday,2)./Mday')'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
+MortDa = M.*repmat(mMD',1,P.n); % [day^-1] Mortality rate experienced by the different mesopelagic fish strategies during daytime
+
+mMnight = IFM0*P.n^2*P.F.*F/P.wF + IJM0*P.n^2*P.J.*J/P.wJ + IAM0*P.n^2*P.A.*A/P.wA + IBM0*P.n^2*P.B.*B/P.wB; % [gC m^-3 day^-1]
+mMN = sum(mMnight,1)./Mnight; % [day^-1]
+MortNi = M.*repmat(mMN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
+
+MortM = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
 
 %Bathypelagic fish
 mBday = IAB1*P.n^2*P.A.*A/P.wA; % [gC m^-3 day^-1] size n*n How much each strategy eats bathypelagic fish during daytime
 mBD = (sum(mBday,2)./Bday')'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
-MortD = B.*repmat(mBD',1,P.n); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during daytime
+MortDa = B.*repmat(mBD',1,P.n); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during daytime
 
 mBnight = IAB0*P.n^2*P.A*A/P.wA; % [gC m^-3 day^-1]
 mBN = sum(mBnight,1)./Bnight; % [day^-1]
-MortN = B.*repmat(mBN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
+MortNi = B.*repmat(mBN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
 
-MortB = P.sigma*MortD + (1-P.sigma)*MortN; % [day^-1] Total mortality rate experienced by the different bathypelagic fish strategies
+MortB = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different bathypelagic fish strategies
