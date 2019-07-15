@@ -47,21 +47,64 @@ Jnight = P.n*P.J*sum(J,1); % [gC m^-3] Average concentration in each layer durin
 
 
 %Denominators for ingestion rates calculations
-NF1 = P.IDF + P.EDF.*(pref('forage','detritus')*repmat(P.D',1,n)+pref('forage','copepod')*repmat(Cday',1,n)+...
-                      pref('forage','benthos')*repmat(P.Benthos',1,n)+pref('forage','meso')*repmat(Mday',1,n)); % [gC day^-1] Denominator for ingestion function of forage fisg during day
-NF0 = P.INF + P.ENF.*(pref('forage','detritus')*repmat(P.D,n,1)+pref('forage','copepod')*repmat(Cday,n,1)+...
-                      pref('forage','benthos')*repmat(P.Benthos,n,1)+pref('forage','meso')*repmat(Mday,n,1)); % [gC day^-1] Denominator for the ingestion function
-NA1 =
-NA0 = 
-                  
-                  
-                  
+NF1 = P.IDF + P.EDF.*(pref('forage','detritus')*repmat(P.D',1,P.n)+pref('forage','copepod')*repmat(Cday',1,P.n)+...
+                      pref('forage','benthos')*repmat(P.Benthos',1,P.n)+pref('forage','meso')*repmat(Mday',1,P.n)); % [gC day^-1] Denominator for ingestion function of forage fish during day
+NF0 = P.INF + P.ENF.*(pref('forage','detritus')*repmat(P.D,P.n,1)+pref('forage','copepod')*repmat(Cnight,P.n,1)+...
+                      pref('forage','benthos')*repmat(P.Benthos,P.n,1)+pref('forage','meso')*repmat(Mnight,P.n,1)); % [gC day^-1] Denominator for the ingestion function
+NA1 = P.IDA + P.EDA.*(pref('top','forage')*repmat(Fday',1,P.n)+pref('top','tactile')*repmat(Jday',1,P.n)+...
+                      pref('forage','bathy')*repmat(Bday',1,P.n)+pref('forage','meso')*repmat(Mday',1,P.n)); % [gC day^-1] Denominator for ingestion function of top predator during day
+NA0 = P.INA + P.ENA.*(pref('top','forage')*repmat(Fnight,P.n,1)+pref('top','tactile')*repmat(Jnight,P.n,1)+...
+                      pref('top','bathy')*repmat(Bnight,P.n,1)+pref('top','meso')*repmat(Mnight,P.n,1)); % [gC day^-1] Denominator for the ingestion function           
+NC1 = P.IDC + P.EDC.*(pref('copepod','phyto')*repmat(P.R',1,P.n)+pref('copepod','detritus')*repmat(P.D',1,P.n)); % [gC day^-1] Denominator for ingestion function of copepods during day
+NC0 = P.INC + P.ENC.*(pref('copepod','phyto')*repmat(P.R,P.n,1)+pref('copepod','detritus')*repmat(P.D,P.n,1)); % [gC day^-1] Denominator for the ingestion function                   
+%J: No denominator because functional response type I
+NM1 = P.IDM + P.EDM.*(pref('meso','detritus')*repmat(P.D',1,P.n)+pref('meso','copepod')*repmat(Cday',1,P.n)); % [gC day^-1] Denominator for ingestion function of mesopelagic during day
+NM0 = P.INM + P.ENM.*(pref('meso','detritus')*repmat(P.D,P.n,1)+pref('meso','copepod')*repmat(Cnight,P.n,1)); % [gC day^-1] Denominator for the ingestion function                   
+NB1 = P.IDB + P.EDB.*(pref('bathy','detritus')*repmat(P.D',1,P.n)+pref('bathy','benthos')*repmat(P.Benthos',1,P.n)+...
+                      pref('bathy','copepod')*repmat(Cday',1,P.n)+pref('bathy','meso')*repmat(Mday',1,P.n)); % [gC day^-1] Denominator for ingestion function of top predator during day
+NB0 = P.INB + P.ENB.*(pref('bathy','detritus')*repmat(P.D,P.n,1)+pref('bathy','benthos')*repmat(P.Benthos,P.n,1)+...
+                      pref('bathy','copepod')*repmat(Cnight,P.n,1)+pref('bathy','meso')*repmat(Mnight,P.n,1)); % [gC day^-1] Denominator for the ingestion function  
+
+
 %Ingestion functions
-IFC1 = P.IDF.*P.EDF*pref('forage','copepod')*repmat(Cday',1,n)./NF1; % [gC day^-1] Ingestion rate of copepods during daytime by forage fish
-IFC0 = 
-IFD1 = 
-IFD0 = 
-IFB1 = 
-IFB0 =
-IFM1 = 
-IFM0 = ...;
+IFC1 = P.IDF.*P.EDF*pref('forage','copepod').* repmat(Cday' ,1,P.n)./NF1; % [gC day^-1] Ingestion rate of copepods during daytime by forage fish
+IFC0 = P.INF.*P.ENF*pref('forage','copepod').* repmat(Cnight,P.n,1)./NF0;
+IFD1 = P.IDF.*P.EDF*pref('forage','detritus').*repmat(P.D',1,P.n)  ./NF1;
+IFD0 = P.INF.*P.ENF*pref('forage','detritus').*repmat(P.D ,P.n,1)  ./NF0;
+IFb1 = P.IDF.*P.EDF*pref('forage','benthos') .*repmat(P.Benthos',1,P.n)./NF1; % [gC day^-1] small b to show that it is for benthos and not bathypelagic fish
+IFB0 = P.INF.*P.ENF*pref('forage','benthos') .*repmat(P.Benthos, P.n,1)./NF0;
+IFM1 = P.IDF.*P.EDF*pref('forage','meso')    .*repmat(Mday' ,1,P.n)./NF1;
+IFM0 = P.INF.*P.ENF*pref('forage','meso')    .*repmat(Mnight,P.n,1)./NF0;
+
+IAF1 = P.IDA.*P.EDA*pref('top','forage').* repmat(Fday' ,1,P.n)./NA1; % [gC day^-1] Ingestion rate of forage fish during daytime by top predators
+IAF0 = P.INA.*P.ENA*pref('top','forage').* repmat(Fnight,P.n,1)./NA0;
+IAJ1 = P.IDA.*P.EDA*pref('top','tactile').*repmat(Jday',1,P.n)  ./NA1;
+IAJ0 = P.INA.*P.ENA*pref('top','tactile').*repmat(Jnight ,P.n,1)  ./NA0;
+IAM1 = P.IDA.*P.EDA*pref('top','meso') .*repmat(Mday',1,P.n)./NA1; % [gC day^-1]
+IAM0 = P.INA.*P.ENA*pref('top','meso') .*repmat(Mnight, P.n,1)./NA0;
+IAB1 = P.IDA.*P.EDA*pref('top','bathy')    .*repmat(Bday' ,1,P.n)./NA1;
+IAB0 = P.INA.*P.ENA*pref('top','bathy')    .*repmat(Bnight,P.n,1)./NA0;
+
+ICR1 = P.IDC.*P.EDC*pref('copepod','phyto') .*repmat(P.R',1,P.n)./NC1; % [gC day^-1] Ingestion rate of phytoplankton during daytime by copepods
+ICR0 = P.INC.*P.ENC*pref('copepod','phyto') .*repmat(P.R, P.n,1)./NC0;
+ICD1 = P.IDC.*P.EDC*pref('copepod','detritus').*repmat(P.D',1,P.n)  ./NC1;
+ICD0 = P.INC.*P.ENC*pref('copepod','detritus').*repmat(P.D ,P.n,1)  ./NC0;
+
+IJC1 = P.EDJ*pref('tactile','copepod').*repmat(Cday',1,P.n); % [gC day^-1] Ingestion rate of copepods during daytime by tactile predators - note the Type I functional response
+IJC0 = P.ENJ*pref('tactile','copepod').*repmat(Cnight,P.n,1);
+IJM1 = P.EDJ*pref('tactile','meso').*repmat(Mday',1,P.n);
+IJM0 = P.ENJ*pref('tactile','meso').*repmat(Mnight,P.n,1);
+
+IMC1 = P.IDM.*P.EDM*pref('meso','detritus').*repmat(P.D',1,P.n)  ./NM1; % [gC day^-1] Ingestion rate of copepods during daytime by mesopelagic fish
+IMC0 = P.INM.*P.ENM*pref('meso','detritus').*repmat(P.D ,P.n,1)  ./NM0; 
+IMD1 = P.IDM.*P.EDM*pref('meso','copepod') .*repmat(Cday',1,P.n)./NM1; 
+IMD0 = P.INM.*P.ENM*pref('meso','copepod') .*repmat(Cnight, P.n,1)./NM0;
+
+IBD1 = P.IDB.*P.EDB*pref('bathy','detritus').* repmat(P.D' ,1,P.n)./NB1; % [gC day^-1] Ingestion rate of forage fish during daytime by top predators
+IBD0 = P.INB.*P.ENB*pref('bathy','detritus').* repmat(P.D,P.n,1)./NB0;
+IBb1 = P.IDB.*P.EDB*pref('bathy','benthos').*repmat(P.Benthos',1,P.n)  ./NB1;
+IBb0 = P.INB.*P.ENB*pref('bathy','benthos').*repmat(P.Benthos ,P.n,1)  ./NB0;
+IBC1 = P.IDB.*P.EDB*pref('bathy','copepod') .*repmat(Cday',1,P.n)./NB1; % [gC day^-1]
+IBC0 = P.INB.*P.ENB*pref('bathy','copepod') .*repmat(Cnight, P.n,1)./NB0;
+IBM1 = P.IDB.*P.EDB*pref('bathy','meso')    .*repmat(Mday' ,1,P.n)./NB1;
+IBM0 = P.INB.*P.ENB*pref('bathy','meso')    .*repmat(Mnight,P.n,1)./NB0;
