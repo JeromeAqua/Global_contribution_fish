@@ -3,7 +3,7 @@ function P = Parameters();
 
 %Environment set-up
 P.sigma = 0.65; % [-] Proportion of daytime in 24h
-P.ZMAX = 1500; % [m] Maximum depth
+P.ZMAX = 500; % [m] Maximum depth
 P.n = 50; % [-] Number of water layers that we want
 P.zext = linspace(0,P.ZMAX,P.n+1); % [m] Boundaries of water layers - later we can make them not equally spaced to have more resolution at the surface
 P.zi = (P.zext(2:end)+P.zext(1:end-1))/2; % [m] Average depth of each water layer, the one we use in reality 
@@ -21,9 +21,9 @@ P.O2 = 0 + 5*(1-tanh(max(0,(P.zi-100)/150))) + P.zi*3/P.ZMAX; % [mgO2/L] Oxygen 
 
 P.z0 = 60; % [m] Mixed layer depth for the resources
 P.zm = 30; % [m] Sharpness of the transition to from the mixed layer to depleted layers
-P.R  = 0.1*(1-tanh((P.zi-P.z0)/P.zm))/2; % [gC / m3] Resource concentration
+P.R  = 1*(1-tanh((P.zi-P.z0)/P.zm))/2; % [gC / m3] Resource concentration
 P.D = 0.02*P.zi.^-0.86; % [gC / m^3] Detritus concentration
-P.Benthos = 0.02*exp(P.zi-P.zi(end)); % [gC / m^3] Bottom resources
+P.Benthos = 0.0001*exp(P.zi-P.zi(end)); % [gC / m^3] Bottom resources
 
 %Useful functions
 speed = @(l) 3600*24*0.9112*l^0.825; % [m/day] (max) size-dependent swimming speed for fish and copepods, l in m
@@ -35,7 +35,7 @@ minprop = 0.1; %min proportion of the body length for the cutoff of the sensing 
 P.gamma = 0.5; % [-] Cross sectional area efficiently scanned for fish
 
 %Copepod
-P.C = 0.01; % [gC m^-3] Mean concentration in the water column
+P.C = 01; % [gC m^-3] Mean concentration in the water column
 P.lC = 2.8*10^-3; % [m] Typical length for copepod
 P.wC = 4.53*10^-6; % [gC] Weight of a typical copepod
 P.uC = speed(P.lC); % [m/day] Max copepod speed
@@ -50,7 +50,7 @@ P.MSDC = max(0,P.MSDC)/max(max(P.MSDC)); % [-] de-unitized so that the max is 1 
 P.MSNC = max(0,P.MSNC)/max(max(P.MSNC)); % [-] same de-unitization
 
 %Forage fish
-P.F = 0.01; % [gC m^-3] Mean concentration in the water column
+P.F = 01; % [gC m^-3] Mean concentration in the water column
 P.lF = 0.27; % [m] Typical length for forage fish
 P.wF = 40; % [gC] Weight of a typical forage fish
 P.uF = speed(P.lF); % [m/day] Max forage fish speed
@@ -66,7 +66,7 @@ P.MSDF = max(0,P.MSDF)/max(max(P.MSDF)); % [-] de-unitized so that the max is 1 
 P.MSNF = max(0,P.MSNF)/max(max(P.MSNF)); % [-] same de-unitization
 
 %Top predator
-P.A = 0.02; % [gC m^-3] Mean concentration in the water column
+P.A = 0.01; % [gC m^-3] Mean concentration in the water column
 P.lA = 1.8; % [m] typical length for top predator
 P.wA = 1.108*10^4; % [gC] Weight of a typical top predator
 P.uA = speed(P.lA); % [m/day] Max top predator speed
@@ -82,7 +82,7 @@ P.MSDA = max(0,P.MSDA)/max(max(P.MSDA)); % [-] de-unitized so that the max is 1 
 P.MSNA = max(0,P.MSNA)/max(max(P.MSNA)); % [-] same de-unitization
 
 %Tactile predator
-P.J = 0.001; % [gC m^-3] Mean concentration in the water column
+P.J = 0.01; % [gC m^-3] Mean concentration in the water column
 P.lJ = 0.20; % [m] Typical length for tactile predator
 P.wJ = 11.8; % [gC] Weight of a typical tactile predator
 P.uJ = speedT(P.lJ); % [m/day] Max tactile predator speed
@@ -97,7 +97,7 @@ P.MSDJ = max(0,P.MSDJ)/max(max(P.MSDJ)); % [-] de-unitized so that the max is 1 
 P.MSNJ = max(0,P.MSNJ)/max(max(P.MSNJ)); % [-] same de-unitization
 
 %Mesopelagic fish
-P.M = 0.01; % [gC m^-3] Mean concentration in the water column
+P.M = 02; % [gC m^-3] Mean concentration in the water column
 P.lM = 0.04; % [m] Typical length for mesopelagic fish
 P.wM = 0.12; % [gC] Weight of a typical mesopelagic fish
 P.uM = speed(P.lM); % [m/day] Max mesopelagic fish speed
@@ -113,7 +113,7 @@ P.MSDM = max(0,P.MSDM)/max(max(P.MSDM)); % [-] de-unitized so that the max is 1 
 P.MSNM = max(0,P.MSNM)/max(max(P.MSNM)); % [-] same de-unitization
 
 %Bathypelagic fish
-P.B = 0.005; % [gC m^-3] Mean concentration in the water column
+P.B = 0.5; % [gC m^-3] Mean concentration in the water column
 P.lB = 0.15; % [m] Typical length for bathypelagic fish
 P.wB = 6.41; % [gC] Weight of a typical bathypelagic fish
 P.uB = speed(P.lB); % [m/day] Max bathypelagic fish speed
@@ -149,28 +149,28 @@ Dist = abs(tempB-temp);
 P.CF  = zeros(size(Dist)); % [gC / day / individual] %Migration cost forage fish
     for indx=1:size(Dist,1)
         for indy=1:size(Dist,2)
-            P.CF(indx,indy) = 0.1*migrcost(P.lF,dist(Dist(indx,indy)),'forage'); %multiplied by 0.1 because we assume that fish are 10 times more efficient at swimming than copepods (i.e. Epswim = 0.1)
+            P.CF(indx,indy) = 0.01*migrcost(P.lF,dist(Dist(indx,indy)),'forage'); %multiplied by 0.1 because we assume that fish are 10 times more efficient at swimming than copepods (i.e. Epswim = 0.1)
         end
     end
     
 P.CA  = zeros(size(Dist)); % [gC / day / individual] %Migration cost top predator
     for indx=1:size(Dist,1)
         for indy=1:size(Dist,2)
-            P.CA(indx,indy) = 0.1*migrcost(P.lA,dist(Dist(indx,indy)),'top'); %multiplied by 0.1 because we assume that fish are 10 times more efficient at swimming than copepods (i.e. Epswim = 0.1)
+            P.CA(indx,indy) = 0.01*migrcost(P.lA,dist(Dist(indx,indy)),'top'); %multiplied by 0.1 because we assume that fish are 10 times more efficient at swimming than copepods (i.e. Epswim = 0.1)
         end
     end
     
 P.CM  = zeros(size(Dist)); % [gC / day / individual] %Migration cost mesopelagic fish
     for indx=1:size(Dist,1)
         for indy=1:size(Dist,2)
-            P.Cfish(indx,indy) = 0.1*migrcost(P.lM,dist(Dist(indx,indy)),'meso'); %multiplied by 0.1 because we assume that fish are 10 times more efficient at swimming than copepods (i.e. Epswim = 0.1)
+            P.Cfish(indx,indy) = 0.01*migrcost(P.lM,dist(Dist(indx,indy)),'meso'); %multiplied by 0.1 because we assume that fish are 10 times more efficient at swimming than copepods (i.e. Epswim = 0.1)
         end
     end
     
 P.CB  = zeros(size(Dist)); % [gC / day / individual] %Migration cost bathypelagic fish
     for indx=1:size(Dist,1)
         for indy=1:size(Dist,2)
-            P.CB(indx,indy) = 0.1*migrcost(P.lB,dist(Dist(indx,indy)),'bathy'); %multiplied by 0.1 because we assume that fish are 10 times more efficient at swimming than copepods (i.e. Epswim = 0.1)
+            P.CB(indx,indy) = 0.01*migrcost(P.lB,dist(Dist(indx,indy)),'bathy'); %multiplied by 0.1 because we assume that fish are 10 times more efficient at swimming than copepods (i.e. Epswim = 0.1)
         end
     end
   
@@ -239,7 +239,7 @@ P.metB = repmat(P.SMRB',1,P.n)*P.sigma + repmat(P.SMRB,P.n,1)*(1-P.sigma); % [da
 P.metJ = repmat(P.SMRJ',1,P.n)*P.sigma + repmat(P.SMRJ,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for tactile predator
 
 %% STRATEGY-DEPENDENT MAXIMUM INGESTION RATES
-Imax = @(l)  3.6*10^-4*l.^2.55; % [gC day^-1] maximum ingestion rate for copepod and fish (no imax for tactile, functional response type I)
+Imax = @(l)  3.6*10^-4*(100*l).^2.55; % [gC day^-1] maximum ingestion rate for copepod and fish (no imax for tactile, functional response type I)
 
 P.IDF = Imax(P.lF)*P.MSDF; % [gC day^-1] Strategy-specific max ingestion rate for forage fish
 P.INF = Imax(P.lF)*P.MSNF; % [gC day^-1] Strategy-specific max ingestion rate for forage fish

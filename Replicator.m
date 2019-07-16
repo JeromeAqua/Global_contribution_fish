@@ -1,8 +1,8 @@
 %Replicator code
 %global C F J M A B %the global variables are the proportions of each population using each strategy
 
-Niter = 10^5; % [-] number of iterations of the replicator equation
-Iavg = 100000; % [-] How many of the last time steps do we save?
+Niter = 10^6; % [-] number of iterations of the replicator equation
+Iavg = Niter; %100000; % [-] How many of the last time steps do we save?
 dtfact = 0.01; %Max percentage of change per time step
 P = Parameters();
 
@@ -55,6 +55,7 @@ Jnight = P.n*P.J*sum(J,1); % [gC m^-3] Average concentration in each layer durin
 
 i = Niter;
 notdone = 1;
+tic
 while notdone
     i = i - 1;
 
@@ -227,12 +228,12 @@ while notdone
 
 
 %Fitnesses
-    fitA = IA - P.CA/P.wA - P.metA - 0.05; % [day^-1] Fitness of top predator 0.05 is a background mortality rate
-    fitC = IC - P.CC/P.wC - P.metC - 0.1; % [day^-1]
-    fitJ = IJ - P.CJ/P.wJ - P.metJ - 0.1; % [day^-1]
-    fitF = IF - P.CF/P.wF - P.metF - 0.1; % [day^-1]
-    fitM = IM - P.CM/P.wM - P.metM - 0.05; % [day^-1]
-    fitB = IB - P.CB/P.wB - P.metB - 0.01; % [day^-1]
+    fitA = IA - 0 - P.CA/P.wA - P.metA - 0.01; % [day^-1] Fitness of top predator 0.05 is a background mortality rate
+    fitC = IC - MortC - P.CC/P.wC - P.metC - 0.2 ; % [day^-1]
+    fitJ = IJ - MortJ - P.CJ/P.wJ - P.metJ -0.1 ; % [day^-1]
+    fitF = IF - MortF - P.CF/P.wF - P.metF -0.05; % [day^-1]
+    fitM = IM - MortM - P.CM/P.wM - P.metM -0.05; % [day^-1]
+    fitB = IB - MortB - P.CB/P.wB - P.metB -0.03; % [day^-1]
 
 %%% NOW IS THE REPLICATOR PART
     FAmax = max(max(fitA)); FAmin = min(min(fitA));
@@ -309,3 +310,4 @@ while notdone
      
      notdone = (i>0);
 end
+toc
