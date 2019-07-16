@@ -1,7 +1,7 @@
 %Replicator code
 %global C F J M A B %the global variables are the proportions of each population using each strategy
 
-Niter = 2*10^5; % [-] number of iterations of the replicator equation
+Niter = 10^5; % [-] number of iterations of the replicator equation
 Iavg = 100000; % [-] How many of the last time steps do we save?
 dtfact = 0.01; %Max percentage of change per time step
 P = Parameters();
@@ -13,6 +13,15 @@ FitA = zeros(1,Iavg);
 FitJ = zeros(1,Iavg);
 FitM = zeros(1,Iavg);
 FitB = zeros(1,Iavg);
+
+%Saved distributions for the last time steps
+MAday = zeros(P.n,Iavg); % [-]
+MAnight = MAday;
+MBday = MAday; MBnight = MAday;
+MCday = MAday; MCnight = MAday;
+MJday = MAday; MJnight = MAday;
+MMday = MAday; MMnight = MAday;
+MFday = MAday; MFnight = MAday;
 
 %Coefficient to prevent extinction of strategies
 coeff = 10^-7; % [-]
@@ -45,6 +54,7 @@ Jday = P.n*P.J*sum(J,2)'; % [gC m^-3] Average concentration in each layer during
 Jnight = P.n*P.J*sum(J,1); % [gC m^-3] Average concentration in each layer during night
 
 i = Niter;
+notdone = 1;
 while notdone
     i = i - 1;
 
@@ -54,7 +64,7 @@ while notdone
     NF0 = P.INF + P.ENF.*(pref('forage','detritus')*repmat(P.D,P.n,1)+pref('forage','copepod')*repmat(Cnight,P.n,1)+...
                           pref('forage','benthos')*repmat(P.Benthos,P.n,1)+pref('forage','meso')*repmat(Mnight,P.n,1)); % [gC day^-1] Denominator for the ingestion function
     NA1 = P.IDA + P.EDA.*(pref('top','forage')*repmat(Fday',1,P.n)+pref('top','tactile')*repmat(Jday',1,P.n)+...
-                          pref('forage','bathy')*repmat(Bday',1,P.n)+pref('forage','meso')*repmat(Mday',1,P.n)); % [gC day^-1] Denominator for ingestion function of top predator during day
+                          pref('top','bathy')*repmat(Bday',1,P.n)+pref('top','meso')*repmat(Mday',1,P.n)); % [gC day^-1] Denominator for ingestion function of top predator during day
     NA0 = P.INA + P.ENA.*(pref('top','forage')*repmat(Fnight,P.n,1)+pref('top','tactile')*repmat(Jnight,P.n,1)+...
                           pref('top','bathy')*repmat(Bnight,P.n,1)+pref('top','meso')*repmat(Mnight,P.n,1)); % [gC day^-1] Denominator for the ingestion function           
     NC1 = P.IDC + P.EDC.*(pref('copepod','phyto')*repmat(P.R',1,P.n)+pref('copepod','detritus')*repmat(P.D',1,P.n)); % [gC day^-1] Denominator for ingestion function of copepods during day
@@ -110,6 +120,46 @@ while notdone
     IBC0 = P.INB.*P.ENB*pref('bathy','copepod') .*repmat(Cnight, P.n,1)./NB0;
     IBM1 = P.IDB.*P.EDB*pref('bathy','meso')    .*repmat(Mday' ,1,P.n)./NB1;
     IBM0 = P.INB.*P.ENB*pref('bathy','meso')    .*repmat(Mnight,P.n,1)./NB0;
+    
+    
+%Remove all the NaN of ingestion rates when they do not feed at all
+    IFC1(isnan(IFC1)) = 0; % [gC day^-1] Ingestion rate of copepods during daytime by forage fish
+    IFC0(isnan(IFC0)) = 0;
+    IFD1(isnan(IFD1)) = 0;
+    IFD0(isnan(IFD0)) = 0;
+    IFb1(isnan(IFb1)) = 0; % [gC day^-1] small b to show that it is for benthos and not bathypelagic fish
+    IFb0(isnan(IFb0)) = 0;
+    IFM1(isnan(IFM1)) = 0;
+    IFM0(isnan(IFM0)) = 0;
+    IAF1(isnan(IAF1)) = 0; % [gC day^-1] Ingestion rate of forage fish during daytime by top predators
+    IAF0(isnan(IAF0)) = 0;
+    IAJ1(isnan(IAJ1)) = 0;
+    IAJ0(isnan(IAJ0)) = 0;
+    IAM1(isnan(IAM1)) = 0 ; % [gC day^-1]
+    IAM0(isnan(IAM0)) = 0;
+    IAB1(isnan(IAB1)) = 0;
+    IAB0(isnan(IAB0)) = 0;
+    ICR1(isnan(ICR1)) = 0; % [gC day^-1] Ingestion rate of phytoplankton during daytime by copepods
+    ICR0(isnan(ICR0)) = 0;
+    ICD1(isnan(ICD1)) = 0;
+    ICD0(isnan(ICD0)) = 0;
+    IJC1(isnan(IJC1)) = 0; % [gC day^-1] Ingestion rate of copepods during daytime by tactile predators - note the Type I functional response
+    IJC0(isnan(IJC0)) = 0;
+    IJM1(isnan(IJM1)) = 0;
+    IJM0(isnan(IJM0)) = 0;
+    IMC1(isnan(IMC1)) = 0; % [gC day^-1] Ingestion rate of copepods during daytime by mesopelagic fish
+    IMC0(isnan(IMC0)) = 0; 
+    IMD1(isnan(IMD1)) = 0; 
+    IMD0(isnan(IMD0)) = 0;
+    IBD1(isnan(IBD1)) = 0; % [gC day^-1] Ingestion rate of forage fish during daytime by top predators
+    IBD0(isnan(IBD0)) = 0;
+    IBb1(isnan(IBb1)) = 0;
+    IBb0(isnan(IBb0)) = 0;
+    IBC1(isnan(IBC1)) = 0; % [gC day^-1]
+    IBC0(isnan(IBC0)) = 0;
+    IBM1(isnan(IBM1)) = 0;
+    IBM0(isnan(IBM0)) = 0 ;
+    
 
 %Assimilation rates
     IC = P.fC*(P.sigma*(ICR1+ICD1)+(1-P.sigma)*(ICR0+ICD0))/P.wC; % [day^-1] Total assimilation rate per individual per strategy for copepods
@@ -194,18 +244,38 @@ while notdone
 
 
 %the proportionality factor is dynamic so that maximum increase is at most 2% per time step
-     factA = dtfact./max([FAmax, -FAmin]);
+     factA = dtfact./max([FAmax, -FAmin]); % [day]
      factB = dtfact./max([FBmax, -FBmin]);
-        
+     factC = dtfact./max([FCmax, -FCmin]);
+     factJ = dtfact./max([FJmax, -FJmin]);
+     factM = dtfact./max([FMmax, -FMmin]);
+     factF = dtfact./max([FFmax, -FFmin]);
 
+%increment, the core of the replicator equation
+    A = A.*(1 + factA*fitA); % [-] Proportion of all strategies, before renormalization
+    B = B.*(1 + factB*fitB);
+    C = C.*(1 + factC*fitC);
+    J = J.*(1 + factJ*fitJ);
+    M = M.*(1 + factM*fitM);
+    F = F.*(1 + factF*fitF);
+    
+%no extinction, so that every strategy can still emerge
+    A(A<dA0) = dA0; % [-]
+    B(B<dB0) = dB0;
+    C(C<dC0) = dC0;
+    J(J<dJ0) = dJ0;
+    M(M<dM0) = dM0;
+    F(F<dF0) = dF0;
+    
+%Renormalization
+    A = A/sum(sum(A)); % [-] Good matrices of strategies after each replicator time step
+    B = B/sum(sum(B));
+    C = C/sum(sum(C));
+    M = M/sum(sum(M));
+    J = J/sum(sum(J));
+    F = F/sum(sum(F));
 
-
-
-
-
-
-
-
+%Calculation of the day and night concentrations
      Cday = P.n*P.C*sum(C,2)'; % [gC m^-3] Average concentration in each layer during day for copepod
      Cnight = P.n*P.C*sum(C,1); % [gC m^-3] Average concentration in each layer during night
      Fday = P.n*P.F*sum(F,2)'; % [gC m^-3] Average concentration in each layer during day for forage fish
@@ -218,4 +288,24 @@ while notdone
      Mnight = P.n*P.M*sum(M,1); % [gC m^-3] Average concentration in each layer during night
      Jday = P.n*P.J*sum(J,2)'; % [gC m^-3] Average concentration in each layer during day for tactile predator
      Jnight = P.n*P.J*sum(J,1); % [gC m^-3] Average concentration in each layer during night
+     
+     
+%Save historic of convergence
+    if i<Iavg
+        MAday(:,Iavg-i) = Aday;
+        MBday(:,Iavg-i) = Bday;
+        MCday(:,Iavg-i) = Cday;
+        MMday(:,Iavg-i) = Mday;
+        MFday(:,Iavg-i) = Fday;
+        MJday(:,Iavg-i) = Jday;
+        MAnight(:,Iavg-i) = Anight;
+        MBnight(:,Iavg-i) = Bnight;
+        MCnight(:,Iavg-i) = Cnight;
+        MMnight(:,Iavg-i) = Mnight;
+        MFnight(:,Iavg-i) = Fnight;
+        MJnight(:,Iavg-i) = Jnight;
+    end
+        
+     
+     notdone = (i>0);
 end
