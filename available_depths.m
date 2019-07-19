@@ -20,7 +20,7 @@ hold on
 plot([2 2],[zi(1) zi(end)])
 %% Metabolic rates
 
-T0 = 0.1; % [day^-1] standard metabolic rate of fish at 15 degrees
+T0 = 0.001; % [day^-1] standard metabolic rate of fish at 15 degrees
 M0 = 0.5; % [day^-1] maximum  metabolic rate of fish at 15 degrees
 
 Q10 = 2; % [-] for starters let's not complicate things

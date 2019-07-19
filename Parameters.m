@@ -1,9 +1,9 @@
-function P = Parameters();
+function P = Parameters()
 %%% Parameter file
 
 %Environment set-up
 P.sigma = 0.65; % [-] Proportion of daytime in 24h
-P.ZMAX = 500; % [m] Maximum depth
+P.ZMAX = 1000; % [m] Maximum depth
 P.n = 50; % [-] Number of water layers that we want
 P.zext = linspace(0,P.ZMAX,P.n+1); % [m] Boundaries of water layers - later we can make them not equally spaced to have more resolution at the surface
 P.zi = (P.zext(2:end)+P.zext(1:end-1))/2; % [m] Average depth of each water layer, the one we use in reality 
@@ -21,9 +21,9 @@ P.O2 = 0 + 5*(1-tanh(max(0,(P.zi-100)/150))) + P.zi*3/P.ZMAX; % [mgO2/L] Oxygen 
 
 P.z0 = 60; % [m] Mixed layer depth for the resources
 P.zm = 30; % [m] Sharpness of the transition to from the mixed layer to depleted layers
-P.R  = 1*(1-tanh((P.zi-P.z0)/P.zm))/2; % [gC / m3] Resource concentration
-P.D = 0.02*P.zi.^-0.86; % [gC / m^3] Detritus concentration
-P.Benthos = 0.0001*exp(P.zi-P.zi(end)); % [gC / m^3] Bottom resources
+P.R  = 0.5*(1-tanh((P.zi-P.z0)/P.zm))/2; % [gC / m3] Resource concentration
+P.D = 0.5*P.zi.^-0.86; % [gC / m^3] Detritus concentration
+P.Benthos = 0.5*exp((P.zi-P.zi(end))/20); % [gC / m^3] Bottom resources
 
 %Useful functions
 speed = @(l) 3600*24*0.9112*l^0.825; % [m/day] (max) size-dependent swimming speed for fish and copepods, l in m
@@ -35,7 +35,7 @@ minprop = 0.1; %min proportion of the body length for the cutoff of the sensing 
 P.gamma = 0.5; % [-] Cross sectional area efficiently scanned for fish
 
 %Copepod
-P.C = 01; % [gC m^-3] Mean concentration in the water column
+P.C = 0.1; % [gC m^-3] Mean concentration in the water column
 P.lC = 2.8*10^-3; % [m] Typical length for copepod
 P.wC = 4.53*10^-6; % [gC] Weight of a typical copepod
 P.uC = speed(P.lC); % [m/day] Max copepod speed
@@ -46,40 +46,40 @@ P.fC = 0.7; % [-] Assimilation efficiency for copepods
 P.tC = 0.1; % [day^-1] SMR at P.TC XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  - to refine when we have proper values
 P.mC = 0.5; % [day^-1] MMR at P.TC XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRC, P.MSNC, P.MSDC, P.MaskC] = Metabolicscope('copepod',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
-P.MSDC = max(0,P.MSDC)/max(max(P.MSDC)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
-P.MSNC = max(0,P.MSNC)/max(max(P.MSNC)); % [-] same de-unitization
+P.MSDC = min(1,max(0,P.MSDC));%max(max(P.MSDC)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
+P.MSNC = min(1,max(0,P.MSNC));%/max(max(P.MSNC)); % [-] same de-unitization
 
 %Forage fish
-P.F = 01; % [gC m^-3] Mean concentration in the water column
+P.F = 0.1; % [gC m^-3] Mean concentration in the water column
 P.lF = 0.27; % [m] Typical length for forage fish
 P.wF = 40; % [gC] Weight of a typical forage fish
 P.uF = speed(P.lF); % [m/day] Max forage fish speed
 P.TF = 15; % [ºC] Reference temperature for forage fish
 P.QF = 2.3; % [-] Q10 for forage fish
-P.RF = 2.69; % [m] Maximum visual range for forage fish
+P.RF = 5; % [m] Maximum visual range for forage fish
 P.KF = 1; % [W/m^2] Half-saturation constant for light for forage fish
 P.fF = 0.65; % [-] Assimilation efficiency for forage fish
 P.tF = 0.01; % [day^-1] SMR at P.TF XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-P.mF = 0.9; % [day^-1] MMR at P.TF XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+P.mF = 0.5; % [day^-1] MMR at P.TF XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRF, P.MSNF, P.MSDF, P.MaskF] = Metabolicscope('forage',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, metabolic scope during day, during night, and mask of available strategies
-P.MSDF = max(0,P.MSDF)/max(max(P.MSDF)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
-P.MSNF = max(0,P.MSNF)/max(max(P.MSNF)); % [-] same de-unitization
+P.MSDF = min(1,max(0,P.MSDF));%/max(max(P.MSDF)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
+P.MSNF = min(1,max(0,P.MSNF));%/max(max(P.MSNF)); % [-] same de-unitization
 
 %Top predator
-P.A = 0.01; % [gC m^-3] Mean concentration in the water column
+P.A = 10^-4; % [gC m^-3] Mean concentration in the water column
 P.lA = 1.8; % [m] typical length for top predator
 P.wA = 1.108*10^4; % [gC] Weight of a typical top predator
 P.uA = speed(P.lA); % [m/day] Max top predator speed
 P.TA = 20; % [ºC] Reference temperature for top predator
 P.QA = 1.67; % [-] Q10 for top predator
-P.RA = 18; % [m] Maximum visual range for top predator
-P.KA = 10^-2; % [W/m^2] Half-saturation constant for light for top predator
+P.RA = 20;%18; % [m] Maximum visual range for top predator
+P.KA = 10^-15; % [W/m^2] Half-saturation constant for light for top predator
 P.fA = 0.65; % [-] Assimilation efficiency for top predator
-P.tA = 0.005; % [day^-1] SMR at P.TA XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-P.mA = 0.3; % [day^-1] MMR at P.TA XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+P.tA = 0.001; % [day^-1] SMR at P.TA XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+P.mA = 0.5; % [day^-1] MMR at P.TA XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRA, P.MSNA, P.MSDA, P.MaskA] = Metabolicscope('top',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
-P.MSDA = max(0,P.MSDA)/max(max(P.MSDA)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
-P.MSNA = max(0,P.MSNA)/max(max(P.MSNA)); % [-] same de-unitization
+P.MSDA = min(1,max(0,P.MSDA));%/max(max(P.MSDA)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
+P.MSNA = min(1,max(0,P.MSNA));%/max(max(P.MSNA)); % [-] same de-unitization
 
 %Tactile predator
 P.J = 0.01; % [gC m^-3] Mean concentration in the water column
@@ -90,14 +90,14 @@ P.TJ = 10; % [ºC] Reference temperature for tactile predator
 P.QJ = 3; % [-] Q10 for jellyfish
 P.RJ = 0.2; % [m] Sensing range for tactile predator
 P.fJ = 0.39; % [-] Assimilation efficiency for tactile predator
-P.tJ = 0.5; % [day^-1] SMR at P.TJ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-P.mJ = 0.9; % [day^-1] MMR at P.TJ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+P.tJ = 0.02; % [day^-1] SMR at P.TJ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+P.mJ = 0.6; % [day^-1] MMR at P.TJ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRJ, P.MSNJ, P.MSDJ, P.MaskJ] = Metabolicscope('tactile',P); % [day^-1, day^-1, day^-1, -] Metabolic scope during day, during night, and mask of available strategies
-P.MSDJ = max(0,P.MSDJ)/max(max(P.MSDJ)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
-P.MSNJ = max(0,P.MSNJ)/max(max(P.MSNJ)); % [-] same de-unitization
+P.MSDJ = min(1,max(0,P.MSDJ));%/max(max(P.MSDJ)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
+P.MSNJ = min(1,max(0,P.MSNJ));%/max(max(P.MSNJ)); % [-] same de-unitization
 
 %Mesopelagic fish
-P.M = 02; % [gC m^-3] Mean concentration in the water column
+P.M = 0.1; % [gC m^-3] Mean concentration in the water column
 P.lM = 0.04; % [m] Typical length for mesopelagic fish
 P.wM = 0.12; % [gC] Weight of a typical mesopelagic fish
 P.uM = speed(P.lM); % [m/day] Max mesopelagic fish speed
@@ -107,26 +107,26 @@ P.RM = 0.4; % [m] Maximum visual range for mesopelagic fish
 P.KM = 10^-6; % [W/m^2] Half-saturation constant for light for mesopelagic fish
 P.fM = 0.65; % [-] Assimilation efficiency for mesopelagic fish
 P.tM = 0.01; % [day^-1] SMR at P.TM XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-P.mM = 0.5; % [day^-1] MMR at P.TM XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+P.mM = 0.06; % [day^-1] MMR at P.TM XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRM, P.MSNM, P.MSDM, P.MaskM] = Metabolicscope('meso',P); % [day^-1, day^-1, day^-1, -] epth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
-P.MSDM = max(0,P.MSDM)/max(max(P.MSDM)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
-P.MSNM = max(0,P.MSNM)/max(max(P.MSNM)); % [-] same de-unitization
+P.MSDM = min(1,max(0,P.MSDM));%/max(max(P.MSDM)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
+P.MSNM = min(1,max(0,P.MSNM));%/max(max(P.MSNM)); % [-] same de-unitization
 
 %Bathypelagic fish
-P.B = 0.5; % [gC m^-3] Mean concentration in the water column
+P.B = 0.1; % [gC m^-3] Mean concentration in the water column
 P.lB = 0.15; % [m] Typical length for bathypelagic fish
 P.wB = 6.41; % [gC] Weight of a typical bathypelagic fish
 P.uB = speed(P.lB); % [m/day] Max bathypelagic fish speed
 P.TB = 5; % [ºC] Reference temperature for bathypelagic fish
 P.QB = 3.5; % [-] Q10 for bathypelagic fish
 P.RB = 1.5; % [m] Maximum visual range for bathypelagic fish
-P.KB = 10^-10; % [W/m^2] Half-saturation constant for light for bathypelagic fish
+P.KB = 10^-18; % [W/m^2] Half-saturation constant for light for bathypelagic fish
 P.fB = 0.65; % [-] Assimilation efficiency for bathypelagic fish
 P.tB = 0.01; % [day^-1] SMR at P.TB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-P.mB = 0.5; % [day^-1] MMR at P.TB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+P.mB = 0.05; % [day^-1] MMR at P.TB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRB, P.MSNB, P.MSDB, P.MaskB] = Metabolicscope('bathy',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
-P.MSDB = max(0,P.MSDB)/max(max(P.MSDB)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
-P.MSNB = max(0,P.MSNB)/max(max(P.MSNB)); % [-] same de-unitization
+P.MSDB = min(1,max(0,P.MSDB));%/max(max(P.MSDB)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
+P.MSNB = min(1,max(0,P.MSNB));%/max(max(P.MSNB)); % [-] same de-unitization
 
 
 %% MIGRATION COST 
@@ -223,7 +223,7 @@ P.ENB = P.gamma*pi*P.uA*P.MSNB.*repmat(Vis,P.n,1).^2; % [m^3 day^-1] clearance r
 P.ENB = max(P.ENB, 0.5*pi*P.uB*P.MSNB*(P.lB/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 %Copepod
-P.EDC = pi*(2*P.lC)^2*P.uF*P.MSDC; % [m^3 day^-1] Clearance rate of copepod during day - ignored swimming speed and size of prey, so detection distance is just the fluid signal of the predator
+P.EDC = pi*(2*P.lC)^2*P.uF*P.MSDC; % [m^3 day^-1] Clearance rate of copepod during day - ignored swimming speed and size of prey, so detection distance is just the fluid signal of the (moving) predator
 P.ENC = pi*(2*P.lC)^2*P.uF*P.MSNC; % [m^3 day^-1] Clearance rate of copepod during night - ignored as during day
 
 %Tactile predator
@@ -239,7 +239,7 @@ P.metB = repmat(P.SMRB',1,P.n)*P.sigma + repmat(P.SMRB,P.n,1)*(1-P.sigma); % [da
 P.metJ = repmat(P.SMRJ',1,P.n)*P.sigma + repmat(P.SMRJ,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for tactile predator
 
 %% STRATEGY-DEPENDENT MAXIMUM INGESTION RATES
-Imax = @(l)  3.6*10^-4*(100*l).^2.55; % [gC day^-1] maximum ingestion rate for copepod and fish (no imax for tactile, functional response type I)
+Imax = @(l)  3.6*10^-4*(100*l).^2.55*5; % [gC day^-1] maximum ingestion rate for copepod and fish (no imax for tactile, functional response type I)
 
 P.IDF = Imax(P.lF)*P.MSDF; % [gC day^-1] Strategy-specific max ingestion rate for forage fish
 P.INF = Imax(P.lF)*P.MSNF; % [gC day^-1] Strategy-specific max ingestion rate for forage fish
