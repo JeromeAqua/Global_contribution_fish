@@ -7,9 +7,9 @@ zext = linspace(0,ZMAX,n+1); % [m] Boundaries of water layers - later we can mak
 zi = (zext(2:end)+zext(1:end-1))/2; % [m] Average depth of each water layer, the one we use in reality 
 
 T =  4+18*(1-tanh(max(0,(zi-100)/500))); % [degree C] temperature as a function of depth
-O2 = 0 + 5*(1-tanh(max(0,(zi-100)/150))) + zi*3/ZMAX; % [mgO2/L] Oxygen concentration in the water column
+O2 = 0 + 5*(1-1.2*tanh(max(0,(zi-100)/150))) + zi.^1.2*1/ZMAX; % [mgO2/L] Oxygen concentration in the water column
 
-%% Plot environmental conditions
+% Plot environmental conditions
 subplot(121)
 plot(T,zi)
 set(gca,'ydir','reverse')
@@ -20,7 +20,7 @@ hold on
 plot([2 2],[zi(1) zi(end)])
 %% Metabolic rates
 
-T0 = 0.001; % [day^-1] standard metabolic rate of fish at 15 degrees
+T0 = 0.1; % [day^-1] standard metabolic rate of fish at 15 degrees
 M0 = 0.5; % [day^-1] maximum  metabolic rate of fish at 15 degrees
 
 Q10 = 2; % [-] for starters let's not complicate things

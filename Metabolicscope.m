@@ -1,62 +1,94 @@
 function [SMRdepth, MSN, MSD, MASK] = Metabolicscope(player,P)
 
-if strcmp(player,'copepod')
+K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant
 
-    aM = -0.33; % [L/mgO2] coefficient for the dependency in O2 - weird units
+if strcmp(player,'copepod')
+    
+    a = 12; % [day^-1] reference maximum metabolic rate
+    Km = 10; % [degree C] Half saturation constant for the saturation of the MMR
+    eps = 3; % [degree C] Offset T for the MMR 
+
+    
+    aM = @(temp) -1.13*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
     bM = @(temp) 0.28-0.1*temp/15;  % [-]
 
     SMR = @(temp) P.tC*P.QC.^((temp-P.TC)/10); % [day^-1] standard metabolic rate as a function of temperature
-    MMR = @(temp,O2) P.mC*P.QC.^((temp-P.TC)/10).*(1-exp(aM*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
+    MMR = @(temp,O2) a*(temp+eps)./(Km+temp+eps).*(1-exp(aM(temp).*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
     MS = @(temp,O2) MMR(temp,O2) - SMR(temp); % [day^-1] metabolic scope as a function of O2 and temperature
     
     msref = MS(P.TC,P.O2(1));
 
 elseif strcmp(player,'forage')
-    aM = -0.33; % [L/mgO2] coefficient for the dependency in O2 - weird units
-    bM = @(temp) 0.28-0.1*temp/15;  % [-]
+    
+    a = 0.6; % [day^-1] reference maximum metabolic rate
+    Km = 10; % [degree C] Half saturation constant for the saturation of the MMR
+    eps = 3; % [degree C] Offset T for the MMR 
+    
+    aM = @(temp) -0.33*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
+    bM = @(temp) 0.6;  % [-]
 
     SMR = @(temp) P.tF*P.QF.^((temp-P.TF)/10); % [day^-1] standard metabolic rate as a function of temperature
-    MMR = @(temp,O2) P.mF*P.QF.^((temp-P.TF)/10).*(1-exp(aM*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
+    MMR = @(temp,O2) a*(temp+eps)./(Km+temp+eps).*(1-exp(aM(temp).*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
     MS = @(temp,O2) MMR(temp,O2) - SMR(temp); % [day^-1] metabolic scope as a function of O2 and temperature
     
     msref = MS(P.TF,P.O2(1));
 
 elseif strcmp(player,'tactile')
-    aM = -0.33; % [L/mgO2] coefficient for the dependency in O2 - weird units
+    
+    a = 0.6; % [day^-1] reference maximum metabolic rate
+    Km = 10; % [degree C] Half saturation constant for the saturation of the MMR
+    eps = 3; % [degree C] Offset T for the MMR 
+    
+    aM = @(temp) -1.13*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
     bM = @(temp) 0.28-0.1*temp/15;  % [-]
 
     SMR = @(temp) P.tJ*P.QJ.^((temp-P.TJ)/10); % [day^-1] standard metabolic rate as a function of temperature
-    MMR = @(temp,O2) P.mJ*P.QJ.^((temp-P.TJ)/10).*(1-exp(aM*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
+    MMR = @(temp,O2) a*(temp+eps)./(Km+temp+eps).*(1-exp(aM(temp).*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
     MS = @(temp,O2) MMR(temp,O2) - SMR(temp); % [day^-1] metabolic scope as a function of O2 and temperature
     
     msref = MS(P.TJ,P.O2(1));
     
 elseif strcmp(player,'meso')
-    aM = -0.33; % [L/mgO2] coefficient for the dependency in O2 - weird units
-    bM = @(temp) 0.28-0.1*temp/15;  % [-]
+    
+    a = 0.06; % [day^-1] reference maximum metabolic rate
+    Km = 15; % [degree C] Half saturation constant for the saturation of the MMR
+    eps = 6; % [degree C] Offset T for the MMR 
+    
+    aM = -1*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
+    bM = @(temp) 0.5;  % [-]
 
     SMR = @(temp) P.tM*P.QM.^((temp-P.TM)/10); % [day^-1] standard metabolic rate as a function of temperature
-    MMR = @(temp,O2) P.mM*P.QM.^((temp-P.TM)/10).*(1-exp(aM*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
+    MMR = @(temp,O2) a*(temp+eps)./(Km+temp+eps).*(1-exp(aM(temp).*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
     MS = @(temp,O2) MMR(temp,O2) - SMR(temp); % [day^-1] metabolic scope as a function of O2 and temperature
     
     msref = MS(P.TM,P.O2(1));
     
 elseif strcmp(player,'top')
-    aM = -0.33; % [L/mgO2] coefficient for the dependency in O2 - weird units
-    bM = @(temp) 0.28-0.1*temp/15;  % [-]
+    
+    a = 0.06; % [day^-1] reference maximum metabolic rate
+    Km = 30; % [degree C] Half saturation constant for the saturation of the MMR
+    eps = 4; % [degree C] Offset T for the MMR 
+    
+    aM = -0.33*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
+    bM = @(temp) 0.8;  % [-]
 
     SMR = @(temp) P.tA*P.QA.^((temp-P.TA)/10); % [day^-1] standard metabolic rate as a function of temperature
-    MMR = @(temp,O2) P.mA*P.QA.^((temp-P.TA)/10).*(1-exp(aM*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
+    MMR = @(temp,O2) a*(temp+eps)./(Km+temp+eps).*(1-exp(aM(temp).*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
     MS = @(temp,O2) MMR(temp,O2) - SMR(temp); % [day^-1] metabolic scope as a function of O2 and temperature
     
     msref = MS(P.TA,P.O2(1));
     
 elseif strcmp(player,'bathy')
-    aM = -0.33; % [L/mgO2] coefficient for the dependency in O2 - weird units
-    bM = @(temp) 0.28-0.1*temp/15;  % [-]
+    
+    a = 0.004; % [day^-1] reference maximum metabolic rate
+    Km = 5; % [degree C] Half saturation constant for the saturation of the MMR
+    eps = 6; % [degree C] Offset T for the MMR 
+    
+    aM = -1.13; % [L/mgO2] coefficient for the dependency in O2 - weird units
+    bM = @(temp) 0.8;  % [-]
 
     SMR = @(temp) P.tB*P.QB.^((temp-P.TB)/10); % [day^-1] standard metabolic rate as a function of temperature
-    MMR = @(temp,O2) P.mB*P.QB.^((temp-P.TB)/10).*(1-exp(aM*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
+    MMR = @(temp,O2) a*(temp+eps)./(Km+temp+eps).*(1-exp(aM(temp).*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
     MS = @(temp,O2) MMR(temp,O2) - SMR(temp); % [day^-1] metabolic scope as a function of O2 and temperature  
     
     msref = MS(P.TB,P.O2(1));
@@ -77,8 +109,10 @@ for i=1:P.n
     end
 end
 
-MSN = MSN / msref; %we normalize it by the metabolic cost at the reference temperature and O2 conditions (02 = surface) so that the max is at the good place 
-MSD = MSD / msref;
+MSN = MSN / max(max(MSN)); %we normalize it by the metabolic cost at the reference temperature and O2 conditions (02 = surface) so that the max is at the good place 
+MSD = MSD / max(max(MSD));
+
+MSN(MSN<0) = (MSN<0);
 
 MASK(and(MSN<0,MSD<0)) = 0; %the available strategies are the ones where at least one metabolic scope is positive, otherwise it means that the oxygen debt can never be repaid
 

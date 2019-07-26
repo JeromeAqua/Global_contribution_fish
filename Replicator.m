@@ -5,7 +5,7 @@ Niter = 10^5; % [-] number of iterations of the replicator equation
 Iavg = Niter; %100000; % [-] How many of the last time steps do we save?
 dtfact = 0.01; %Max percentage of change per time step
 P = Parameters();
-reinit = 0; %Do we start from the last simulation or do we initialize strategy matrices?
+reinit = 1; %Do we start from the last simulation or do we initialize strategy matrices?
 
 % Saved fitnesses for the last time steps
 FitC = zeros(1,Iavg); % [day^-1] 
