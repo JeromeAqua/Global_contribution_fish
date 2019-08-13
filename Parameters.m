@@ -18,6 +18,7 @@ P.LN = P.rho*P.LD; % [W/m^2] Depth-dependent night light levels
 
 P.T  = 4+18*(1-tanh(max(0,(P.zi-100)/500))); % [degree C] temperature as a function of depth
 P.O2 = 0 + 5*(1-tanh(max(0,(P.zi-100)/150))) + P.zi*3/P.ZMAX; % [mgO2/L] Oxygen concentration in the water column
+P.pO2 = P.O2./(0.381*exp(5.7018*(28-P.T)./(P.T+273.15)))/0.75; % [kPa] Partial pressure of oxygen in the water column
 
 P.z0 = 60; % [m] Mixed layer depth for the resources
 P.zm = 30; % [m] Sharpness of the transition to from the mixed layer to depleted layers
