@@ -13,18 +13,18 @@
 % mnight = Mnight/(P.n*P.M); % [-]
 
 %Max of curves is at 1
-aday = Aday/max(Aday); % [-] Fraction of A at z during day
-anight = Anight/max(Anight); % [-]
-bday = Bday/max(Bday); % [-] Fraction of B at z during day
-bnight = Bnight/max(Bnight); % [-]
-cday = Cday/max(Cday); % [-] Fraction of C at z during day
-cnight = Cnight/max(Cnight); % [-]
-fday = Fday/max(Fday); % [-] Fraction of F at z during day
-fnight = Fnight/max(Fnight); % [-]
-jday = Jday/max(Jday); % [-] Fraction of J at z during day
-jnight = Jnight/max(Jnight); % [-]
-mday = Mday/max(Mday); % [-] Fraction of M at z during day
-mnight = Mnight/max(Mnight); % [-]
+aday = Aday/max(max(Anight),max(Aday)); % [-] Fraction of A at z during day
+anight = Anight/max(max(Anight),max(Aday)); % [-]
+bday = Bday/max(max(Bnight),max(Bday)); % [-] Fraction of B at z during day
+bnight = Bnight/max(max(Bnight),max(Bday)); % [-]
+cday = Cday/max(max(Cnight),max(Cday)); % [-] Fraction of C at z during day
+cnight = Cnight/max(max(Cnight),max(Cday)); % [-]
+fday = Fday/max(max(Fnight),max(Fday)); % [-] Fraction of F at z during day
+fnight = Fnight/max(max(Fnight),max(Fday)); % [-]
+jday = Jday/max(max(Jnight),max(Jday)); % [-] Fraction of J at z during day
+jnight = Jnight/max(max(Jnight),max(Jday)); % [-]
+mday = Mday/max(max(Mnight),max(Mday)); % [-] Fraction of M at z during day
+mnight = Mnight/max(max(Mnight),max(Mday)); % [-]
 
 figure
 subplot(131)

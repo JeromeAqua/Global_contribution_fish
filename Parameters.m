@@ -11,7 +11,7 @@ P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
 
 %Environmental parameters
 P.klight = 0.07; % [m^-1] Light attenuation coefficient in the water column
-P.Lmax = 200; % [W/m^2] Surface irradiance during daytime
+P.Lmax = 500; % [W/m^2] Surface irradiance during daytime
 P.rho = 10^-5; % [-] Fraction of daytime light during nighttime
 P.LD = P.Lmax*exp(-P.klight*P.zi); % [W/m^2] Depth-dependent day light levels
 P.LN = P.rho*P.LD; % [W/m^2] Depth-dependent night light levels
@@ -47,8 +47,8 @@ P.fC = 0.7; % [-] Assimilation efficiency for copepods
 P.tC = 0.1; % [day^-1] SMR at P.TC XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  - to refine when we have proper values
 P.mC = 0.5; % [day^-1] MMR at P.TC XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRC, P.MSNC, P.MSDC, P.MaskC] = Metabolicscope('copepod',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
-P.MSDC = min(1,max(0,P.MSDC));%max(max(P.MSDC)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
-P.MSNC = min(1,max(0,P.MSNC));%/max(max(P.MSNC)); % [-] same de-unitization
+% P.MSDC = min(1,max(0,P.MSDC));%max(max(P.MSDC)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
+% P.MSNC = min(1,max(0,P.MSNC));%/max(max(P.MSNC)); % [-] same de-unitization
 
 %Forage fish
 P.F = 0.1; % [gC m^-3] Mean concentration in the water column
@@ -63,24 +63,24 @@ P.fF = 0.65; % [-] Assimilation efficiency for forage fish
 P.tF = 0.059; % [day^-1] SMR at P.TF XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 P.mF = 0.5; % [day^-1] MMR at P.TF XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRF, P.MSNF, P.MSDF, P.MaskF] = Metabolicscope('forage',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, metabolic scope during day, during night, and mask of available strategies
-P.MSDF = min(1,max(0,P.MSDF));%/max(max(P.MSDF)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
-P.MSNF = min(1,max(0,P.MSNF));%/max(max(P.MSNF)); % [-] same de-unitization
+% P.MSDF = min(1,max(0,P.MSDF));%/max(max(P.MSDF)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
+% P.MSNF = min(1,max(0,P.MSNF));%/max(max(P.MSNF)); % [-] same de-unitization
 
 %Top predator
 P.A = 10^-4; % [gC m^-3] Mean concentration in the water column
-P.lA = 1.8; % [m] typical length for top predator
+P.lA = 1.0; % [m] typical length for top predator
 P.wA = 1.108*10^4; % [gC] Weight of a typical top predator
 P.uA = speed(P.lA); % [m/day] Max top predator speed
 P.TA = 20; % [ºC] Reference temperature for top predator
 P.QA = 2; % [-] Q10 for top predator
-P.RA = 20;%18; % [m] Maximum visual range for top predator
+P.RA = 15;%18; % [m] Maximum visual range for top predator
 P.KA = 10^-15; % [W/m^2] Half-saturation constant for light for top predator
 P.fA = 0.65; % [-] Assimilation efficiency for top predator
 P.tA = 0.0014; % [day^-1] SMR at P.TA XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 P.mA = 0.5; % [day^-1] MMR at P.TA XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRA, P.MSNA, P.MSDA, P.MaskA] = Metabolicscope('top',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
-P.MSDA = min(1,max(0,P.MSDA));%/max(max(P.MSDA)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
-P.MSNA = min(1,max(0,P.MSNA));%/max(max(P.MSNA)); % [-] same de-unitization
+% P.MSDA = min(1,max(0,P.MSDA));%/max(max(P.MSDA)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
+% P.MSNA = min(1,max(0,P.MSNA));%/max(max(P.MSNA)); % [-] same de-unitization
 
 %Tactile predator
 P.J = 0.01; % [gC m^-3] Mean concentration in the water column
@@ -94,8 +94,8 @@ P.fJ = 0.39; % [-] Assimilation efficiency for tactile predator
 P.tJ = 0.02; % [day^-1] SMR at P.TJ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 P.mJ = 0.6; % [day^-1] MMR at P.TJ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRJ, P.MSNJ, P.MSDJ, P.MaskJ] = Metabolicscope('tactile',P); % [day^-1, day^-1, day^-1, -] Metabolic scope during day, during night, and mask of available strategies
-P.MSDJ = min(1,max(0,P.MSDJ));%/max(max(P.MSDJ)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
-P.MSNJ = min(1,max(0,P.MSNJ));%/max(max(P.MSNJ)); % [-] same de-unitization
+% P.MSDJ = min(1,max(0,P.MSDJ));%/max(max(P.MSDJ)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
+% P.MSNJ = min(1,max(0,P.MSNJ));%/max(max(P.MSNJ)); % [-] same de-unitization
 
 %Mesopelagic fish
 P.M = 0.1; % [gC m^-3] Mean concentration in the water column
@@ -110,8 +110,8 @@ P.fM = 0.65; % [-] Assimilation efficiency for mesopelagic fish
 P.tM = 0.0126; % [day^-1] SMR at P.TM XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 P.mM = 0.4; % [day^-1] MMR at P.TM XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRM, P.MSNM, P.MSDM, P.MaskM] = Metabolicscope('meso',P); % [day^-1, day^-1, day^-1, -] epth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
-P.MSDM = min(1,max(0,P.MSDM));%/max(max(P.MSDM)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
-P.MSNM = min(1,max(0,P.MSNM));%/max(max(P.MSNM)); % [-] same de-unitization
+% P.MSDM = min(1,max(0,P.MSDM));%/max(max(P.MSDM)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
+% P.MSNM = min(1,max(0,P.MSNM));%/max(max(P.MSNM)); % [-] same de-unitization
 
 %Bathypelagic fish
 P.B = 0.1; % [gC m^-3] Mean concentration in the water column
@@ -126,8 +126,8 @@ P.fB = 0.65; % [-] Assimilation efficiency for bathypelagic fish
 P.tB = 9.3e-4; % [day^-1] SMR at P.TB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 P.mB = 0.05; % [day^-1] MMR at P.TB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRB, P.MSNB, P.MSDB, P.MaskB] = Metabolicscope('bathy',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
-P.MSDB = min(1,max(0,P.MSDB));%/max(max(P.MSDB)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
-P.MSNB = min(1,max(0,P.MSNB));%/max(max(P.MSNB)); % [-] same de-unitization
+% P.MSDB = min(1,max(0,P.MSDB));%/max(max(P.MSDB)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
+% P.MSNB = min(1,max(0,P.MSNB));%/max(max(P.MSNB)); % [-] same de-unitization
 
 
 %% MIGRATION COST 

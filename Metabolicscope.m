@@ -17,7 +17,7 @@ if strcmp(player,'copepod')
     aM = @(temp) -1.13*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
     bM = @(temp) 0.28-0.1*temp/15;  % [-]
 
-    SMR = @(temp) P.tC*P.QC.^((temp-P.TC)/10); % [day^-1] standard metabolic rate as a function of temperature
+    S = @(temp) P.tC*P.QC.^((temp-P.TC)/10); % [day^-1] standard metabolic rate as a function of temperature
     M = @(temp,O2) a*(temp+eps)./(Km+temp+eps).*(1-exp(aM(temp).*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
     
 %     msref = MS(P.TC,P.O2(1));
@@ -45,7 +45,7 @@ elseif strcmp(player,'forage')
     aM = @(temp) -0.33*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
     bM = @(temp) 0.6;  % [-]
 
-    SMR = @(temp) P.tF*P.QF.^((temp-P.TF)/10); % [day^-1] standard metabolic rate as a function of temperature
+    S = @(temp) P.tF*P.QF.^((temp-P.TF)/10); % [day^-1] standard metabolic rate as a function of temperature
     M = @(temp,O2) a*(temp+eps)./(Km+temp+eps).*(1-exp(aM(temp).*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
     
     
@@ -64,7 +64,7 @@ elseif strcmp(player,'tactile')
     aM = @(temp) -1.13*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
     bM = @(temp) 0.28-0.1*temp/15;  % [-]
 
-    SMR = @(temp) P.tJ*P.QJ.^((temp-P.TJ)/10); % [day^-1] standard metabolic rate as a function of temperature
+    S = @(temp) P.tJ*P.QJ.^((temp-P.TJ)/10); % [day^-1] standard metabolic rate as a function of temperature
     M = @(temp,O2) a*(temp+eps)./(Km+temp+eps).*(1-exp(aM(temp).*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
     
 %     msref = MS(P.TJ,P.O2(1));
@@ -79,10 +79,10 @@ elseif strcmp(player,'meso')
     Km = 15; % [degree C] Half saturation constant for the saturation of the MMR
     eps = 6; % [degree C] Offset T for the MMR 
     
-    aM = -1*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
+    aM = @(temp) -1*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
     bM = @(temp) 0.5;  % [-]
 
-    SMR = @(temp) P.tM*P.QM.^((temp-P.TM)/10); % [day^-1] standard metabolic rate as a function of temperature
+    S = @(temp) P.tM*P.QM.^((temp-P.TM)/10); % [day^-1] standard metabolic rate as a function of temperature
     M = @(temp,O2) a*(temp+eps)./(Km+temp+eps).*(1-exp(aM(temp).*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
     
 %     msref = MS(P.TM,P.O2(1));
@@ -97,10 +97,10 @@ elseif strcmp(player,'top')
     Km = 30; % [degree C] Half saturation constant for the saturation of the MMR
     eps = 4; % [degree C] Offset T for the MMR 
     
-    aM = -0.33*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
+    aM = @(temp) -0.33*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
     bM = @(temp) 0.8;  % [-]
 
-    SMR = @(temp) P.tA*P.QA.^((temp-P.TA)/10); % [day^-1] standard metabolic rate as a function of temperature
+    S = @(temp) P.tA*P.QA.^((temp-P.TA)/10); % [day^-1] standard metabolic rate as a function of temperature
     M = @(temp,O2) a*(temp+eps)./(Km+temp+eps).*(1-exp(aM(temp).*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
     
 %     msref = MS(P.TA,P.O2(1));
@@ -115,10 +115,10 @@ elseif strcmp(player,'bathy')
     Km = 5; % [degree C] Half saturation constant for the saturation of the MMR
     eps = 6; % [degree C] Offset T for the MMR 
     
-    aM = -1.13; % [L/mgO2] coefficient for the dependency in O2 - weird units
+    aM = @(temp) -1.13*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
     bM = @(temp) 0.8;  % [-]
 
-    SMR = @(temp) P.tB*P.QB.^((temp-P.TB)/10); % [day^-1] standard metabolic rate as a function of temperature
+    S = @(temp) P.tB*P.QB.^((temp-P.TB)/10); % [day^-1] standard metabolic rate as a function of temperature
     M = @(temp,O2) a*(temp+eps)./(Km+temp+eps).*(1-exp(aM(temp).*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
     
 %     msref = MS(P.TB,P.O2(1));
@@ -128,15 +128,15 @@ elseif strcmp(player,'bathy')
     
     
 end
-    
-if strcmp(player,'copepod') || strcmp(player,'tactile')
-    % Establish where copepods and jellies can go / what is their metabolic scope at day and at night
+
     %Day position changes with lines, night position changes with columns
     MASK = ones(P.n); % [-] Logical matrix too see what strategies are viable
     ms = interp2(O,T,MS,P.pO2,P.T); % [day^-1] column of the metabolic scopes at each depth
     MSN = repmat(ms,P.n,1); % [day^-1] Metabolic scope during night
     MSD = repmat(ms',1,P.n); % [day^-1] Metabolic scope during day
 
+if strcmp(player,'copepod') || strcmp(player,'tactile')
+    % Establish where copepods and jellies can go / what is their metabolic scope at day and at night
     for i=1:P.n
         if ms(i)<0 %if the metabolic scope during night time is <0, we reduce the MS during day and vice versa
             MSN(i,:) = (1-P.sigma)*MSN(i,:) + P.sigma*ms(i); %remove in line because it is for the one at day
@@ -146,17 +146,21 @@ if strcmp(player,'copepod') || strcmp(player,'tactile')
 
     MSN = MSN / max(max(MSN)); %we normalize it by the metabolic cost at the reference temperature and O2 conditions (02 = surface) so that the max is at the good place 
     MSD = MSD / max(max(MSD));
-
-    MSN(MSN<0) = (MSN<0);
+%     MSN(MSN<0) = (MSN<0);
 
     MASK(and(MSN<0,MSD<0)) = 0; %the available strategies are the ones where at least one metabolic scope is positive, otherwise it means that the oxygen debt can never be repaid
-
-    SMRdepth = SMR(P.T); % [day^-1] Depth-dependent standard metabolic cost
-
+   
 else
-%if it's a fish there cannot be an oxygen debt    
+    %if it's a fish there cannot be an oxygen debt - so if one of the metabolic scopes is negative the strategy is not viable
+    MSN = repmat(ms,P.n,1); % [day^-1] Metabolic scope during night
+    MSD = repmat(ms',1,P.n); % [day^-1] Metabolic scope during day
+    MSN = MSN / max(max(MSN)); %we normalize it by the metabolic cost at the reference temperature and O2 conditions (02 = surface) so that the max is at the good place 
+    MSD = MSD / max(max(MSD));
+    MASK(or(MSN<0,MSD<0)) = 0;
     
 end
+
+SMRdepth = S(P.T); % [day^-1] Depth-dependent standard metabolic cost
 
 
 end

@@ -24,7 +24,7 @@ MJday = MAday; MJnight = MAday;
 MMday = MAday; MMnight = MAday;
 MFday = MAday; MFnight = MAday;
 
-%Coefficient to prevent extinction of strategies
+%Coefficient to prevent extinction of strategies - and bugs in the OMZ
 coeff = 10^-7; % [-]
 dC0 = coeff*P.C; % [gC m^-3] Minimum concentration of organisms in a strategy
 dF0 = coeff*P.F;
@@ -35,12 +35,12 @@ dB0 = coeff*P.B;
 
 %Initialization of the different strategy matrices
 if reinit==1
-    C = ones(P.n); C = C/sum(sum(C)); % [-] equal distribution at first - we can also use rand(n) to have random distribution
-    F = ones(P.n); F = F/sum(sum(F)); 
-    M = ones(P.n); M = M/sum(sum(M));
-    A = ones(P.n); A = A/sum(sum(A));
-    B = ones(P.n); B = B/sum(sum(B));
-    J = ones(P.n); J = J/sum(sum(J));
+    C = ones(P.n).*P.MaskC + dC0; C = C/sum(sum(C)); % [-] equal distribution at first - we can also use rand(n) to have random distribution
+    F = ones(P.n).*P.MaskF + dF0; F = F/sum(sum(F)); 
+    M = ones(P.n).*P.MaskM + dM0; M = M/sum(sum(M));
+    A = ones(P.n).*P.MaskA + dA0; A = A/sum(sum(A));
+    B = ones(P.n).*P.MaskB + dB0; B = B/sum(sum(B));
+    J = ones(P.n).*P.MaskJ + dJ0; J = J/sum(sum(J));
 end
 
 Cday = P.n*P.C*sum(C,2)'; % [gC m^-3] Average concentration in each layer during day for copepod
@@ -231,12 +231,12 @@ while notdone
 
 
 %Fitnesses
-    fitA = IA - 0 - P.CA/P.wA - P.metA - 1*(P.sigma*Aday'+(1-sigma)*Anight).^2; % [day^-1] Fitness of top predator - Frequency-dependent mortality rate
-    fitC = IC - MortC - P.CC/P.wC - P.metC ;%- 0.2 ; % [day^-1]
-    fitJ = IJ - MortJ - P.CJ/P.wJ - P.metJ ;%-0.1 ; % [day^-1]
-    fitF = IF - MortF - P.CF/P.wF - P.metF ;%-0.05; % [day^-1]
-    fitM = IM - MortM - P.CM/P.wM - P.metM ;%-0.05; % [day^-1]
-    fitB = IB - MortB - P.CB/P.wB - P.metB ;%-0.03; % [day^-1]
+    fitA = (IA - 0 - P.CA/P.wA - P.metA - 1*(P.sigma*Aday'+(1-P.sigma)*Anight).^2).*P.MaskA; % [day^-1] Fitness of top predator - Frequency-dependent mortality rate
+    fitC = (IC - MortC - P.CC/P.wC - P.metC).*P.MaskC ;%- 0.2 ; % [day^-1]
+    fitJ = (IJ - MortJ - P.CJ/P.wJ - P.metJ).*P.MaskJ ;%-0.1 ; % [day^-1]
+    fitF = (IF - MortF - P.CF/P.wF - P.metF).*P.MaskF ;%-0.05; % [day^-1]
+    fitM = (IM - MortM - P.CM/P.wM - P.metM).*P.MaskM ;%-0.05; % [day^-1]
+    fitB = (IB - MortB - P.CB/P.wB - P.metB).*P.MaskB ;%-0.03; % [day^-1]
 
 %%% NOW IS THE REPLICATOR PART
     FAmax = max(max(fitA)); FAmin = min(min(fitA));

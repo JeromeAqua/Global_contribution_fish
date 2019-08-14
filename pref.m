@@ -12,9 +12,9 @@ if strcmp(predator,'copepod')
     
 elseif strcmp(predator,'forage')
     if strcmp(prey,'detritus')
-        out = 0.2;
+        out = 0.0;
     elseif strcmp(prey,'benthos')
-        out = 0.2;
+        out = 0.0;
     elseif strcmp(prey,'copepod')
         out = 1;
     elseif strcmp(prey,'meso')
@@ -60,7 +60,7 @@ elseif strcmp(predator,'bathy')
     elseif strcmp(prey,'benthos')
         out = 1;
     elseif strcmp(prey,'copepod')
-        out = 0.00;
+        out = 0.0;
     elseif strcmp(prey,'meso')
         out = 0.0;
     else
