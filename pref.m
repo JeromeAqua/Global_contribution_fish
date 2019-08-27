@@ -60,9 +60,9 @@ elseif strcmp(predator,'bathy')
     elseif strcmp(prey,'benthos')
         out = 1;
     elseif strcmp(prey,'copepod')
-        out = 0.0;
+        out = 0.25;
     elseif strcmp(prey,'meso')
-        out = 0.0;
+        out = 0.5;
     else
         out = NaN;
     end                 

@@ -10,7 +10,7 @@ Cw = 0:0.01:21; % [kPa] Oxygen partial pressure in the water
 if strcmp(player,'copepod')
     
     a = 12; % [day^-1] reference maximum metabolic rate
-    Km = 10; % [degree C] Half saturation constant for the saturation of the MMR
+    Km = 14; % [degree C] Half saturation constant for the saturation of the MMR
     eps = 3; % [degree C] Offset T for the MMR 
 
     
@@ -39,11 +39,11 @@ if strcmp(player,'copepod')
 elseif strcmp(player,'forage')
     
     a = 0.6; % [day^-1] reference maximum metabolic rate
-    Km = 10; % [degree C] Half saturation constant for the saturation of the MMR
-    eps = 3; % [degree C] Offset T for the MMR 
+    Km = 12; % [degree C] Half saturation constant for the saturation of the MMR
+    eps = -3; % [degree C] Offset T for the MMR 
     
     aM = @(temp) -0.33*K(temp); % [L/mgO2] coefficient for the dependency in O2 - weird units
-    bM = @(temp) 0.6;  % [-]
+    bM = @(temp) 0.3;  % [-]
 
     S = @(temp) P.tF*P.QF.^((temp-P.TF)/10); % [day^-1] standard metabolic rate as a function of temperature
     M = @(temp,O2) a*(temp+eps)./(Km+temp+eps).*(1-exp(aM(temp).*O2).*exp(bM(temp))); % [day^-1] maximum metabolic rate as a function of O2 and temperature
