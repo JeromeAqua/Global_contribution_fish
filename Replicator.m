@@ -1,9 +1,8 @@
 %Replicator code
 %global C F J M A B %the global variables are the proportions of each population using each strategy
-
 Niter = 10^5; % [-] number of iterations of the replicator equation
 Iavg = Niter; %100000; % [-] How many of the last time steps do we save?
-dtfact = 0.01; %Max percentage of change per time step
+dtfact = 0.05; %Max percentage of change per time step
 P = Parameters();
 reinit = 1; %Do we start from the last simulation or do we initialize strategy matrices?
 
@@ -231,10 +230,11 @@ while notdone
 
 
 %Fitnesses
-    fitA = (IA - 0 - P.CA/P.wA - P.metA - 1*(P.sigma*Aday'+(1-P.sigma)*Anight).^2).*P.MaskA; % [day^-1] Fitness of top predator - Frequency-dependent mortality rate
+    fitA = (IA - 0 - P.CA/P.wA - P.metA - 1*((P.sigma*Aday'+(1-P.sigma)*Anight)/(P.n*P.A)).^2).*P.MaskA; % [day^-1] Fitness of top predator - Frequency-dependent mortality rate
     fitC = (IC - MortC - P.CC/P.wC - P.metC).*P.MaskC ;%- 0.2 ; % [day^-1]
     fitJ = (IJ - MortJ - P.CJ/P.wJ - P.metJ).*P.MaskJ ;%-0.1 ; % [day^-1]
     fitF = (IF - MortF - P.CF/P.wF - P.metF).*P.MaskF ;%-0.05; % [day^-1]
+    fitF(and(1-P.MaskF,1==1)) = -abs(min(min(fitF)));
     fitM = (IM - MortM - P.CM/P.wM - P.metM).*P.MaskM ;%-0.05; % [day^-1]
     fitB = (IB - MortB - P.CB/P.wB - P.metB).*P.MaskB ;%-0.03; % [day^-1]
 
@@ -308,6 +308,13 @@ while notdone
         MMnight(:,Iavg-i) = Mnight;
         MFnight(:,Iavg-i) = Fnight;
         MJnight(:,Iavg-i) = Jnight;
+        
+        FitA(Iavg-i) = max(max(fitA));
+        FitB(Iavg-i) = max(max(fitB));
+        FitC(Iavg-i) = max(max(fitC));
+        FitJ(Iavg-i) = max(max(fitJ));
+        FitF(Iavg-i) = max(max(fitF));
+        FitM(Iavg-i) = max(max(fitM));
     end
         
      

@@ -22,7 +22,7 @@ P.pO2 = P.O2./(0.381*exp(5.7018*(28-P.T)./(P.T+273.15)))/0.75; % [kPa] Partial p
 
 P.z0 = 60; % [m] Mixed layer depth for the resources
 P.zm = 30; % [m] Sharpness of the transition to from the mixed layer to depleted layers
-P.R  = 0.5*(1-tanh((P.zi-P.z0)/P.zm))/2; % [gC / m3] Resource concentration
+P.R  = 1*(1-tanh((P.zi-P.z0)/P.zm))/2; % [gC / m3] Resource concentration
 P.D = 0.5*P.zi.^-0.86; % [gC / m^3] Detritus concentration
 P.Benthos = 0.5*exp((P.zi-P.zi(end))/20); % [gC / m^3] Bottom resources
 
@@ -67,13 +67,13 @@ P.mF = 0.5; % [day^-1] MMR at P.TF XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 % P.MSNF = min(1,max(0,P.MSNF));%/max(max(P.MSNF)); % [-] same de-unitization
 
 %Top predator
-P.A = 10^-4; % [gC m^-3] Mean concentration in the water column
+P.A = 10^-6; % [gC m^-3] Mean concentration in the water column
 P.lA = 1.0; % [m] typical length for top predator
 P.wA = 1.108*10^4; % [gC] Weight of a typical top predator
 P.uA = speed(P.lA); % [m/day] Max top predator speed
 P.TA = 20; % [ºC] Reference temperature for top predator
 P.QA = 2; % [-] Q10 for top predator
-P.RA = 15;%18; % [m] Maximum visual range for top predator
+P.RA = 10;%5;%18; % [m] Maximum visual range for top predator
 P.KA = 10^-15; % [W/m^2] Half-saturation constant for light for top predator
 P.fA = 0.65; % [-] Assimilation efficiency for top predator
 P.tA = 0.0014; % [day^-1] SMR at P.TA XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -81,6 +81,13 @@ P.mA = 0.5; % [day^-1] MMR at P.TA XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRA, P.MSNA, P.MSDA, P.MaskA] = Metabolicscope('top',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
 % P.MSDA = min(1,max(0,P.MSDA));%/max(max(P.MSDA)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 % P.MSNA = min(1,max(0,P.MSNA));%/max(max(P.MSNA)); % [-] same de-unitization
+
+% %Creating the factors used for the roaming
+% P.Factor = zeros(P.n, P.n);
+% s = 66.66; % [m] Standard deviation of the roaming 200/3 because we have 100% of the roamin with +- 3 sigmas, so 3*66 = 200m
+% for kk = 1:P.n
+%     P.Factor(kk,:) = exp(-(P.zi-P.zi(kk)).^2/(2*s^2)) / sum(exp(-(P.zi-P.zi(kk)).^2/(2*s^2))); %The sum of lines is 1. Meaning we have to multiply each line with the concentrations
+% end
 
 %Tactile predator
 P.J = 0.01; % [gC m^-3] Mean concentration in the water column
