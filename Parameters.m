@@ -16,15 +16,15 @@ P.rho = 10^-5; % [-] Fraction of daytime light during nighttime
 P.LD = P.Lmax*exp(-P.klight*P.zi); % [W/m^2] Depth-dependent day light levels
 P.LN = P.rho*P.LD; % [W/m^2] Depth-dependent night light levels
 
-P.T  = 4+18*(1-tanh(max(0,(P.zi-100)/500))); % [degree C] temperature as a function of depth
-P.O2 = 0 + 5*(1-tanh(max(0,(P.zi-100)/150))) + P.zi*3/P.ZMAX; % [mgO2/L] Oxygen concentration in the water column
-P.pO2 = P.O2./(0.381*exp(5.7018*(28-P.T)./(P.T+273.15)))/0.75; % [kPa] Partial pressure of oxygen in the water column
+P.T  = 2+18*(1-tanh(max(0,(P.zi-100)/500))); % [degree C] temperature as a function of depth
+P.O2 = 3 + 5*(1-tanh(max(0,(P.zi-100)/150))) + P.zi*3/P.ZMAX; % [mgO2/L] Oxygen concentration in the water column
+P.pO2 = min(21,P.O2./(0.381*exp(5.7018*(28-P.T)./(P.T+273.15)))/0.75); % [kPa] Partial pressure of oxygen in the water column
 
 P.z0 = 60; % [m] Mixed layer depth for the resources
 P.zm = 30; % [m] Sharpness of the transition to from the mixed layer to depleted layers
-P.R  = 1*(1-tanh((P.zi-P.z0)/P.zm))/2; % [gC / m3] Resource concentration
-P.D = 0.5*P.zi.^-0.86; % [gC / m^3] Detritus concentration
-P.Benthos = 0.5*exp((P.zi-P.zi(end))/20); % [gC / m^3] Bottom resources
+P.R  = 0.01*(1-tanh((P.zi-P.z0)/P.zm))/2; % [gC / m3] Resource concentration
+P.D = 0.0000005*P.zi.^-0.86; % [gC / m^3] Detritus concentration - nothing eats it for now
+P.Benthos = 1*exp((P.zi-P.zi(end))/20); % [gC / m^3] Bottom resources
 
 %Useful functions
 speed = @(l) 3600*24*0.9112*l^0.825; % [m/day] (max) size-dependent swimming speed for fish and copepods, l in m
@@ -36,7 +36,7 @@ minprop = 0.1; %min proportion of the body length for the cutoff of the sensing 
 P.gamma = 0.5; % [-] Cross sectional area efficiently scanned for fish
 
 %Copepod
-P.C = 0.1; % [gC m^-3] Mean concentration in the water column
+P.C = 0.01; % [gC m^-3] Mean concentration in the water column
 P.lC = 2.8*10^-3; % [m] Typical length for copepod
 P.wC = 4.53*10^-6; % [gC] Weight of a typical copepod
 P.uC = speed(P.lC); % [m/day] Max copepod speed
@@ -51,27 +51,29 @@ P.mC = 0.5; % [day^-1] MMR at P.TC XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 % P.MSNC = min(1,max(0,P.MSNC));%/max(max(P.MSNC)); % [-] same de-unitization
 
 %Forage fish
-P.F = 0.1; % [gC m^-3] Mean concentration in the water column
+P.F = 0.01; % [gC m^-3] Mean concentration in the water column
 P.lF = 0.27; % [m] Typical length for forage fish
 P.wF = 40; % [gC] Weight of a typical forage fish
 P.uF = speed(P.lF); % [m/day] Max forage fish speed
 P.TF = 14; % [ºC] Reference temperature for forage fish
 P.QF = 2; % [-] Q10 for forage fish
-P.RF = 5; % [m] Maximum visual range for forage fish
-P.KF = 1; % [W/m^2] Half-saturation constant for light for forage fish
+P.RF = 10; % [m] Maximum visual range for forage fish
+P.KF = 0.1; % [W/m^2] Half-saturation constant for light for forage fish
 P.fF = 0.65; % [-] Assimilation efficiency for forage fish
 P.tF = 0.059; % [day^-1] SMR at P.TF XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 P.mF = 0.5; % [day^-1] MMR at P.TF XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 [P.SMRF, P.MSNF, P.MSDF, P.MaskF] = Metabolicscope('forage',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, metabolic scope during day, during night, and mask of available strategies
 % P.MSDF = min(1,max(0,P.MSDF));%/max(max(P.MSDF)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 % P.MSNF = min(1,max(0,P.MSNF));%/max(max(P.MSNF)); % [-] same de-unitization
+P.MaskF(:,P.zi>500) = 0; % Artificial stuff to prevent forage fish to go at depth
+P.MaskF(P.zi>500,:) = 0;
 
 %Top predator
-P.A = 10^-6; % [gC m^-3] Mean concentration in the water column
+P.A = 0.0001; % [gC m^-3] Mean concentration in the water column
 P.lA = 1.0; % [m] typical length for top predator
 P.wA = 1.108*10^4; % [gC] Weight of a typical top predator
 P.uA = speed(P.lA); % [m/day] Max top predator speed
-P.TA = 20; % [ºC] Reference temperature for top predator
+P.TA = 18; % [ºC] Reference temperature for top predator
 P.QA = 2; % [-] Q10 for top predator
 P.RA = 10;%5;%18; % [m] Maximum visual range for top predator
 P.KA = 10^-15; % [W/m^2] Half-saturation constant for light for top predator
@@ -90,7 +92,7 @@ P.mA = 0.5; % [day^-1] MMR at P.TA XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 % end
 
 %Tactile predator
-P.J = 0.01; % [gC m^-3] Mean concentration in the water column
+P.J = 0.000001; % [gC m^-3] Mean concentration in the water column
 P.lJ = 0.20; % [m] Typical length for tactile predator
 P.wJ = 11.8; % [gC] Weight of a typical tactile predator
 P.uJ = speedT(P.lJ); % [m/day] Max tactile predator speed
@@ -105,7 +107,7 @@ P.mJ = 0.6; % [day^-1] MMR at P.TJ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 % P.MSNJ = min(1,max(0,P.MSNJ));%/max(max(P.MSNJ)); % [-] same de-unitization
 
 %Mesopelagic fish
-P.M = 0.1; % [gC m^-3] Mean concentration in the water column
+P.M = 0.01; % [gC m^-3] Mean concentration in the water column
 P.lM = 0.04; % [m] Typical length for mesopelagic fish
 P.wM = 0.12; % [gC] Weight of a typical mesopelagic fish
 P.uM = speed(P.lM); % [m/day] Max mesopelagic fish speed
@@ -121,7 +123,7 @@ P.mM = 0.4; % [day^-1] MMR at P.TM XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 % P.MSNM = min(1,max(0,P.MSNM));%/max(max(P.MSNM)); % [-] same de-unitization
 
 %Bathypelagic fish
-P.B = 0.1; % [gC m^-3] Mean concentration in the water column
+P.B = 0.001; % [gC m^-3] Mean concentration in the water column
 P.lB = 0.15; % [m] Typical length for bathypelagic fish
 P.wB = 6.41; % [gC] Weight of a typical bathypelagic fish
 P.uB = speed(P.lB); % [m/day] Max bathypelagic fish speed
@@ -197,22 +199,24 @@ P.CJ = zeros(size(Dist)); % [gC / day / individual] %Migration cost tactile pred
      end
      
 %% Clearance rates
+%%%DECREASED MIN RANGE FOR F AND A
+
 
 %Forage fish
 Vis = P.RF*sqrt(P.LD./(P.KF+P.LD))'; % [m] Depth-dependent visual range of forage fish during daytime
 P.EDF = P.gamma*pi*P.uF*P.MSDF.*repmat(Vis,1,P.n).^2; % [m^3 day^-1] clearance rate of forage fish during daytime with visual feeding
-P.EDF = max(P.EDF, 0.5*pi*P.uF*P.MSDF*(P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
+P.EDF = max(P.EDF, 0.5*pi*P.uF*P.MSDF*(0.1*P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 Vis = P.RF*sqrt(P.LN./(P.KF+P.LN)); % [m] Depth-dependent visual range of forage fish during daytime
 P.ENF = P.gamma*pi*P.uF*P.MSNF.*repmat(Vis,P.n,1).^2; % [m^3 day^-1] clearance rate of forage fish during nighttime with visual feeding
-P.ENF = max(P.ENF, 0.5*pi*P.uF*P.MSNF*(P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
+P.ENF = max(P.ENF, 0.5*pi*P.uF*P.MSNF*(0.1*P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 %Top predator
 Vis = P.RA*sqrt(P.LD./(P.KA+P.LD))'; % [m] Depth-dependent visual range of top predator during daytime
 P.EDA = P.gamma*pi*P.uA*P.MSDA.*repmat(Vis,1,P.n).^2; % [m^3 day^-1] clearance rate of top predator during daytime with visual feeding
-P.EDA = max(P.EDA, 0.5*pi*P.uA*P.MSDA*(P.lA/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
+P.EDA = max(P.EDA, 0.5*pi*P.uA*P.MSDA*(0.1*P.lA/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 Vis = P.RA*sqrt(P.LN./(P.KA+P.LN)); % [m] Depth-dependent visual range of top predator during daytime
 P.ENA = P.gamma*pi*P.uA*P.MSNA.*repmat(Vis,P.n,1).^2; % [m^3 day^-1] clearance rate of top predator during nighttime with visual feeding
-P.ENA = max(P.ENA, 0.5*pi*P.uA*P.MSNA*(P.lA/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
+P.ENA = max(P.ENA, 0.5*pi*P.uA*P.MSNA*(0.1*P.lA/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 %Mesopelagic fish
 Vis = P.RM*sqrt(P.LD./(P.KM+P.LD))'; % [m] Depth-dependent visual range of mesopelagic fish during daytime

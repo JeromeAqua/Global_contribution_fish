@@ -2,26 +2,13 @@
 %global C F J M A B %the global variables are the proportions of each population using each strategy
 Niter = 10^5; % [-] number of iterations of the replicator equation
 Iavg = Niter; %100000; % [-] How many of the last time steps do we save?
-dtfact = 0.05; %Max percentage of change per time step
-P = Parameters();
+dtfact = 0.2; %Max percentage of change per time step
+sig = 0.3; %0.001; % Parameter used for the Gaussian filter
 reinit = 1; %Do we start from the last simulation or do we initialize strategy matrices?
 
-% Saved fitnesses for the last time steps
-FitC = zeros(1,Iavg); % [day^-1] 
-FitF = zeros(1,Iavg);
-FitA = zeros(1,Iavg);
-FitJ = zeros(1,Iavg);
-FitM = zeros(1,Iavg);
-FitB = zeros(1,Iavg);
-
-%Saved distributions for the last time steps
-MAday = zeros(P.n,Iavg); % [-]
-MAnight = MAday;
-MBday = MAday; MBnight = MAday;
-MCday = MAday; MCnight = MAday;
-MJday = MAday; MJnight = MAday;
-MMday = MAday; MMnight = MAday;
-MFday = MAday; MFnight = MAday;
+if reinit==1
+    P = Parameters();
+end
 
 %Coefficient to prevent extinction of strategies - and bugs in the OMZ
 coeff = 10^-7; % [-]
@@ -34,13 +21,30 @@ dB0 = coeff*P.B;
 
 %Initialization of the different strategy matrices
 if reinit==1
-    C = ones(P.n).*P.MaskC + dC0; C = C/sum(sum(C)); % [-] equal distribution at first - we can also use rand(n) to have random distribution
-    F = ones(P.n).*P.MaskF + dF0; F = F/sum(sum(F)); 
-    M = ones(P.n).*P.MaskM + dM0; M = M/sum(sum(M));
-    A = ones(P.n).*P.MaskA + dA0; A = A/sum(sum(A));
-    B = ones(P.n).*P.MaskB + dB0; B = B/sum(sum(B));
-    J = ones(P.n).*P.MaskJ + dJ0; J = J/sum(sum(J));
+    C = rand(P.n).*P.MaskC + dC0; C = C/sum(sum(C)); % [-] random distributions at first - we can also use ones(n) to have equal distribution
+    F = rand(P.n).*P.MaskF + dF0; F = F/sum(sum(F)); 
+    M = rand(P.n).*P.MaskM + dM0; M = M/sum(sum(M));
+    A = rand(P.n).*P.MaskA + dA0; A = A/sum(sum(A));
+    B = rand(P.n).*P.MaskB + dB0; B = B/sum(sum(B));
+    J = rand(P.n).*P.MaskJ + dJ0; J = J/sum(sum(J));
 end
+
+% Saved fitnesses for the last time steps
+FitC = zeros(1,Iavg); % [day^-1] 
+FitF = zeros(1,Iavg);
+FitA = zeros(1,Iavg);
+FitJ = zeros(1,Iavg);
+FitM = zeros(1,Iavg);
+FitB = zeros(1,Iavg);
+%Saved distributions for the last time steps
+MAday = zeros(P.n,Iavg); % [-]
+MAnight = MAday;
+MBday = MAday; MBnight = MAday;
+MCday = MAday; MCnight = MAday;
+MJday = MAday; MJnight = MAday;
+MMday = MAday; MMnight = MAday;
+MFday = MAday; MFnight = MAday;
+
 
 Cday = P.n*P.C*sum(C,2)'; % [gC m^-3] Average concentration in each layer during day for copepod
 Cnight = P.n*P.C*sum(C,1); % [gC m^-3] Average concentration in each layer during night
@@ -234,9 +238,16 @@ while notdone
     fitC = (IC - MortC - P.CC/P.wC - P.metC).*P.MaskC ;%- 0.2 ; % [day^-1]
     fitJ = (IJ - MortJ - P.CJ/P.wJ - P.metJ).*P.MaskJ ;%-0.1 ; % [day^-1]
     fitF = (IF - MortF - P.CF/P.wF - P.metF).*P.MaskF ;%-0.05; % [day^-1]
-    fitF(and(1-P.MaskF,1==1)) = -abs(min(min(fitF)));
+%     fitF(and(1-P.MaskF,1==1)) = -abs(min(min(fitF)));
     fitM = (IM - MortM - P.CM/P.wM - P.metM).*P.MaskM ;%-0.05; % [day^-1]
     fitB = (IB - MortB - P.CB/P.wB - P.metB).*P.MaskB ;%-0.03; % [day^-1]
+    
+    fitF = sign(fitF).*log10(1+abs(fitF.*P.MaskF)); % Transformation to make it flatter - just a try for now
+    fitA = sign(fitA).*log10(1+abs(fitA.*P.MaskA));
+    fitB = sign(fitB).*log10(1+abs(fitB.*P.MaskB));
+    fitC = sign(fitC).*log10(1+abs(fitC.*P.MaskC));
+    fitM = sign(fitM).*log10(1+abs(fitM.*P.MaskM));
+    fitJ = sign(fitJ).*log10(1+abs(fitJ.*P.MaskJ));
 
 %%% NOW IS THE REPLICATOR PART
     FAmax = max(max(fitA)); FAmin = min(min(fitA));
@@ -272,6 +283,31 @@ while notdone
     F(F<dF0) = dF0;
     
 %Renormalization
+    A = A/sum(sum(A)); % [-] Good matrices of strategies after each replicator time step
+    B = B/sum(sum(B));
+    C = C/sum(sum(C));
+    M = M/sum(sum(M));
+    J = J/sum(sum(J));
+    F = F/sum(sum(F));
+    
+    
+%Applying a Gaussian filter - tries
+    A = imgaussfilt(A,sig);
+    C = imgaussfilt(C,sig);
+    B = imgaussfilt(B,sig);
+    F = imgaussfilt(F,sig);
+    J = imgaussfilt(J,sig);
+    M = imgaussfilt(M,sig);
+    
+    %Removing the impossible places -- just a try for now
+    F(P.MaskF==0) = dF0;
+    A(P.MaskA==0) = dA0;
+    C(P.MaskC==0) = dC0;
+    J(P.MaskJ==0) = dJ0;
+    B(P.MaskB==0) = dB0;
+    M(P.MaskM==0) = dM0;
+
+    %Renormalization
     A = A/sum(sum(A)); % [-] Good matrices of strategies after each replicator time step
     B = B/sum(sum(B));
     C = C/sum(sum(C));
@@ -321,4 +357,6 @@ while notdone
      notdone = (i>0);
 end
 toc
+
+% save default_5_10-6it.mat -v7.3
 Plot_DVM;

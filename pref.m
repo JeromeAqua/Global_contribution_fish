@@ -5,7 +5,7 @@ if strcmp(predator,'copepod')
     if strcmp(prey,'phyto')
         out = 1;
     elseif strcmp(prey,'detritus')
-        out = 0;
+        out = 0.01;
     else
         out = NaN;
     end   
@@ -40,7 +40,7 @@ elseif strcmp(predator,'tactile')
     if strcmp(prey,'copepod')
         out = 1;
     elseif strcmp(prey,'meso')
-        out = 1;
+        out = 0;
     else
         out = NaN;
     end                
@@ -60,9 +60,9 @@ elseif strcmp(predator,'bathy')
     elseif strcmp(prey,'benthos')
         out = 1;
     elseif strcmp(prey,'copepod')
-        out = 0.5;
+        out = 0.0;
     elseif strcmp(prey,'meso')
-        out = 0.8;
+        out = 0.0;
     else
         out = NaN;
     end                 
