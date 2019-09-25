@@ -61,6 +61,8 @@ Jnight = P.n*P.J*sum(J,1); % [gC m^-3] Average concentration in each layer durin
 
 i = Niter;
 notdone = 1;
+
+mtry = P.sigma*repmat(P.LD'/P.LD(1),1,P.n)+(1-P.sigma)*repmat(P.LN/P.LN(1),P.n,1);
 tic
 while notdone
     i = i - 1;
@@ -178,56 +180,82 @@ while notdone
 
 %Mortality rates due to predation - we calculate the mortality rate imposed by all strategies (predators) at each depth before redistributing it equally among prey
 %Copepod
-    mCday = IFC1*P.n^2*P.F.*F/P.wF + IJC1*P.n^2*P.J.*J/P.wJ + IMC1*P.n^2*P.M.*M/P.wM + IBC1*P.n^2*P.B.*B/P.wB; % [gC m^-3 day^-1] size n*n How much each strategy eats copepods during daytime
-    mCD = (sum(mCday,2)./Cday')'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
+    mCday = (P.IDF.*P.EDF*pref('forage','copepod')./NF1*P.n^2*P.F.*F/P.wF +...
+             P.EDJ*pref('tactile','copepod')*P.n^2*P.J.*J/P.wJ + ...
+             P.IDM.*P.EDM*pref('meso','copepod')  ./NM1*P.n^2*P.M.*M/P.wM +...
+             P.IDB.*P.EDB*pref('bathy','copepod') ./NB1*P.n^2*P.B.*B/P.wB); % [gC m^-3 day^-1] size n*n How much each strategy eats copepods during daytime
+   
+    mCday(isnan(mCday)) = 0;
+         
+    mCD = sum(mCday,2)'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
     MortDa = repmat(mCD',1,P.n); % [day^-1] Mortality rate experienced by the different copepod strategies during daytime
 
-    mCnight = IFC0*P.n^2*P.F.*F/P.wF + IJC0*P.n^2*P.J.*J/P.wJ + IMC0*P.n^2*P.M.*M/P.wM + IBC0*P.n^2*P.B.*B/P.wB; % [gC m^-3 day^-1]
-    mCN = sum(mCnight,1)./Cnight; % [day^-1]
+    mCnight = (P.INF.*P.ENF*pref('forage','copepod')./NF0*P.n^2*P.F.*F/P.wF +...
+               P.ENJ*pref('tactile','copepod')*P.n^2*P.J.*J/P.wJ + ...
+               P.INM.*P.ENM*pref('meso','copepod') ./NM0*P.n^2*P.M.*M/P.wM + ...
+               P.INB.*P.ENB*pref('bathy','copepod') ./NB0*P.n^2*P.B.*B/P.wB); % [gC m^-3 day^-1]
+    
+    mCnight(isnan(mCnight)) = 0;
+    
+    mCN = sum(mCnight,1); % [day^-1]
     MortNi = repmat(mCN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
 
     MortC = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
 
 %Forage fish
-    mFday = IAF1*P.n^2*P.A.*A/P.wA; % [gC m^-3 day^-1] size n*n How much each strategy eats forage fish during daytime
-    mFD = (sum(mFday,2)./Fday')'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
+    mFday = (P.IDA.*P.EDA*pref('top','forage')./NA1*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1] size n*n How much each strategy eats forage fish during daytime
+    mFday(isnan(mFday)) = 0;
+    mFD = sum(mFday,2)'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
     MortDa = repmat(mFD',1,P.n); % [day^-1] Mortality rate experienced by the different forage fish strategies during daytime
 
-    mFnight = IAF0*P.n^2*P.A*A/P.wA; % [gC m^-3 day^-1]
-    mFN = sum(mFnight,1)./Fnight; % [day^-1]
+    mFnight = (P.INA.*P.ENA*pref('top','forage')./NA0*P.n^2*P.A*A/P.wA); % [gC m^-3 day^-1]
+    mFnight(isnan(mFnight)) = 0;
+    mFN = sum(mFnight,1); % [day^-1]
     MortNi = repmat(mFN,P.n,1); % [day^-1] Mortality rate experienced by the different forage fish strategies during nighttime
 
     MortF = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different forage fish strategies
 
 %Tactile predator
-    mJday = IAJ1*P.n^2*P.A.*A/P.wA; % [gC m^-3 day^-1] size n*n How much each strategy eats tactile pred during daytime
-    mJD = (sum(mJday,2)./Jday')'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
+    mJday = (P.IDA.*P.EDA*pref('top','tactile')./NA1*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1] size n*n How much each strategy eats tactile pred during daytime
+    mJday(isnan(mJday)) = 0;
+    mJD = sum(mJday,2)'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
     MortDa = repmat(mJD',1,P.n); % [day^-1] Mortality rate experienced by the different tactile pred strategies during daytime
 
-    mJnight = IAJ0*P.n^2*P.A*A/P.wA; % [gC m^-3 day^-1]
-    mJN = sum(mJnight,1)./Jnight; % [day^-1]
+    mJnight = (P.INA.*P.ENA*pref('top','tactile')./NA0*P.n^2*P.A*A/P.wA); % [gC m^-3 day^-1]
+    mJnight(isnan(mJnight)) = 0;
+    mJN = sum(mJnight,1); % [day^-1]
     MortNi = repmat(mJN,P.n,1); % [day^-1] Mortality rate experienced by the different tactile pred strategies during nighttime
 
     MortJ = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different tactile predator strategies
 
 %Mesopelagic fish
-    mMday = IFM1*P.n^2*P.F.*F/P.wF + IJM1*P.n^2*P.J.*J/P.wJ + IAM1*P.n^2*P.A.*A/P.wA + IBM1*P.n^2*P.B.*B/P.wB; % [gC m^-3 day^-1] size n*n How much each strategy eats mesopelagic during daytime
-    mMD = (sum(mMday,2)./Mday')'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
+    mMday = (P.IDF.*P.EDF*pref('forage','meso')./NF1*P.n^2*P.F.*F/P.wF +...
+             P.EDJ*pref('tactile','meso')*P.n^2*P.J.*J/P.wJ +...
+             P.IDA.*P.EDA*pref('top','meso')./NA1*P.n^2*P.A.*A/P.wA +...
+             P.IDB.*P.EDB*pref('bathy','meso')./NB1*P.n^2*P.B.*B/P.wB); %./repmat(Mday' ,1,P.n); % [gC m^-3 day^-1] size n*n How much each strategy eats mesopelagic during daytime
+    mMday(isnan(mMday)) = 0;
+    mMD = sum(mMday,2)'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
     MortDa = repmat(mMD',1,P.n); % [day^-1] Mortality rate experienced by the different mesopelagic fish strategies during daytime
 
-    mMnight = IFM0*P.n^2*P.F.*F/P.wF + IJM0*P.n^2*P.J.*J/P.wJ + IAM0*P.n^2*P.A.*A/P.wA + IBM0*P.n^2*P.B.*B/P.wB; % [gC m^-3 day^-1]
-    mMN = sum(mMnight,1)./Mnight; % [day^-1]
+    mMnight = (P.INF.*P.ENF*pref('forage','meso')./NF0*P.n^2*P.F.*F/P.wF +...
+               P.ENJ*pref('tactile','meso')*P.n^2*P.J.*J/P.wJ + ...
+               P.INA.*P.ENA*pref('top','meso')./NA0*P.n^2*P.A.*A/P.wA +...
+               P.INB.*P.ENB*pref('bathy','meso')./NB0*P.n^2*P.B.*B/P.wB); % [gC m^-3 day^-1]
+    mMnight(isnan(mMnight)) = 0;
+    mMN = sum(mMnight,1); % [day^-1]
     MortNi = repmat(mMN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
 
     MortM = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
 
 %Bathypelagic fish
-    mBday = IAB1*P.n^2*P.A.*A/P.wA; % [gC m^-3 day^-1] size n*n How much each strategy eats bathypelagic fish during daytime
-    mBD = (sum(mBday,2)./Bday')'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
+    mBday = (P.IDA.*P.EDA*pref('top','bathy')./NA1*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1] size n*n How much each strategy eats bathypelagic fish during daytime
+    mBday(isnan(mBday)) = 0;
+    mBD = sum(mBday,2)'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
     MortDa = repmat(mBD',1,P.n); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during daytime
 
-    mBnight = IAB0*P.n^2*P.A*A/P.wA; % [gC m^-3 day^-1]
-    mBN = sum(mBnight,1)./Bnight; % [day^-1]
+    mBnight = (P.INA.*P.ENA*pref('top','bathy')./NA0*P.n^2*P.A*A/P.wA); % [gC m^-3 day^-1]
+    mBnight(isnan(mBnight)) = 0;
+    mBN = sum(mBnight,1); % [day^-1]
     MortNi = repmat(mBN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
 
     MortB = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different bathypelagic fish strategies

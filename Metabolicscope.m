@@ -158,8 +158,11 @@ else
     MSD = MSD / max(max(MSD));
     MASK(or(MSN<0,MSD<0)) = 0;
     
+
 end
 
+    MSN(MSN<0) = 0;
+    MSD(MSD<0) = 0;
 SMRdepth = S(P.T); % [day^-1] Depth-dependent standard metabolic cost
 
 

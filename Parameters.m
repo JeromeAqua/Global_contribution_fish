@@ -17,12 +17,12 @@ P.LD = P.Lmax*exp(-P.klight*P.zi); % [W/m^2] Depth-dependent day light levels
 P.LN = P.rho*P.LD; % [W/m^2] Depth-dependent night light levels
 
 P.T  = 2+18*(1-tanh(max(0,(P.zi-100)/500))); % [degree C] temperature as a function of depth
-P.O2 = 3 + 5*(1-tanh(max(0,(P.zi-100)/150))) + P.zi*3/P.ZMAX; % [mgO2/L] Oxygen concentration in the water column
+P.O2 = 1 + 2*(1-tanh(max(0,(P.zi-100)/150))) + P.zi*3/P.ZMAX; % [mgO2/L] Oxygen concentration in the water column
 P.pO2 = min(21,P.O2./(0.381*exp(5.7018*(28-P.T)./(P.T+273.15)))/0.75); % [kPa] Partial pressure of oxygen in the water column
 
 P.z0 = 60; % [m] Mixed layer depth for the resources
 P.zm = 30; % [m] Sharpness of the transition to from the mixed layer to depleted layers
-P.R  = 0.01*(1-tanh((P.zi-P.z0)/P.zm))/2; % [gC / m3] Resource concentration
+P.R  = 0.01*exp(-(P.zi-80).^2/50^2); %0.01*(1-tanh((P.zi-P.z0)/P.zm))/2; % [gC / m3] Resource concentration
 P.D = 0.0000005*P.zi.^-0.86; % [gC / m^3] Detritus concentration - nothing eats it for now
 P.Benthos = 1*exp((P.zi-P.zi(end))/20); % [gC / m^3] Bottom resources
 
@@ -51,13 +51,13 @@ P.mC = 0.5; % [day^-1] MMR at P.TC XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 % P.MSNC = min(1,max(0,P.MSNC));%/max(max(P.MSNC)); % [-] same de-unitization
 
 %Forage fish
-P.F = 0.01; % [gC m^-3] Mean concentration in the water column
+P.F = 0.001; % [gC m^-3] Mean concentration in the water column
 P.lF = 0.27; % [m] Typical length for forage fish
 P.wF = 40; % [gC] Weight of a typical forage fish
 P.uF = speed(P.lF); % [m/day] Max forage fish speed
 P.TF = 14; % [ºC] Reference temperature for forage fish
 P.QF = 2; % [-] Q10 for forage fish
-P.RF = 10; % [m] Maximum visual range for forage fish
+P.RF = 0.5; % [m] Maximum visual range for forage fish
 P.KF = 0.1; % [W/m^2] Half-saturation constant for light for forage fish
 P.fF = 0.65; % [-] Assimilation efficiency for forage fish
 P.tF = 0.059; % [day^-1] SMR at P.TF XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -69,7 +69,7 @@ P.MaskF(:,P.zi>500) = 0; % Artificial stuff to prevent forage fish to go at dept
 P.MaskF(P.zi>500,:) = 0;
 
 %Top predator
-P.A = 0.0001; % [gC m^-3] Mean concentration in the water column
+P.A = 0.00001; % [gC m^-3] Mean concentration in the water column
 P.lA = 1.0; % [m] typical length for top predator
 P.wA = 1.108*10^4; % [gC] Weight of a typical top predator
 P.uA = speed(P.lA); % [m/day] Max top predator speed
@@ -113,7 +113,7 @@ P.wM = 0.12; % [gC] Weight of a typical mesopelagic fish
 P.uM = speed(P.lM); % [m/day] Max mesopelagic fish speed
 P.TM = 10; % [ºC] Reference temperature for mesopelagic fish
 P.QM = 2; % [-] Q10 for mesopelagic fish
-P.RM = 0.4; % [m] Maximum visual range for mesopelagic fish
+P.RM = 0.05; % [m] Maximum visual range for mesopelagic fish
 P.KM = 10^-6; % [W/m^2] Half-saturation constant for light for mesopelagic fish
 P.fM = 0.65; % [-] Assimilation efficiency for mesopelagic fish
 P.tM = 0.0126; % [day^-1] SMR at P.TM XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX

@@ -18,7 +18,7 @@ elseif strcmp(predator,'forage')
     elseif strcmp(prey,'copepod')
         out = 1;
     elseif strcmp(prey,'meso')
-        out = 0.5;
+        out = 0.1;
     else
         out = NaN;
     end  
@@ -62,7 +62,7 @@ elseif strcmp(predator,'bathy')
     elseif strcmp(prey,'copepod')
         out = 0.0;
     elseif strcmp(prey,'meso')
-        out = 0.0;
+        out = 0.8;
     else
         out = NaN;
     end                 
