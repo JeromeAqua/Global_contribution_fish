@@ -40,12 +40,15 @@ P.C = 0.01; % [gC m^-3] Mean concentration in the water column
 P.lC = 2.8*10^-3; % [m] Typical length for copepod
 P.wC = 4.53*10^-6; % [gC] Weight of a typical copepod
 P.uC = speed(P.lC); % [m/day] Max copepod speed
-P.TC = 15; % [ºC] Reference temperature for copepods
-P.QC = 2; % [-] Q10 for copepods
 P.RC = 2.86*10^-3; % [m] Sensing range for copepods
 P.fC = 0.7; % [-] Assimilation efficiency for copepods
-P.tC = 0.1; % [day^-1] SMR at P.TC XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  - to refine when we have proper values
-P.mC = 0.5; % [day^-1] MMR at P.TC XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+P.T0C = 15; % [ºC] Reference temperature for copepods
+P.TmC = 25; % [ºC] Maximum temperature for zooplankton before decline
+P.QC = 2; % [-] Q10 for copepods
+P.pminC = 12.6; % [kPa] Concentration until which organisms can maintain their metabolic rates
+P.tC = 0.0052*P.wC^-0.25; % [day^-1] SMR at P.TC  
+P.mC = 2*P.tC; % [day^-1] MMR at P.TC 
 [P.SMRC, P.MSNC, P.MSDC, P.MaskC] = Metabolicscope('copepod',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
 % P.MSDC = min(1,max(0,P.MSDC));%max(max(P.MSDC)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 % P.MSNC = min(1,max(0,P.MSNC));%/max(max(P.MSNC)); % [-] same de-unitization
@@ -55,13 +58,16 @@ P.F = 0.001; % [gC m^-3] Mean concentration in the water column
 P.lF = 0.27; % [m] Typical length for forage fish
 P.wF = 40; % [gC] Weight of a typical forage fish
 P.uF = speed(P.lF); % [m/day] Max forage fish speed
-P.TF = 14; % [ºC] Reference temperature for forage fish
-P.QF = 2; % [-] Q10 for forage fish
 P.RF = 0.5; % [m] Maximum visual range for forage fish
 P.KF = 0.1; % [W/m^2] Half-saturation constant for light for forage fish
 P.fF = 0.65; % [-] Assimilation efficiency for forage fish
-P.tF = 0.059; % [day^-1] SMR at P.TF XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-P.mF = 0.5; % [day^-1] MMR at P.TF XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+P.T0F = 15; % [ºC] Reference temperature for forage fish
+P.TmF = 20; % [ºC] Maximum temperature for forage fish before decline
+P.QF = 2; % [-] Q10 for forage fish
+P.pcritF = 4; % [kPa] Pcrit for forage fish - constant with temperature for now
+P.tF = 0.0014*P.wF^-0.25; % [day^-1] SMR at P.TF 
+P.mF = 2*P.tF; % [day^-1] MMR at P.TF 
 [P.SMRF, P.MSNF, P.MSDF, P.MaskF] = Metabolicscope('forage',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, metabolic scope during day, during night, and mask of available strategies
 % P.MSDF = min(1,max(0,P.MSDF));%/max(max(P.MSDF)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 % P.MSNF = min(1,max(0,P.MSNF));%/max(max(P.MSNF)); % [-] same de-unitization
@@ -69,39 +75,38 @@ P.MaskF(:,P.zi>500) = 0; % Artificial stuff to prevent forage fish to go at dept
 P.MaskF(P.zi>500,:) = 0;
 
 %Top predator
-P.A = 0.00001; % [gC m^-3] Mean concentration in the water column
+P.A = 0.001; % [gC m^-3] Mean concentration in the water column
 P.lA = 1.0; % [m] typical length for top predator
 P.wA = 1.108*10^4; % [gC] Weight of a typical top predator
 P.uA = speed(P.lA); % [m/day] Max top predator speed
-P.TA = 18; % [ºC] Reference temperature for top predator
-P.QA = 2; % [-] Q10 for top predator
 P.RA = 10;%5;%18; % [m] Maximum visual range for top predator
 P.KA = 10^-15; % [W/m^2] Half-saturation constant for light for top predator
 P.fA = 0.65; % [-] Assimilation efficiency for top predator
-P.tA = 0.0014; % [day^-1] SMR at P.TA XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-P.mA = 0.5; % [day^-1] MMR at P.TA XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+P.T0A = 18; % [ºC] Reference temperature for top predator
+P.TmA = 25; % [ºC] Maximum temperature for top predator before decline
+P.QA = 2; % [-] Q10 for top predator
+P.pcritA = 5; % [kPa] Pcrit for top predator - constant with temperature for now
+P.tA = 0.0014*P.wA^-0.25; % [day^-1] SMR at P.TA 
+P.mA = 2*P.tA; % [day^-1] MMR at P.TA 
 [P.SMRA, P.MSNA, P.MSDA, P.MaskA] = Metabolicscope('top',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
 % P.MSDA = min(1,max(0,P.MSDA));%/max(max(P.MSDA)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 % P.MSNA = min(1,max(0,P.MSNA));%/max(max(P.MSNA)); % [-] same de-unitization
 
-% %Creating the factors used for the roaming
-% P.Factor = zeros(P.n, P.n);
-% s = 66.66; % [m] Standard deviation of the roaming 200/3 because we have 100% of the roamin with +- 3 sigmas, so 3*66 = 200m
-% for kk = 1:P.n
-%     P.Factor(kk,:) = exp(-(P.zi-P.zi(kk)).^2/(2*s^2)) / sum(exp(-(P.zi-P.zi(kk)).^2/(2*s^2))); %The sum of lines is 1. Meaning we have to multiply each line with the concentrations
-% end
-
 %Tactile predator
-P.J = 0.000001; % [gC m^-3] Mean concentration in the water column
+P.J = 0.00001; % [gC m^-3] Mean concentration in the water column
 P.lJ = 0.20; % [m] Typical length for tactile predator
 P.wJ = 11.8; % [gC] Weight of a typical tactile predator
 P.uJ = speedT(P.lJ); % [m/day] Max tactile predator speed
-P.TJ = 10; % [ºC] Reference temperature for tactile predator
-P.QJ = 3; % [-] Q10 for jellyfish
 P.RJ = 0.2; % [m] Sensing range for tactile predator
 P.fJ = 0.39; % [-] Assimilation efficiency for tactile predator
-P.tJ = 0.02; % [day^-1] SMR at P.TJ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-P.mJ = 0.6; % [day^-1] MMR at P.TJ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+P.T0J = 10; % [ºC] Reference temperature for tactile predator
+P.TmJ = 18; % [ºC] Maximum temperature for tactile predator
+P.QJ = 3; % [-] Q10 for jellyfish
+P.pminJ = 10; % [kPa] O2 concentration until which organisms can maintain their metabolic rates
+P.tJ = 0.011*P.wJ^-0.25; % [day^-1] SMR at P.TJ 
+P.mJ = 2*P.tJ; % [day^-1] MMR at P.TJ 
 [P.SMRJ, P.MSNJ, P.MSDJ, P.MaskJ] = Metabolicscope('tactile',P); % [day^-1, day^-1, day^-1, -] Metabolic scope during day, during night, and mask of available strategies
 % P.MSDJ = min(1,max(0,P.MSDJ));%/max(max(P.MSDJ)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 % P.MSNJ = min(1,max(0,P.MSNJ));%/max(max(P.MSNJ)); % [-] same de-unitization
@@ -111,13 +116,16 @@ P.M = 0.01; % [gC m^-3] Mean concentration in the water column
 P.lM = 0.04; % [m] Typical length for mesopelagic fish
 P.wM = 0.12; % [gC] Weight of a typical mesopelagic fish
 P.uM = speed(P.lM); % [m/day] Max mesopelagic fish speed
-P.TM = 10; % [ºC] Reference temperature for mesopelagic fish
-P.QM = 2; % [-] Q10 for mesopelagic fish
 P.RM = 0.05; % [m] Maximum visual range for mesopelagic fish
 P.KM = 10^-6; % [W/m^2] Half-saturation constant for light for mesopelagic fish
 P.fM = 0.65; % [-] Assimilation efficiency for mesopelagic fish
-P.tM = 0.0126; % [day^-1] SMR at P.TM XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-P.mM = 0.4; % [day^-1] MMR at P.TM XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+P.T0M = 8; % [ºC] Reference temperature for mesopelagic fish
+P.TmM = 16; % [ºC] Maximum temperature for mesopelagic fish before decline
+P.QM = 2; % [-] Q10 for mesopelagic fish
+P.pcritM = 3; % [kPa] Pcrit for mesopelagic fish - constant with temperature for now
+P.tM = 0.0014*P.wM^-0.25; % [day^-1] SMR at P.T0M 
+P.mM = 2*P.tM; % [day^-1] MMR at P.T0M 
 [P.SMRM, P.MSNM, P.MSDM, P.MaskM] = Metabolicscope('meso',P); % [day^-1, day^-1, day^-1, -] epth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
 % P.MSDM = min(1,max(0,P.MSDM));%/max(max(P.MSDM)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 % P.MSNM = min(1,max(0,P.MSNM));%/max(max(P.MSNM)); % [-] same de-unitization
@@ -127,13 +135,16 @@ P.B = 0.001; % [gC m^-3] Mean concentration in the water column
 P.lB = 0.15; % [m] Typical length for bathypelagic fish
 P.wB = 6.41; % [gC] Weight of a typical bathypelagic fish
 P.uB = speed(P.lB); % [m/day] Max bathypelagic fish speed
-P.TB = 3; % [ºC] Reference temperature for bathypelagic fish
-P.QB = 2; % [-] Q10 for bathypelagic fish
 P.RB = 1.5; % [m] Maximum visual range for bathypelagic fish
 P.KB = 10^-18; % [W/m^2] Half-saturation constant for light for bathypelagic fish
 P.fB = 0.65; % [-] Assimilation efficiency for bathypelagic fish
-P.tB = 9.3e-4; % [day^-1] SMR at P.TB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-P.mB = 0.05; % [day^-1] MMR at P.TB XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+P.T0B = 6; % [ºC] Reference temperature for bathypelagic fish
+P.TmB = 7; % [ºC] Maximum temperature for bathypelagic fish before decline
+P.QB = 2; % [-] Q10 for bathypelagic fish
+P.pcritB = 4; % [kPa] Pcrit for bathypelagic fish - constant with temperature for now
+P.tB = 0.0014*P.wB^-0.25; % [day^-1] SMR at P.TB 
+P.mB = 2*P.tB; % [day^-1] MMR at P.TB 
 [P.SMRB, P.MSNB, P.MSDB, P.MaskB] = Metabolicscope('bathy',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
 % P.MSDB = min(1,max(0,P.MSDB));%/max(max(P.MSDB)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 % P.MSNB = min(1,max(0,P.MSNB));%/max(max(P.MSNB)); % [-] same de-unitization
