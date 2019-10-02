@@ -3,11 +3,13 @@
 Niter = 4*10^4; % [-] number of iterations of the replicator equation
 Iavg = Niter; %100000; % [-] How many of the last time steps do we save?
 dtfact = 0.2; %Max percentage of change per time step
-sig = 0.3; % Parameter used for the Gaussian filter
+sig = 0.3; % Parameter used for the Gaussian filter default = 0.3
 reinit = 1; %Do we start from the last simulation or do we initialize strategy matrices?
 
 if reinit==1
+    tic
     P = Parameters();
+    toc
 end
 
 %Coefficient to prevent extinction of strategies - and bugs in the OMZ
@@ -68,67 +70,67 @@ while notdone
     i = i - 1;
 
 %Denominators for ingestion rates calculations
-    NF1 = P.IDF + P.EDF.*(pref('forage','detritus')*repmat(P.D',1,P.n)+pref('forage','copepod')*repmat(Cday',1,P.n)+...
-                          pref('forage','benthos')*repmat(P.Benthos',1,P.n)+pref('forage','meso')*repmat(Mday',1,P.n)); % [gC day^-1] Denominator for ingestion function of forage fish during day
-    NF0 = P.INF + P.ENF.*(pref('forage','detritus')*repmat(P.D,P.n,1)+pref('forage','copepod')*repmat(Cnight,P.n,1)+...
-                          pref('forage','benthos')*repmat(P.Benthos,P.n,1)+pref('forage','meso')*repmat(Mnight,P.n,1)); % [gC day^-1] Denominator for the ingestion function
-    NA1 = P.IDA + P.EDA.*(pref('top','forage')*repmat(Fday',1,P.n)+pref('top','tactile')*repmat(Jday',1,P.n)+...
-                          pref('top','bathy')*repmat(Bday',1,P.n)+pref('top','meso')*repmat(Mday',1,P.n)); % [gC day^-1] Denominator for ingestion function of top predator during day
-    NA0 = P.INA + P.ENA.*(pref('top','forage')*repmat(Fnight,P.n,1)+pref('top','tactile')*repmat(Jnight,P.n,1)+...
-                          pref('top','bathy')*repmat(Bnight,P.n,1)+pref('top','meso')*repmat(Mnight,P.n,1)); % [gC day^-1] Denominator for the ingestion function           
-    NC1 = P.IDC + P.EDC.*(pref('copepod','phyto')*repmat(P.R',1,P.n)+pref('copepod','detritus')*repmat(P.D',1,P.n)); % [gC day^-1] Denominator for ingestion function of copepods during day
-    NC0 = P.INC + P.ENC.*(pref('copepod','phyto')*repmat(P.R,P.n,1)+pref('copepod','detritus')*repmat(P.D,P.n,1)); % [gC day^-1] Denominator for the ingestion function                   
+    NF1 = P.IDF + P.EDFd.*pref('forage','detritus').*repmat(P.D',1,P.n)     +P.EDFC.*pref('forage','copepod').*repmat(Cday',1,P.n)+...
+                  P.EDFb.*pref('forage','benthos').*repmat(P.Benthos',1,P.n)+P.EDFM.*pref('forage','meso').*repmat(Mday',1,P.n); % [gC day^-1] Denominator for ingestion function of forage fish during day
+    NF0 = P.INF + P.ENFd.*pref('forage','detritus').*repmat(P.D,P.n,1)      +P.ENFC.*pref('forage','copepod').*repmat(Cnight,P.n,1)+...
+                  P.ENFb.* pref('forage','benthos').*repmat(P.Benthos,P.n,1)+P.ENFM.*pref('forage','meso').*repmat(Mnight,P.n,1); % [gC day^-1] Denominator for the ingestion function
+    NA1 = P.IDA + P.EDAF.*pref('top','forage').*repmat(Fday',1,P.n)+P.EDAJ.*pref('top','tactile').*repmat(Jday',1,P.n)+...
+                  P.EDAB.*pref('top','bathy').*repmat(Bday',1,P.n) +P.EDAM.*pref('top','meso').*repmat(Mday',1,P.n); % [gC day^-1] Denominator for ingestion function of top predator during day
+    NA0 = P.INA + P.ENAF.*pref('top','forage').*repmat(Fnight,P.n,1)+P.ENAJ.*pref('top','tactile').*repmat(Jnight,P.n,1)+...
+                  P.ENAB.*pref('top','bathy').*repmat(Bnight,P.n,1)+P.ENAM.*pref('top','meso').*repmat(Mnight,P.n,1); % [gC day^-1] Denominator for the ingestion function           
+    NC1 = P.IDC + P.EDCp.*pref('copepod','phyto').*repmat(P.R',1,P.n)+P.EDCd.*pref('copepod','detritus').*repmat(P.D',1,P.n); % [gC day^-1] Denominator for ingestion function of copepods during day
+    NC0 = P.INC + P.ENCp.*pref('copepod','phyto').*repmat(P.R,P.n,1)+P.ENCd.*pref('copepod','detritus').*repmat(P.D,P.n,1); % [gC day^-1] Denominator for the ingestion function                   
     %J: No denominator because functional response type I
-    NM1 = P.IDM + P.EDM.*(pref('meso','detritus')*repmat(P.D',1,P.n)+pref('meso','copepod')*repmat(Cday',1,P.n)); % [gC day^-1] Denominator for ingestion function of mesopelagic during day
-    NM0 = P.INM + P.ENM.*(pref('meso','detritus')*repmat(P.D,P.n,1)+pref('meso','copepod')*repmat(Cnight,P.n,1)); % [gC day^-1] Denominator for the ingestion function                   
-    NB1 = P.IDB + P.EDB.*(pref('bathy','detritus')*repmat(P.D',1,P.n)+pref('bathy','benthos')*repmat(P.Benthos',1,P.n)+...
-                          pref('bathy','copepod')*repmat(Cday',1,P.n)+pref('bathy','meso')*repmat(Mday',1,P.n)); % [gC day^-1] Denominator for ingestion function of top predator during day
-    NB0 = P.INB + P.ENB.*(pref('bathy','detritus')*repmat(P.D,P.n,1)+pref('bathy','benthos')*repmat(P.Benthos,P.n,1)+...
-                          pref('bathy','copepod')*repmat(Cnight,P.n,1)+pref('bathy','meso')*repmat(Mnight,P.n,1)); % [gC day^-1] Denominator for the ingestion function  
+    NM1 = P.IDM + P.EDMd.*pref('meso','detritus').*repmat(P.D',1,P.n)+P.EDMC.*pref('meso','copepod').*repmat(Cday',1,P.n); % [gC day^-1] Denominator for ingestion function of mesopelagic during day
+    NM0 = P.INM + P.ENMd.*pref('meso','detritus').*repmat(P.D,P.n,1)+P.ENMC.*pref('meso','copepod').*repmat(Cnight,P.n,1); % [gC day^-1] Denominator for the ingestion function                   
+    NB1 = P.IDB + P.EDBd.*pref('bathy','detritus').*repmat(P.D',1,P.n)+P.EDBb.*pref('bathy','benthos').*repmat(P.Benthos',1,P.n)+...
+                  P.EDBC.*pref('bathy','copepod').*repmat(Cday',1,P.n)+P.EDBM.*pref('bathy','meso').*repmat(Mday',1,P.n); % [gC day^-1] Denominator for ingestion function of top predator during day
+    NB0 = P.INB + P.ENBd.*pref('bathy','detritus').*repmat(P.D,P.n,1)+P.ENBb.*pref('bathy','benthos').*repmat(P.Benthos,P.n,1)+...
+                  P.ENBC.*pref('bathy','copepod').*repmat(Cnight,P.n,1)+P.ENBM.*pref('bathy','meso').*repmat(Mnight,P.n,1); % [gC day^-1] Denominator for the ingestion function  
 
 
 %Ingestion rates
-    IFC1 = P.IDF.*P.EDF*pref('forage','copepod').* repmat(Cday' ,1,P.n)./NF1; % [gC day^-1] Ingestion rate of copepods during daytime by forage fish
-    IFC0 = P.INF.*P.ENF*pref('forage','copepod').* repmat(Cnight,P.n,1)./NF0;
-    IFD1 = P.IDF.*P.EDF*pref('forage','detritus').*repmat(P.D',1,P.n)  ./NF1;
-    IFD0 = P.INF.*P.ENF*pref('forage','detritus').*repmat(P.D ,P.n,1)  ./NF0;
-    IFb1 = P.IDF.*P.EDF*pref('forage','benthos') .*repmat(P.Benthos',1,P.n)./NF1; % [gC day^-1] small b to show that it is for benthos and not bathypelagic fish
-    IFb0 = P.INF.*P.ENF*pref('forage','benthos') .*repmat(P.Benthos, P.n,1)./NF0;
-    IFM1 = P.IDF.*P.EDF*pref('forage','meso')    .*repmat(Mday' ,1,P.n)./NF1;
-    IFM0 = P.INF.*P.ENF*pref('forage','meso')    .*repmat(Mnight,P.n,1)./NF0;
+    IFC1 = P.IDF.*P.EDFC*pref('forage','copepod').* repmat(Cday' ,1,P.n)./NF1; % [gC day^-1] Ingestion rate of copepods during daytime by forage fish
+    IFC0 = P.INF.*P.ENFC*pref('forage','copepod').* repmat(Cnight,P.n,1)./NF0;
+    IFD1 = P.IDF.*P.EDFd*pref('forage','detritus').*repmat(P.D',1,P.n)  ./NF1;
+    IFD0 = P.INF.*P.ENFd*pref('forage','detritus').*repmat(P.D ,P.n,1)  ./NF0;
+    IFb1 = P.IDF.*P.EDFb*pref('forage','benthos') .*repmat(P.Benthos',1,P.n)./NF1; % [gC day^-1] small b to show that it is for benthos and not bathypelagic fish
+    IFb0 = P.INF.*P.ENFb*pref('forage','benthos') .*repmat(P.Benthos, P.n,1)./NF0;
+    IFM1 = P.IDF.*P.EDFM*pref('forage','meso')    .*repmat(Mday' ,1,P.n)./NF1;
+    IFM0 = P.INF.*P.ENFM*pref('forage','meso')    .*repmat(Mnight,P.n,1)./NF0;
 
-    IAF1 = P.IDA.*P.EDA*pref('top','forage').* repmat(Fday' ,1,P.n)./NA1; % [gC day^-1] Ingestion rate of forage fish during daytime by top predators
-    IAF0 = P.INA.*P.ENA*pref('top','forage').* repmat(Fnight,P.n,1)./NA0;
-    IAJ1 = P.IDA.*P.EDA*pref('top','tactile').*repmat(Jday',1,P.n)  ./NA1;
-    IAJ0 = P.INA.*P.ENA*pref('top','tactile').*repmat(Jnight ,P.n,1)  ./NA0;
-    IAM1 = P.IDA.*P.EDA*pref('top','meso') .*repmat(Mday',1,P.n)./NA1; % [gC day^-1]
-    IAM0 = P.INA.*P.ENA*pref('top','meso') .*repmat(Mnight, P.n,1)./NA0;
-    IAB1 = P.IDA.*P.EDA*pref('top','bathy')    .*repmat(Bday' ,1,P.n)./NA1;
-    IAB0 = P.INA.*P.ENA*pref('top','bathy')    .*repmat(Bnight,P.n,1)./NA0;
+    IAF1 = P.IDA.*P.EDAF*pref('top','forage').* repmat(Fday' ,1,P.n)./NA1; % [gC day^-1] Ingestion rate of forage fish during daytime by top predators
+    IAF0 = P.INA.*P.ENAF*pref('top','forage').* repmat(Fnight,P.n,1)./NA0;
+    IAJ1 = P.IDA.*P.EDAJ*pref('top','tactile').*repmat(Jday',1,P.n)  ./NA1;
+    IAJ0 = P.INA.*P.ENAJ*pref('top','tactile').*repmat(Jnight ,P.n,1)  ./NA0;
+    IAM1 = P.IDA.*P.EDAM*pref('top','meso') .*repmat(Mday',1,P.n)./NA1; % [gC day^-1]
+    IAM0 = P.INA.*P.ENAM*pref('top','meso') .*repmat(Mnight, P.n,1)./NA0;
+    IAB1 = P.IDA.*P.EDAB*pref('top','bathy')    .*repmat(Bday' ,1,P.n)./NA1;
+    IAB0 = P.INA.*P.ENAB*pref('top','bathy')    .*repmat(Bnight,P.n,1)./NA0;
 
-    ICR1 = P.IDC.*P.EDC*pref('copepod','phyto') .*repmat(P.R',1,P.n)./NC1; % [gC day^-1] Ingestion rate of phytoplankton during daytime by copepods
-    ICR0 = P.INC.*P.ENC*pref('copepod','phyto') .*repmat(P.R, P.n,1)./NC0;
-    ICD1 = P.IDC.*P.EDC*pref('copepod','detritus').*repmat(P.D',1,P.n)  ./NC1;
-    ICD0 = P.INC.*P.ENC*pref('copepod','detritus').*repmat(P.D ,P.n,1)  ./NC0;
+    ICR1 = P.IDC.*P.EDCp*pref('copepod','phyto') .*repmat(P.R',1,P.n)./NC1; % [gC day^-1] Ingestion rate of phytoplankton during daytime by copepods
+    ICR0 = P.INC.*P.ENCp*pref('copepod','phyto') .*repmat(P.R, P.n,1)./NC0;
+    ICD1 = P.IDC.*P.EDCd*pref('copepod','detritus').*repmat(P.D',1,P.n)  ./NC1;
+    ICD0 = P.INC.*P.ENCd*pref('copepod','detritus').*repmat(P.D ,P.n,1)  ./NC0;
 
-    IJC1 = P.EDJ*pref('tactile','copepod').*repmat(Cday',1,P.n); % [gC day^-1] Ingestion rate of copepods during daytime by tactile predators - note the Type I functional response
-    IJC0 = P.ENJ*pref('tactile','copepod').*repmat(Cnight,P.n,1);
-    IJM1 = P.EDJ*pref('tactile','meso').*repmat(Mday',1,P.n);
-    IJM0 = P.ENJ*pref('tactile','meso').*repmat(Mnight,P.n,1);
+    IJC1 = P.EDJC*pref('tactile','copepod').*repmat(Cday',1,P.n); % [gC day^-1] Ingestion rate of copepods during daytime by tactile predators - note the Type I functional response
+    IJC0 = P.ENJC*pref('tactile','copepod').*repmat(Cnight,P.n,1);
+    IJM1 = P.EDJM*pref('tactile','meso').*repmat(Mday',1,P.n);
+    IJM0 = P.ENJM*pref('tactile','meso').*repmat(Mnight,P.n,1);
 
-    IMC1 = P.IDM.*P.EDM*pref('meso','copepod') .*repmat(Cday',1,P.n)./NM1; % [gC day^-1] Ingestion rate of copepods during daytime by mesopelagic fish
-    IMC0 = P.INM.*P.ENM*pref('meso','copepod') .*repmat(Cnight, P.n,1)./NM0;
-    IMD1 = P.IDM.*P.EDM*pref('meso','detritus').*repmat(P.D',1,P.n)  ./NM1; 
-    IMD0 = P.INM.*P.ENM*pref('meso','detritus').*repmat(P.D ,P.n,1)  ./NM0; 
+    IMC1 = P.IDM.*P.EDMC*pref('meso','copepod') .*repmat(Cday',1,P.n)./NM1; % [gC day^-1] Ingestion rate of copepods during daytime by mesopelagic fish
+    IMC0 = P.INM.*P.ENMC*pref('meso','copepod') .*repmat(Cnight, P.n,1)./NM0;
+    IMD1 = P.IDM.*P.EDMd*pref('meso','detritus').*repmat(P.D',1,P.n)  ./NM1; 
+    IMD0 = P.INM.*P.ENMd*pref('meso','detritus').*repmat(P.D ,P.n,1)  ./NM0; 
 
-    IBD1 = P.IDB.*P.EDB*pref('bathy','detritus').* repmat(P.D' ,1,P.n)./NB1; % [gC day^-1] Ingestion rate of forage fish during daytime by top predators
-    IBD0 = P.INB.*P.ENB*pref('bathy','detritus').* repmat(P.D,P.n,1)./NB0;
-    IBb1 = P.IDB.*P.EDB*pref('bathy','benthos').*repmat(P.Benthos',1,P.n)  ./NB1;
-    IBb0 = P.INB.*P.ENB*pref('bathy','benthos').*repmat(P.Benthos ,P.n,1)  ./NB0;
-    IBC1 = P.IDB.*P.EDB*pref('bathy','copepod') .*repmat(Cday',1,P.n)./NB1; % [gC day^-1]
-    IBC0 = P.INB.*P.ENB*pref('bathy','copepod') .*repmat(Cnight, P.n,1)./NB0;
-    IBM1 = P.IDB.*P.EDB*pref('bathy','meso')    .*repmat(Mday' ,1,P.n)./NB1;
-    IBM0 = P.INB.*P.ENB*pref('bathy','meso')    .*repmat(Mnight,P.n,1)./NB0;
+    IBD1 = P.IDB.*P.EDBd*pref('bathy','detritus').* repmat(P.D' ,1,P.n)./NB1; % [gC day^-1] Ingestion rate of forage fish during daytime by top predators
+    IBD0 = P.INB.*P.ENBd*pref('bathy','detritus').* repmat(P.D,P.n,1)./NB0;
+    IBb1 = P.IDB.*P.EDBb*pref('bathy','benthos').*repmat(P.Benthos',1,P.n)  ./NB1;
+    IBb0 = P.INB.*P.ENBb*pref('bathy','benthos').*repmat(P.Benthos ,P.n,1)  ./NB0;
+    IBC1 = P.IDB.*P.EDBC*pref('bathy','copepod') .*repmat(Cday',1,P.n)./NB1; % [gC day^-1]
+    IBC0 = P.INB.*P.ENBC*pref('bathy','copepod') .*repmat(Cnight, P.n,1)./NB0;
+    IBM1 = P.IDB.*P.EDBM*pref('bathy','meso')    .*repmat(Mday' ,1,P.n)./NB1;
+    IBM0 = P.INB.*P.ENBM*pref('bathy','meso')    .*repmat(Mnight,P.n,1)./NB0;
     
     
 %Remove all the NaN of ingestion rates when they do not feed at all
@@ -180,20 +182,20 @@ while notdone
 
 %Mortality rates due to predation - we calculate the mortality rate imposed by all strategies (predators) at each depth before redistributing it equally among prey
 %Copepod
-    mCday = (P.IDF.*P.EDF*pref('forage','copepod')./NF1*P.n^2*P.F.*F/P.wF +...
-             P.EDJ*pref('tactile','copepod')*P.n^2*P.J.*J/P.wJ + ...
-             P.IDM.*P.EDM*pref('meso','copepod')  ./NM1*P.n^2*P.M.*M/P.wM +...
-             P.IDB.*P.EDB*pref('bathy','copepod') ./NB1*P.n^2*P.B.*B/P.wB); % [gC m^-3 day^-1] size n*n How much each strategy eats copepods during daytime
+    mCday = (P.IDF.*P.EDFC*pref('forage','copepod')./NF1*P.n^2*P.F.*F/P.wF +...
+             P.EDJC*pref('tactile','copepod')*P.n^2*P.J.*J/P.wJ + ...
+             P.IDM.*P.EDMC*pref('meso','copepod')  ./NM1*P.n^2*P.M.*M/P.wM +...
+             P.IDB.*P.EDBC*pref('bathy','copepod') ./NB1*P.n^2*P.B.*B/P.wB); % [gC m^-3 day^-1] size n*n How much each strategy eats copepods during daytime
    
     mCday(isnan(mCday)) = 0;
          
     mCD = sum(mCday,2)'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
     MortDa = repmat(mCD',1,P.n); % [day^-1] Mortality rate experienced by the different copepod strategies during daytime
 
-    mCnight = (P.INF.*P.ENF*pref('forage','copepod')./NF0*P.n^2*P.F.*F/P.wF +...
-               P.ENJ*pref('tactile','copepod')*P.n^2*P.J.*J/P.wJ + ...
-               P.INM.*P.ENM*pref('meso','copepod') ./NM0*P.n^2*P.M.*M/P.wM + ...
-               P.INB.*P.ENB*pref('bathy','copepod') ./NB0*P.n^2*P.B.*B/P.wB); % [gC m^-3 day^-1]
+    mCnight = (P.INF.*P.ENFC*pref('forage','copepod')./NF0*P.n^2*P.F.*F/P.wF +...
+               P.ENJC*pref('tactile','copepod')*P.n^2*P.J.*J/P.wJ + ...
+               P.INM.*P.ENMC*pref('meso','copepod') ./NM0*P.n^2*P.M.*M/P.wM + ...
+               P.INB.*P.ENBC*pref('bathy','copepod') ./NB0*P.n^2*P.B.*B/P.wB); % [gC m^-3 day^-1]
     
     mCnight(isnan(mCnight)) = 0;
     
@@ -203,12 +205,12 @@ while notdone
     MortC = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
 
 %Forage fish
-    mFday = (P.IDA.*P.EDA*pref('top','forage')./NA1*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1] size n*n How much each strategy eats forage fish during daytime
+    mFday = (P.IDA.*P.EDAF*pref('top','forage')./NA1*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1] size n*n How much each strategy eats forage fish during daytime
     mFday(isnan(mFday)) = 0;
     mFD = sum(mFday,2)'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
     MortDa = repmat(mFD',1,P.n); % [day^-1] Mortality rate experienced by the different forage fish strategies during daytime
 
-    mFnight = (P.INA.*P.ENA*pref('top','forage')./NA0*P.n^2*P.A*A/P.wA); % [gC m^-3 day^-1]
+    mFnight = (P.INA.*P.ENAF*pref('top','forage')./NA0*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1]
     mFnight(isnan(mFnight)) = 0;
     mFN = sum(mFnight,1); % [day^-1]
     MortNi = repmat(mFN,P.n,1); % [day^-1] Mortality rate experienced by the different forage fish strategies during nighttime
@@ -216,12 +218,12 @@ while notdone
     MortF = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different forage fish strategies
 
 %Tactile predator
-    mJday = (P.IDA.*P.EDA*pref('top','tactile')./NA1*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1] size n*n How much each strategy eats tactile pred during daytime
+    mJday = (P.IDA.*P.EDAJ*pref('top','tactile')./NA1*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1] size n*n How much each strategy eats tactile pred during daytime
     mJday(isnan(mJday)) = 0;
     mJD = sum(mJday,2)'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
     MortDa = repmat(mJD',1,P.n); % [day^-1] Mortality rate experienced by the different tactile pred strategies during daytime
 
-    mJnight = (P.INA.*P.ENA*pref('top','tactile')./NA0*P.n^2*P.A*A/P.wA); % [gC m^-3 day^-1]
+    mJnight = (P.INA.*P.ENAJ*pref('top','tactile')./NA0*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1]
     mJnight(isnan(mJnight)) = 0;
     mJN = sum(mJnight,1); % [day^-1]
     MortNi = repmat(mJN,P.n,1); % [day^-1] Mortality rate experienced by the different tactile pred strategies during nighttime
@@ -229,18 +231,18 @@ while notdone
     MortJ = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different tactile predator strategies
 
 %Mesopelagic fish
-    mMday = (P.IDF.*P.EDF*pref('forage','meso')./NF1*P.n^2*P.F.*F/P.wF +...
-             P.EDJ*pref('tactile','meso')*P.n^2*P.J.*J/P.wJ +...
-             P.IDA.*P.EDA*pref('top','meso')./NA1*P.n^2*P.A.*A/P.wA +...
-             P.IDB.*P.EDB*pref('bathy','meso')./NB1*P.n^2*P.B.*B/P.wB); %./repmat(Mday' ,1,P.n); % [gC m^-3 day^-1] size n*n How much each strategy eats mesopelagic during daytime
+    mMday = (P.IDF.*P.EDFM*pref('forage','meso')./NF1*P.n^2*P.F.*F/P.wF +...
+             P.EDJM*pref('tactile','meso')*P.n^2*P.J.*J/P.wJ +...
+             P.IDA.*P.EDAM*pref('top','meso')./NA1*P.n^2*P.A.*A/P.wA +...
+             P.IDB.*P.EDBM*pref('bathy','meso')./NB1*P.n^2*P.B.*B/P.wB); %./repmat(Mday' ,1,P.n); % [gC m^-3 day^-1] size n*n How much each strategy eats mesopelagic during daytime
     mMday(isnan(mMday)) = 0;
     mMD = sum(mMday,2)'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
     MortDa = repmat(mMD',1,P.n); % [day^-1] Mortality rate experienced by the different mesopelagic fish strategies during daytime
 
-    mMnight = (P.INF.*P.ENF*pref('forage','meso')./NF0*P.n^2*P.F.*F/P.wF +...
-               P.ENJ*pref('tactile','meso')*P.n^2*P.J.*J/P.wJ + ...
-               P.INA.*P.ENA*pref('top','meso')./NA0*P.n^2*P.A.*A/P.wA +...
-               P.INB.*P.ENB*pref('bathy','meso')./NB0*P.n^2*P.B.*B/P.wB); % [gC m^-3 day^-1]
+    mMnight = (P.INF.*P.ENFM*pref('forage','meso')./NF0*P.n^2*P.F.*F/P.wF +...
+               P.ENJM*pref('tactile','meso')*P.n^2*P.J.*J/P.wJ + ...
+               P.INA.*P.ENAM*pref('top','meso')./NA0*P.n^2*P.A.*A/P.wA +...
+               P.INB.*P.ENBM*pref('bathy','meso')./NB0*P.n^2*P.B.*B/P.wB); % [gC m^-3 day^-1]
     mMnight(isnan(mMnight)) = 0;
     mMN = sum(mMnight,1); % [day^-1]
     MortNi = repmat(mMN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
@@ -248,12 +250,12 @@ while notdone
     MortM = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
 
 %Bathypelagic fish
-    mBday = (P.IDA.*P.EDA*pref('top','bathy')./NA1*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1] size n*n How much each strategy eats bathypelagic fish during daytime
+    mBday = (P.IDA.*P.EDAM*pref('top','bathy')./NA1*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1] size n*n How much each strategy eats bathypelagic fish during daytime
     mBday(isnan(mBday)) = 0;
     mBD = sum(mBday,2)'; % [day^-1] size 1*n What is the mortality rate experienced at each depth during day
     MortDa = repmat(mBD',1,P.n); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during daytime
 
-    mBnight = (P.INA.*P.ENA*pref('top','bathy')./NA0*P.n^2*P.A*A/P.wA); % [gC m^-3 day^-1]
+    mBnight = (P.INA.*P.ENAM*pref('top','bathy')./NA0*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1]
     mBnight(isnan(mBnight)) = 0;
     mBN = sum(mBnight,1); % [day^-1]
     MortNi = repmat(mBN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
@@ -262,7 +264,7 @@ while notdone
 
 
 %Fitnesses
-    fitA = (IA - 0 - P.CA/P.wA - P.metA - 1*((P.sigma*Aday'+(1-P.sigma)*Anight)/(P.n*P.A)).^2).*P.MaskA; % [day^-1] Fitness of top predator - Frequency-dependent mortality rate
+    fitA = (IA - 0 - P.CA/P.wA - P.metA - 0.01*((P.sigma*Aday'+(1-P.sigma)*Anight)/(P.n*P.A)).^2).*P.MaskA; % [day^-1] Fitness of top predator - Frequency-dependent mortality rate
     fitC = (IC - MortC - P.CC/P.wC - P.metC).*P.MaskC ;%- 0.2 ; % [day^-1]
     fitJ = (IJ - MortJ - P.CJ/P.wJ - P.metJ).*P.MaskJ ;%-0.1 ; % [day^-1]
     fitF = (IF - MortF - P.CF/P.wF - P.metF).*P.MaskF ;%-0.05; % [day^-1]

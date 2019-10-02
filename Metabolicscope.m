@@ -8,8 +8,7 @@ Cw = 0:0.01:21; % [kPa] Oxygen partial pressure in the water
 
 
 if strcmp(player,'copepod')
-    
-   
+       
 S = @(t,o) P.tC*P.QC.^((t-P.T0C)/10).*min(1,o/P.pminC); % standard metabolic rate
 MMRmax = @(t) min(P.mC*P.QC.^((t-P.T0C)/10), P.mC*P.QC.^((P.TmC-P.T0C)/10)) ; % [day^-1] higher bound of maximum metabolic rate at each T
 M = @(t,o) min(1,o/P.pminC).*MMRmax(t);
