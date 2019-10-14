@@ -110,17 +110,14 @@ else
     %if it's a fish there cannot be an oxygen debt - so if one of the metabolic scopes is negative the strategy is not viable
     MSN = repmat(ms,P.n,1); % [day^-1] Metabolic scope during night
     MSD = repmat(ms',1,P.n); % [day^-1] Metabolic scope during day
-    MSN = MSN / max(max(MSN)); %we normalize it by the metabolic cost at the reference temperature and O2 conditions (02 = surface) so that the max is at the good place 
-    MSD = MSD / max(max(MSD));
+    MSN = MSN / max(10^-10,(max(max(MSN)))); %we normalize it by the metabolic cost at the reference temperature and O2 conditions (02 = surface) so that the max is at the good place 
+    MSD = MSD / max(10^-10,(max(max(MSD))));
     MASK(or(MSN<0,MSD<0)) = 0;
     SMRdepth = S(P.T); % [day^-1] Depth-dependent standard metabolic cost
-    
 
 end
 
     MSN(MSN<0) = 0;
     MSD(MSD<0) = 0;
     
-
-
 end

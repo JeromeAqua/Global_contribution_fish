@@ -1,5 +1,5 @@
-t = 0:0.1:25; % [degree C] temperature
-Cw = 0:0.1:21; % [kPa] Oxygen partial pressure in the water
+t = 0:0.5:25; % [degree C] temperature
+Cw = 0:0.5:21; % [kPa] Oxygen partial pressure in the water
 [O,T] = meshgrid(Cw,t); % [kPa - degree C] Mesh with the values of both points at each node
 
 

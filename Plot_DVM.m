@@ -75,32 +75,32 @@ figure
 subplot(231)
 plot_rescaling(CCday,CCnight,P)
 title('Copepods')
-yticks([0 100 200 300 400 500 1000])
+% yticks([0 100 200 300 400 500 1000])
 
 subplot(232)
 plot_rescaling(FFday, FFnight, P)
 title('Forage fish')
-yticks([0 100 200 300 400 500 1000])
+% yticks([0 100 200 300 400 500 1000])
 
 subplot(233)
 plot_rescaling(mmday,mmnight,P)
 title('Mesopelagic')
-yticks([0 100 200 300 400 500 1000])
+% yticks([0 100 200 300 400 500 1000])
 
 subplot(234)
 plot_rescaling(JJday,JJnight,P)
 title('Jellies')
-yticks([0 100 200 300 400 500 1000])
+% yticks([0 100 200 300 400 500 1000])
 
 subplot(235)
 plot_rescaling(AAday, AAnight, P)
 title('Top predators')
-yticks([0 100 200 300 400 500 1000])
+% yticks([0 100 200 300 400 500 1000])
 
 subplot(236)
 plot_rescaling(BBday, BBnight, P)
 title('Bathypelagic')
-yticks([0 100 200 300 400 500 1000])
+% yticks([0 100 200 300 400 500 1000])
 
 
 
@@ -122,7 +122,8 @@ function OUT = plot_rescaling(DAY,NIGHT,P)
     xticklabels({'Night','Day'})
     xlim([-1 1])
     
-    plot([0 0], [0 1000], 'k') % 0line at the middle
+    plot([0 0], [0 P.ZMAX], 'k') % 0line at the middle
+    ylim([0 P.ZMAX])
 end
 
 

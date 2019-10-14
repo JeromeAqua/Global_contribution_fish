@@ -1,6 +1,6 @@
 %Replicator code
 %global C F J M A B %the global variables are the proportions of each population using each strategy
-Niter = 4*10^4; % [-] number of iterations of the replicator equation
+Niter = 5*10^4; % [-] number of iterations of the replicator equation
 Iavg = Niter; %100000; % [-] How many of the last time steps do we save?
 dtfact = 0.2; %Max percentage of change per time step
 sig = 0.3; % Parameter used for the Gaussian filter default = 0.3
@@ -8,18 +8,18 @@ reinit = 1; %Do we start from the last simulation or do we initialize strategy m
 
 if reinit==1
     tic
-    P = Parameters();
+    P = Parameters3();
     toc
 end
 
 %Coefficient to prevent extinction of strategies - and bugs in the OMZ
-coeff = 10^-15;%10^-6; % [-] 10^-5
-dC0 = coeff; %coeff*P.C; % [gC m^-3] Minimum concentration of organisms in a strategy
-dF0 = coeff; %coeff*P.F;
-dJ0 = coeff; %coeff*P.J;
-dA0 = coeff; %coeff*P.A;
-dM0 = coeff; %coeff*P.M;
-dB0 = coeff; %coeff*P.B;
+coeff = 10^-10;%10^-6; % [-] 10^-5
+dC0 = coeff*P.C; % [gC m^-3] Minimum concentration of organisms in a strategy
+dF0 = coeff*P.F;
+dJ0 = coeff*P.J;
+dA0 = coeff*P.A;
+dM0 = coeff*P.M;
+dB0 = coeff*P.B;
 
 %Initialization of the different strategy matrices
 if reinit==1
@@ -272,12 +272,12 @@ while notdone
     fitM = (IM - MortM - P.CM/P.wM - P.metM).*P.MaskM ;%-0.05; % [day^-1]
     fitB = (IB - MortB - P.CB/P.wB - P.metB).*P.MaskB ;%-0.03; % [day^-1]
     
-    fitF = sign(fitF).*log10(1+abs(fitF.*P.MaskF)); % Transformation to make it flatter - just a try for now
-    fitA = sign(fitA).*log10(1+abs(fitA.*P.MaskA));
-    fitB = sign(fitB).*log10(1+abs(fitB.*P.MaskB));
-    fitC = sign(fitC).*log10(1+abs(fitC.*P.MaskC));
-    fitM = sign(fitM).*log10(1+abs(fitM.*P.MaskM));
-    fitJ = sign(fitJ).*log10(1+abs(fitJ.*P.MaskJ));
+%     fitF = sign(fitF).*log10(1+abs(fitF.*P.MaskF)); % Transformation to make it flatter - just a try for now
+%     fitA = sign(fitA).*log10(1+abs(fitA.*P.MaskA));
+%     fitB = sign(fitB).*log10(1+abs(fitB.*P.MaskB));
+%     fitC = sign(fitC).*log10(1+abs(fitC.*P.MaskC));
+%     fitM = sign(fitM).*log10(1+abs(fitM.*P.MaskM));
+%     fitJ = sign(fitJ).*log10(1+abs(fitJ.*P.MaskJ));
 
 %%% NOW IS THE REPLICATOR PART
     FAmax = max(max(fitA)); FAmin = min(min(fitA));
