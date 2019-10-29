@@ -2,9 +2,11 @@
 %global C F J M A B %the global variables are the proportions of each population using each strategy
 Niter = 5*10^4; % [-] number of iterations of the replicator equation
 Iavg = Niter; %100000; % [-] How many of the last time steps do we save?
-dtfact = 0.2; %Max percentage of change per time step
-sig = 0.3; % Parameter used for the Gaussian filter default = 0.3
+dtfact = 0.05; %Max percentage of change per time step
+sig = 0.25; % Parameter used for the Gaussian filter default = 0.3
 reinit = 1; %Do we start from the last simulation or do we initialize strategy matrices?
+
+minimort = 0;
 
 if reinit==1
     tic
@@ -26,7 +28,7 @@ if reinit==1
     C = rand(P.n).*P.MaskC + dC0; C = C/sum(sum(C)); % [-] random distributions at first - we can also use ones(n) to have equal distribution
     F = rand(P.n).*P.MaskF + dF0; F = F/sum(sum(F)); 
     M = rand(P.n).*P.MaskM + dM0; M = M/sum(sum(M));
-    A = rand(P.n).*P.MaskA + dA0; A = A/sum(sum(A));
+    A = ones(P.n).*P.MaskA + dA0; A = A/sum(sum(A));
     B = rand(P.n).*P.MaskB + dB0; B = B/sum(sum(B));
     J = rand(P.n).*P.MaskJ + dJ0; J = J/sum(sum(J));
 end
@@ -202,7 +204,7 @@ while notdone
     mCN = sum(mCnight,1); % [day^-1]
     MortNi = repmat(mCN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
 
-    MortC = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
+    MortC = minimort+ P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
 
 %Forage fish
     mFday = (P.IDA.*P.EDAF*pref('top','forage')./NA1*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1] size n*n How much each strategy eats forage fish during daytime
@@ -215,7 +217,7 @@ while notdone
     mFN = sum(mFnight,1); % [day^-1]
     MortNi = repmat(mFN,P.n,1); % [day^-1] Mortality rate experienced by the different forage fish strategies during nighttime
 
-    MortF = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different forage fish strategies
+    MortF = minimort + P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different forage fish strategies
 
 %Tactile predator
     mJday = (P.IDA.*P.EDAJ*pref('top','tactile')./NA1*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1] size n*n How much each strategy eats tactile pred during daytime
@@ -228,7 +230,7 @@ while notdone
     mJN = sum(mJnight,1); % [day^-1]
     MortNi = repmat(mJN,P.n,1); % [day^-1] Mortality rate experienced by the different tactile pred strategies during nighttime
 
-    MortJ = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different tactile predator strategies
+    MortJ = minimort + P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different tactile predator strategies
 
 %Mesopelagic fish
     mMday = (P.IDF.*P.EDFM*pref('forage','meso')./NF1*P.n^2*P.F.*F/P.wF +...
@@ -247,7 +249,7 @@ while notdone
     mMN = sum(mMnight,1); % [day^-1]
     MortNi = repmat(mMN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
 
-    MortM = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
+    MortM = minimort+ P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
 
 %Bathypelagic fish
     mBday = (P.IDA.*P.EDAM*pref('top','bathy')./NA1*P.n^2*P.A.*A/P.wA); % [gC m^-3 day^-1] size n*n How much each strategy eats bathypelagic fish during daytime
@@ -260,18 +262,17 @@ while notdone
     mBN = sum(mBnight,1); % [day^-1]
     MortNi = repmat(mBN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
 
-    MortB = P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different bathypelagic fish strategies
+    MortB = minimort + P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different bathypelagic fish strategies
 
 
 %Fitnesses
-    fitA = (IA - 0 - P.CA/P.wA - P.metA - 0.01*((P.sigma*Aday'+(1-P.sigma)*Anight)/(P.n*P.A)).^2).*P.MaskA; % [day^-1] Fitness of top predator - Frequency-dependent mortality rate
-    fitC = (IC - MortC - P.CC/P.wC - P.metC).*P.MaskC ;%- 0.2 ; % [day^-1]
-    fitJ = (IJ - MortJ - P.CJ/P.wJ - P.metJ).*P.MaskJ ;%-0.1 ; % [day^-1]
-    fitF = (IF - MortF - P.CF/P.wF - P.metF).*P.MaskF ;%-0.05; % [day^-1]
-%     fitF(and(1-P.MaskF,1==1)) = -abs(min(min(fitF)));
-    fitM = (IM - MortM - P.CM/P.wM - P.metM).*P.MaskM ;%-0.05; % [day^-1]
-    fitB = (IB - MortB - P.CB/P.wB - P.metB).*P.MaskB ;%-0.03; % [day^-1]
-    
+    fitA = (IA  - P.CA/P.wA - P.metA) -(0.01*((P.sigma*Aday'+(1-P.sigma)*Anight)/(P.n*P.A)).^2).*P.MaskA; % [day^-1] Fitness of top predator - Frequency-dependent mortality rate
+    fitC = (IC  - P.CC/P.wC - P.metC)-MortC.*P.MaskC ;%- 0.2 ; % [day^-1]
+    fitJ = (IJ  - P.CJ/P.wJ - P.metJ)-MortJ.*P.MaskJ ;%-0.1 ; % [day^-1]
+    fitF = (IF  - P.CF/P.wF - P.metF)-MortF.*P.MaskF ;%-0.05; % [day^-1]
+    fitM = (IM  - P.CM/P.wM - P.metM)-MortM.*P.MaskM ;%-0.05; % [day^-1]
+    fitB = (IB  - P.CB/P.wB - P.metB)-MortB.*P.MaskB ;%-0.03; % [day^-1]
+%     
 %     fitF = sign(fitF).*log10(1+abs(fitF.*P.MaskF)); % Transformation to make it flatter - just a try for now
 %     fitA = sign(fitA).*log10(1+abs(fitA.*P.MaskA));
 %     fitB = sign(fitB).*log10(1+abs(fitB.*P.MaskB));
@@ -289,12 +290,12 @@ while notdone
 
 
 %the proportionality factor is dynamic so that maximum increase is at most 2% per time step
-     factA = dtfact./max([FAmax, -FAmin]); % [day]
-     factB = dtfact./max([FBmax, -FBmin]);
-     factC = dtfact./max([FCmax, -FCmin]);
-     factJ = dtfact./max([FJmax, -FJmin]);
-     factM = dtfact./max([FMmax, -FMmin]);
-     factF = dtfact./max([FFmax, -FFmin]);
+     factA = dtfact/max([FAmax, -FAmin]); % [day]
+     factB = dtfact/max([FBmax, -FBmin]);
+     factC = dtfact/max([FCmax, -FCmin]);
+     factJ = dtfact/max([FJmax, -FJmin]);
+     factM = dtfact/max([FMmax, -FMmin]);
+     factF = dtfact/max([FFmax, -FFmin]);
 
 %increment, the core of the replicator equation
     A = A.*(1 + factA*fitA); % [-] Proportion of all strategies, before renormalization
