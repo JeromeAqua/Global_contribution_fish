@@ -7,31 +7,42 @@ Cw = 0:0.5:21; % [kPa] Oxygen partial pressure in the water
 Wc = 6.41; % [gC] Weight of the organism in gC
 Q10 = 2;
 T0 = 6; % [degree C] Temperature at which we calculated t0 and M0
-Tmax = 7; % [degree C] Temperature at which we reached the maximum MMR of fish
-pcrit = @(t) 4; % [kPa] Pcrit as a function of temperature, constant for now
+Tmax = 18; % [degree C] Temperature at which we reached the maximum MMR of fish = temperature at which the MS is maximum
+pcrit = @(t) 2; % [kPa] Pcrit as a function of temperature, constant for now
 
 t0 = 0.0014*Wc^(-0.25); % [day^-1] standard metabolic rate of fish at T0 degrees
-m0 = 2*t0; % [day^-1] Maximum metabolic rate of fish at T0 degrees
+% m0 = 6*t0; % [day^-1] Maximum metabolic rate of fish at T0 degrees
 
-S = @(t) t0*Q10.^((t-T0)/10); % standard metabolic rate
-MMRmax = @(t) min(m0*Q10.^((t-T0)/10), m0*Q10.^((Tmax-T0)/10)) ; % [day^-1] higher bound of maximum metabolic rate at each T
-M = @(t,o) min(S(t)./pcrit(t).*o,MMRmax(t));
+pmax = 21; % [kPa] 100% oxygen saturation
+prop = 0.6; % % of oxygen saturation above which zooplankton are oxyregulators
+factM = 3; % Factor of increase between SMRmax and MMRmax: MMRmax = factM*SMRmax
+Smax = @(t) t0*Q10.^((t-T0)/10); % standard metabolic rate
+% MMRmax = @(t) min(m0*Q10.^((t-T0)/10), m0*Q10.^((Tmax-T0)/10)) ; % [day^-1] higher bound of maximum metabolic rate at each T
+% M = @(t,o) min(S(t)./pcrit(t).*o,MMRmax(t));
+Mmax = @(t) factM*min(Smax(t),Smax(Tmax));
+
+mmr = @(t,o2) (o2<prop*pmax)*(Mmax(t)*o2/(prop*pmax)) + (o2>=prop*pmax)*Mmax(t);
+
+a = @(t) (Smax(t) - factM*Smax(t)*pcrit(t)/prop/pmax) / (prop*pmax-pcrit(t));
+b = @(t) Smax(t) - a(t)*prop*pmax;
+
+smr = @(t,o2) (o2<prop*pmax)*(a(t)*o2+b(t)) + (o2>=prop*pmax)*Smax(t);
 
 
-MMR = M(T,O);
-SMR = S(T);
-MS = M(T,O) - S(T); % [day^-1] Metabolic scope at each possible point
+MMR = arrayfun(mmr, T, O); %  M(T,O);
+SMR = arrayfun(smr, T, O);%S(T);
+MS = MMR-SMR; % [day^-1] Metabolic scope at each possible point
 
-for k = 1:size(t,2)
-    p = min(Cw(MS(k,:)>0)); % min O2 where MS>0
-%     pcrit(k) = p; %in case we need it
-    if size(p,2)==1 %i.e. if it is not an empty thingy
-        [~,index] = min(abs(Cw-p));
-        MS(k,1:index) = linspace(-SMR(k),0,index);
-    else
-        MS(k,:) = -SMR(k);
-    end
-end
+% for k = 1:size(t,2)
+%     p = min(Cw(MS(k,:)>0)); % min O2 where MS>0
+% %     pcrit(k) = p; %in case we need it
+%     if size(p,2)==1 %i.e. if it is not an empty thingy
+%         [~,index] = min(abs(Cw-p));
+%         MS(k,1:index) = linspace(-SMR(k),0,index);
+%     else
+%         MS(k,:) = -SMR(k);
+%     end
+% end
 
 
 

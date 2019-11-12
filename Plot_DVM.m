@@ -122,7 +122,7 @@ function OUT = plot_rescaling(DAY,NIGHT,P)
     xticklabels({'Night','Day'})
     xlim([-1 1])
     
-    plot([0 0], [0 P.ZMAX], 'k') % 0line at the middle
+    plot([0 0], [P.zi(1) P.ZMAX], 'k') % 0line at the middle
     ylim([0 P.ZMAX])
 end
 

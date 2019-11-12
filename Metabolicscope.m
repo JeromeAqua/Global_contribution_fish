@@ -2,31 +2,34 @@ function [SMRdepth, MSN, MSD, MASK] = Metabolicscope(player,P)
 
 K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant
 
-t = 0:0.01:25; % [degree C] temperature
-Cw = 0:0.01:21; % [kPa] Oxygen partial pressure in the water
+t = 0:0.5:25; % [degree C] temperature
+Cw = 0:0.5:21; % [kPa] Oxygen partial pressure in the water
 [O,T] = meshgrid(Cw,t); % [kPa - degree C] Mesh with the values of both points at each node in the O2-T space - interpolated after to have the good values in the water column
 
+pmax = 21; %[kPa] 100% oxygen saturation
 
 if strcmp(player,'copepod')
        
-S = @(t,o) P.tC*P.QC.^((t-P.T0C)/10).*min(1,o/P.pminC); % standard metabolic rate
-MMRmax = @(t) min(P.mC*P.QC.^((t-P.T0C)/10), P.mC*P.QC.^((P.TmC-P.T0C)/10)) ; % [day^-1] higher bound of maximum metabolic rate at each T
-M = @(t,o) min(1,o/P.pminC).*MMRmax(t);
+Smax = @(t) P.tC*P.QC.^((t-P.T0C)/10); % standard metabolic rate
+Mmax = @(t) P.factMMRC*min(Smax(t),Smax(P.TmC));
+mmr = @(t,o2) (o2<P.propC*pmax)*(Mmax(t)*o2/(P.propC*pmax)) + (o2>=P.propC*pmax)*Mmax(t);
+a = @(t) (Smax(t) - P.factMMRC*Smax(t)*P.pcritC(t)/P.propC/pmax) / (P.propC*pmax-P.pcritC(t));
+b = @(t) Smax(t) - a(t)*P.propC*pmax;
+smr = @(t,o2) (o2<P.propC*pmax)*(a(t)*o2+b(t)) + (o2>=P.propC*pmax)*Smax(t);
 
-
-MMR = M(T,O);
-SMR = S(T,O);
+MMR = arrayfun(mmr, T, O); 
+SMR = arrayfun(smr, T, O);
 MS = MMR - SMR; % [day^-1] Metabolic scope at each possible point
-    for k = 1:size(t,2)   %if there is a negative value we interpolate linearily between 0 and the pcrit
-        p = min(Cw(MS(k,:)>0)); % min O2 where MS>0
-%       pcrit(k) = p; %in case we need it
-        if size(p,2)==1 %i.e. if it is not an empty thingy
-            [~,index] = min(abs(Cw-p));
-            MS(k,1:index) = linspace(-SMR(k),0,index);
-        else
-            MS(k,:) = -SMR(k);
-        end
-    end
+%     for k = 1:size(t,2)   %if there is a negative value we interpolate linearily between 0 and the pcrit
+%         p = min(Cw(MS(k,:)>0)); % min O2 where MS>0
+% %       pcrit(k) = p; %in case we need it
+%         if size(p,2)==1 %i.e. if it is not an empty thingy
+%             [~,index] = min(abs(Cw-p));
+%             MS(k,1:index) = linspace(-SMR(k),0,index);
+%         else
+%             MS(k,:) = -SMR(k);
+%         end
+%     end
     
 elseif strcmp(player,'forage')
     
@@ -41,14 +44,24 @@ elseif strcmp(player,'forage')
 
 elseif strcmp(player,'tactile')
     
-    S = @(t,o) P.tJ*P.QJ.^((t-P.T0J)/10).*min(1,o/P.pminJ); % standard metabolic rate
-    MMRmax = @(t) min(P.mJ*P.QJ.^((t-P.T0J)/10), P.mJ*P.QJ.^((P.TmJ-P.T0J)/10)) ; % [day^-1] higher bound of maximum metabolic rate at each T
-    M = @(t,o) min(1,o/P.pminJ).*MMRmax(t);
+%     S = @(t,o) P.tJ*P.QJ.^((t-P.T0J)/10).*min(1,o/P.pminJ); % standard metabolic rate
+%     MMRmax = @(t) min(P.mJ*P.QJ.^((t-P.T0J)/10), P.mJ*P.QJ.^((P.TmJ-P.T0J)/10)) ; % [day^-1] higher bound of maximum metabolic rate at each T
+%     M = @(t,o) min(1,o/P.pminJ).*MMRmax(t);
+%     
+%     MMR = M(T,O);
+%     SMR = S(T,O);
+%     MS = MMR - SMR; % [day^-1] Metabolic scope at each possible point in the O2 - T space 
     
-    MMR = M(T,O);
-    SMR = S(T,O);
-    MS = MMR - SMR; % [day^-1] Metabolic scope at each possible point in the O2 - T space 
-    
+Smax = @(t) P.tJ*P.QJ.^((t-P.T0J)/10); % standard metabolic rate
+Mmax = @(t) P.factMMRJ*min(Smax(t),Smax(P.TmJ));
+mmr = @(t,o2) (o2<P.propJ*pmax)*(Mmax(t)*o2/(P.propJ*pmax)) + (o2>=P.propJ*pmax)*Mmax(t);
+a = @(t) (Smax(t) - P.factMMRJ*Smax(t)*P.pcritJ(t)/P.propJ/pmax) / (P.propJ*pmax-P.pcritJ(t));
+b = @(t) Smax(t) - a(t)*P.propJ*pmax;
+smr = @(t,o2) (o2<P.propJ*pmax)*(a(t)*o2+b(t)) + (o2>=P.propJ*pmax)*Smax(t);
+
+MMR = arrayfun(mmr, T, O); 
+SMR = arrayfun(smr, T, O);
+MS = MMR - SMR;
     
 elseif strcmp(player,'meso')
     
@@ -105,7 +118,7 @@ if strcmp(player,'copepod') || strcmp(player,'tactile') %%Most likely useless as
 %     MSN(MSN<0) = (MSN<0);
 
     MASK(and(MSN<0,MSD<0)) = 0; %the available strategies are the ones where at least one metabolic scope is positive, otherwise it means that the oxygen debt can never be repaid
-    SMRdepth = S(P.T,P.pO2); % [day^-1] Depth-dependent standard metabolic cost
+    SMRdepth = arrayfun(smr,P.T,P.pO2);%S(P.T,P.pO2); % [day^-1] Depth-dependent standard metabolic cost
 else
     %if it's a fish there cannot be an oxygen debt - so if one of the metabolic scopes is negative the strategy is not viable
     MSN = repmat(ms,P.n,1); % [day^-1] Metabolic scope during night
@@ -113,7 +126,7 @@ else
     MSN = MSN / max(10^-10,(max(max(MSN)))); %we normalize it by the metabolic cost at the reference temperature and O2 conditions (02 = surface) so that the max is at the good place 
     MSD = MSD / max(10^-10,(max(max(MSD))));
     MASK(or(MSN<0,MSD<0)) = 0;
-    SMRdepth = S(P.T); % [day^-1] Depth-dependent standard metabolic cost
+    SMRdepth =  S(P.T); % [day^-1] Depth-dependent standard metabolic cost
 
 end
 

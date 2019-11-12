@@ -119,7 +119,7 @@ end
 
 PDAM = nan(P.n,1);
 
-VisZ = DetectD(0.4,10^-8,P.lM);
+VisZ = DetectD(0.1,10^-8,P.lM);
 for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
 
         PDAM(zz) = captureproba2(VisZ(zz),vmax(P.wA)*P.MSDA(zz,1),vmax(P.wM)*P.MSDM(zz,1),P.uM*P.MSDM(zz,1)/24/3600,P.lA,P.lM);
@@ -186,7 +186,7 @@ end
 
 PNMC = nan(P.n,1);
 
-VisZ = P.RC; % Distance at which the predator is detected by the prey
+VisZ = P.lM/2;%P.RC; % Distance at which the predator is detected by the prey
 
 for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
 
@@ -204,8 +204,7 @@ PNMd = 1; % detritus don't escape - each attack is successful
 
 PNFC = nan(P.n,1);
 
-VisZ = P.RC;
-
+VisZ = P.lF/2; %P.RC;
 for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
 
     PNFC(zz) = captureproba2(VisZ,vmax(P.wF)*P.MSNF(1,zz),vmax(P.wC)*P.MSNC(1,zz),P.uC*P.MSNC(1,zz)/24/3600,P.lF,P.lC);
@@ -243,7 +242,7 @@ PNBb = 1; % same for benthos
 
 PNBC = nan(P.n,1);
 
-VisZ = P.RC;
+VisZ =P.lB/2;% P.RC;
 
 for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
 
@@ -278,7 +277,7 @@ end
 
 PNAM = nan(P.n,1);
 
-VisZ = DetectN(0.4,10^-8,P.lM);
+VisZ = DetectN(5,10^-8,P.lM);
 for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
 
         PNAM(zz) = captureproba2(VisZ(zz),vmax(P.wA)*P.MSNA(1,zz),vmax(P.wM)*P.MSNM(1,zz),P.uM*P.MSNM(1,zz)/24/3600,P.lA,P.lM);

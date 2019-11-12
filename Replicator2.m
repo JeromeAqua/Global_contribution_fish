@@ -1,21 +1,18 @@
 %Replicator code
 %global C F J M A B %the global variables are the proportions of each population using each strategy
-Niter = 5*10^4; % [-] number of iterations of the replicator equation
+Niter = 9*10^4; % [-] number of iterations of the replicator equation
 Iavg = Niter; %100000; % [-] How many of the last time steps do we save?
-dtfact = 0.05; %Max percentage of change per time step
+dtfact = 0.1; %Max percentage of change per time step
 sig = 0.25; % Parameter used for the Gaussian filter default = 0.3
 reinit = 1; %Do we start from the last simulation or do we initialize strategy matrices?
 
-minimort = 0;
+minimort = 0.0;
 
-if reinit==1
-    tic
-    P = Parameters3();
-    toc
-end
+for k=1:4
+    P = Parameters3(k);
 
 %Coefficient to prevent extinction of strategies - and bugs in the OMZ
-coeff = 10^-10;%10^-6; % [-] 10^-5
+coeff = 10^-12;%10^-6; % [-] 10^-5
 dC0 = coeff*P.C; % [gC m^-3] Minimum concentration of organisms in a strategy
 dF0 = coeff*P.F;
 dJ0 = coeff*P.J;
@@ -31,6 +28,13 @@ if reinit==1
     A = ones(P.n).*P.MaskA + dA0; A = A/sum(sum(A));
     B = rand(P.n).*P.MaskB + dB0; B = B/sum(sum(B));
     J = rand(P.n).*P.MaskJ + dJ0; J = J/sum(sum(J));
+    
+    A(P.MaskA==0) = 0;
+    C(P.MaskC==0) = 0;
+    F(P.MaskF==0) = 0;
+    M(P.MaskM==0) = 0;
+    B(P.MaskB==0) = 0;
+    J(P.MaskJ==0) = 0;
 end
 
 % Saved fitnesses for the last time steps
@@ -175,11 +179,11 @@ while notdone
     
 
 %Assimilation rates
-    IC = P.fC*(P.sigma*(ICR1+ICD1)+(1-P.sigma)*(ICR0+ICD0))/P.wC; % [day^-1] Total assimilation rate per individual per strategy for copepods
+    IC = (P.sigma*(P.fCR*ICR1+P.fCd*ICD1)+(1-P.sigma)*(P.fCR*ICR0+P.fCd*ICD0))/P.wC; % [day^-1] Total assimilation rate per individual per strategy for copepods
     IF = P.fF*(P.sigma*(IFD1+IFb1+IFC1+IFM1)+(1-P.sigma)*(IFD0+IFb0+IFC0+IFM0))/P.wF; % [day^-1] Total assimilation rate per individual per strategy for forage fish
     IA = P.fA*(P.sigma*(IAF1+IAJ1+IAM1+IAB1)+(1-P.sigma)*(IAF0+IAJ0+IAM0+IAB0))/P.wA; % [day^-1] Total assimilation rate per individual per strategy for top predator
     IJ = P.fJ*(P.sigma*(IJC1+IJM1)+(1-P.sigma)*(IJC0+IJM0))/P.wJ; % [day^-1] Total assimilation rate per individual per strategy for tactile predator
-    IM = P.fM*(P.sigma*(IMD1+IMC1)+(1-P.sigma)*(IMD0+IMC0))/P.wM; % [day^-1] Total assimilation rate per individual per strategy for mesopelagic fish
+    IM = (P.sigma*(P.fMd*IMD1+P.fMC*IMC1)+(1-P.sigma)*(P.fMd*IMD0+P.fMC*IMC0))/P.wM; % [day^-1] Total assimilation rate per individual per strategy for mesopelagic fish
     IB = P.fB*(P.sigma*(IBD1+IBb1+IBC1+IBM1)+(1-P.sigma)*(IBD0+IBb0+IBC0+IBM0))/P.wB; % [day^-1] Total assimilation rate per individual per strategy for bathypelagic fish
 
 %Mortality rates due to predation - we calculate the mortality rate imposed by all strategies (predators) at each depth before redistributing it equally among prey
@@ -266,12 +270,12 @@ while notdone
 
 
 %Fitnesses
-    fitA = (IA  - P.CA/P.wA - P.metA) -(0.01*((P.sigma*Aday'+(1-P.sigma)*Anight)/(P.n*P.A)).^2).*P.MaskA; % [day^-1] Fitness of top predator - Frequency-dependent mortality rate
-    fitC = (IC  - P.CC/P.wC - P.metC)-MortC.*P.MaskC ;%- 0.2 ; % [day^-1]
-    fitJ = (IJ  - P.CJ/P.wJ - P.metJ)-MortJ.*P.MaskJ ;%-0.1 ; % [day^-1]
-    fitF = (IF  - P.CF/P.wF - P.metF)-MortF.*P.MaskF ;%-0.05; % [day^-1]
-    fitM = (IM  - P.CM/P.wM - P.metM)-MortM.*P.MaskM ;%-0.05; % [day^-1]
-    fitB = (IB  - P.CB/P.wB - P.metB)-MortB.*P.MaskB ;%-0.03; % [day^-1]
+    fitA = (IA  - P.CA/P.wA - P.metA) -(0.01*((P.sigma*Aday'+(1-P.sigma)*Anight)/(P.n*P.A)).^2); % [day^-1] Fitness of top predator - Frequency-dependent mortality rate
+    fitC = (IC  - P.CC/P.wC - P.metC)-MortC;%- 0.2 ; % [day^-1]
+    fitJ = (IJ  - P.CJ/P.wJ - P.metJ)-MortJ;%-0.1 ; % [day^-1]
+    fitF = (IF  - P.CF/P.wF - P.metF)-MortF;%-0.05; % [day^-1]
+    fitM = (IM  - P.CM/P.wM - P.metM)-MortM;%-0.05; % [day^-1]
+    fitB = (IB  - P.CB/P.wB - P.metB)-MortB;%-0.03; % [day^-1]
 %     
 %     fitF = sign(fitF).*log10(1+abs(fitF.*P.MaskF)); % Transformation to make it flatter - just a try for now
 %     fitA = sign(fitA).*log10(1+abs(fitA.*P.MaskA));
@@ -279,6 +283,14 @@ while notdone
 %     fitC = sign(fitC).*log10(1+abs(fitC.*P.MaskC));
 %     fitM = sign(fitM).*log10(1+abs(fitM.*P.MaskM));
 %     fitJ = sign(fitJ).*log10(1+abs(fitJ.*P.MaskJ));
+
+% sigmo = @(x) 1./(1+exp(-50*x))-1/2;
+%     fitF = sigmo(fitF);
+%     fitA = sigmo(fitA);
+%     fitM = sigmo(fitM);
+%     fitB = sigmo(fitB);
+%     fitJ = sigmo(fitJ);
+%     fitC = sigmo(fitC);
 
 %%% NOW IS THE REPLICATOR PART
     FAmax = max(max(fitA)); FAmin = min(min(fitA));
@@ -298,12 +310,12 @@ while notdone
      factF = dtfact/max([FFmax, -FFmin]);
 
 %increment, the core of the replicator equation
-    A = A.*(1 + factA*fitA); % [-] Proportion of all strategies, before renormalization
-    B = B.*(1 + factB*fitB);
-    C = C.*(1 + factC*fitC);
-    J = J.*(1 + factJ*fitJ);
-    M = M.*(1 + factM*fitM);
-    F = F.*(1 + factF*fitF);
+    A = A.*(1 + factA*fitA.*P.MaskA); % [-] Proportion of all strategies, before renormalization
+    B = B.*(1 + factB*fitB.*P.MaskB);
+    C = C.*(1 + factC*fitC.*P.MaskC);
+    J = J.*(1 + factJ*fitJ.*P.MaskJ);
+    M = M.*(1 + factM*fitM.*P.MaskM);
+    F = F.*(1 + factF*fitF.*P.MaskF);
     
 %no extinction, so that every strategy can still emerge
     A(A<dA0) = dA0; % [-]
@@ -312,15 +324,13 @@ while notdone
     J(J<dJ0) = dJ0;
     M(M<dM0) = dM0;
     F(F<dF0) = dF0;
-    
-%Renormalization
-    A = A/sum(sum(A)); % [-] Good matrices of strategies after each replicator time step
-    B = B/sum(sum(B));
-    C = C/sum(sum(C));
-    M = M/sum(sum(M));
-    J = J/sum(sum(J));
-    F = F/sum(sum(F));
-    
+%     %Renormalization
+%     A = A/sum(sum(A)); % [-] Good matrices of strategies after each replicator time step
+%     B = B/sum(sum(B));
+%     C = C/sum(sum(C));
+%     M = M/sum(sum(M));
+%     J = J/sum(sum(J));
+%     F = F/sum(sum(F));  
     
 %Applying a Gaussian filter - tries
     A = imgaussfilt(A,sig);
@@ -331,12 +341,12 @@ while notdone
     M = imgaussfilt(M,sig);
     
     %Removing the impossible places -- just a try for now
-    F(P.MaskF==0) = dF0;
-    A(P.MaskA==0) = dA0;
-    C(P.MaskC==0) = dC0;
-    J(P.MaskJ==0) = dJ0;
-    B(P.MaskB==0) = dB0;
-    M(P.MaskM==0) = dM0;
+    F(P.MaskF==0) = 0;
+    A(P.MaskA==0) = 0;
+    C(P.MaskC==0) = 0;
+    J(P.MaskJ==0) = 0;
+    B(P.MaskB==0) = 0;
+    M(P.MaskM==0) = 0;
 
     %Renormalization
     A = A/sum(sum(A)); % [-] Good matrices of strategies after each replicator time step
@@ -383,11 +393,13 @@ while notdone
         FitF(Iavg-i) = max(max(fitF));
         FitM(Iavg-i) = max(max(fitM));
     end
-        
-     
+    
      notdone = (i>0);
 end
 toc
+filename = strcat('Run_',num2str(k),'.mat');
+save(filename)
 
-% save default_5_10-6it.mat -v7.3
 Plot_DVM;
+drawnow
+end
