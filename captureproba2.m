@@ -74,6 +74,9 @@ end
 
 
 OUT =Vattack / Vesc;
+if isnan(OUT)
+    OUT = 10^-15;
+end
 end
         
          

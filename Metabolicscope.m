@@ -20,17 +20,20 @@ smr = @(t,o2) (o2<P.propC*pmax)*(a(t)*o2+b(t)) + (o2>=P.propC*pmax)*Smax(t);
 MMR = arrayfun(mmr, T, O); 
 SMR = arrayfun(smr, T, O);
 MS = MMR - SMR; % [day^-1] Metabolic scope at each possible point
-%     for k = 1:size(t,2)   %if there is a negative value we interpolate linearily between 0 and the pcrit
-%         p = min(Cw(MS(k,:)>0)); % min O2 where MS>0
-% %       pcrit(k) = p; %in case we need it
-%         if size(p,2)==1 %i.e. if it is not an empty thingy
-%             [~,index] = min(abs(Cw-p));
-%             MS(k,1:index) = linspace(-SMR(k),0,index);
-%         else
-%             MS(k,:) = -SMR(k);
-%         end
-%     end
-    
+
+elseif strcmp(player,'predcop')
+       
+Smax = @(t) P.tP*P.QP.^((t-P.T0P)/10); % standard metabolic rate
+Mmax = @(t) P.factMMRP*min(Smax(t),Smax(P.TmP));
+mmr = @(t,o2) (o2<P.propP*pmax)*(Mmax(t)*o2/(P.propP*pmax)) + (o2>=P.propP*pmax)*Mmax(t);
+a = @(t) (Smax(t) - P.factMMRP*Smax(t)*P.pcritP(t)/P.propP/pmax) / (P.propP*pmax-P.pcritP(t));
+b = @(t) Smax(t) - a(t)*P.propP*pmax;
+smr = @(t,o2) (o2<P.propP*pmax)*(a(t)*o2+b(t)) + (o2>=P.propP*pmax)*Smax(t);
+
+MMR = arrayfun(mmr, T, O); 
+SMR = arrayfun(smr, T, O);
+MS = MMR - SMR; % [day^-1] Metabolic scope at each possible point
+
 elseif strcmp(player,'forage')
     
     S = @(temp) P.tF*P.QF.^((temp-P.T0F)/10); % [day^-1] standard metabolic rate as a function of temperature
@@ -104,7 +107,7 @@ end
     MSN = repmat(ms,P.n,1); % [day^-1] Metabolic scope during night
     MSD = repmat(ms',1,P.n); % [day^-1] Metabolic scope during day
 
-if strcmp(player,'copepod') || strcmp(player,'tactile') %%Most likely useless as by construction the metabolic scope of oxygen conformers cannot be negative
+if strcmp(player,'copepod') || strcmp(player,'tactile') || strcmp(player,'predcop')
     % Establish where copepods and jellies can go / what is their metabolic scope at day and at night
     for i=1:P.n
         if ms(i)<0 %if the metabolic scope during night time is <0, we reduce the MS during day and vice versa

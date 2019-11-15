@@ -10,6 +10,15 @@ if strcmp(predator,'copepod')
         out = NaN;
     end   
     
+elseif strcmp(predator,'predcop')
+    if strcmp(prey,'phyto')
+        out = 0.0;
+    elseif strcmp(prey,'detritus')
+        out = 1;
+    else
+        out = NaN;
+    end 
+    
 elseif strcmp(predator,'forage')
     if strcmp(prey,'detritus')
         out = 0;
@@ -17,8 +26,10 @@ elseif strcmp(predator,'forage')
         out = 0.0;
     elseif strcmp(prey,'copepod')
         out = 1;
+    elseif strcmp(prey,'predcop')
+        out = 1;
     elseif strcmp(prey,'meso')
-        out = 0.5;
+        out = 1;
     else
         out = NaN;
     end  
@@ -39,6 +50,8 @@ elseif strcmp(predator,'top')
 elseif strcmp(predator,'tactile')
     if strcmp(prey,'copepod')
         out = 1;
+    elseif strcmp(prey,'predcop')
+        out = 1;
     elseif strcmp(prey,'meso')
         out = 0;
     else
@@ -47,8 +60,10 @@ elseif strcmp(predator,'tactile')
              
 elseif strcmp(predator,'meso')
     if strcmp(prey,'detritus')
-        out = 1;
+        out = 0;
     elseif strcmp(prey,'copepod')
+        out = 0.1;
+    elseif strcmp(prey,'predcop')
         out = 1;
     else
         out = NaN;
@@ -61,12 +76,26 @@ elseif strcmp(predator,'bathy')
         out = 1;
     elseif strcmp(prey,'copepod')
         out = 0;
+    elseif strcmp(prey,'predcop')
+        out = 0;
     elseif strcmp(prey,'meso')
         out = 0.1;
     else
         out = NaN;
     end                 
                                         
+end
+
+if strcmp(prey,'detritus')
+    n = 50;
+    ZMAX = 1500;
+    zext = linspace(0,ZMAX,n+1);
+    zi = (zext(2:end)+zext(1:end-1))/2;
+    fz = 20*ones(n,1);
+    
+    tresh = 400; % [m]
+    fz(zi<tresh) = 1+19*zi(zi<tresh)/tresh;
+    out = out*fz;
 end
 
 end

@@ -21,6 +21,8 @@ BBday = mean(MBday(:,end-imean:end),2);
 BBnight = mean(MBnight(:,end-imean:end),2);
 CCday = mean(MCday(:,end-imean:end),2);
 CCnight = mean(MCnight(:,end-imean:end),2);
+PPday = mean(MPday(:,end-imean:end),2);
+PPnight = mean(MPnight(:,end-imean:end),2);
 JJday = mean(MJday(:,end-imean:end),2);
 JJnight = mean(MJnight(:,end-imean:end),2);
 FFday = mean(MFday(:,end-imean:end),2);
@@ -34,6 +36,8 @@ bday = BBday/max(max(BBnight),max(BBday)); % [-] Fraction of B at z during day
 bnight = BBnight/max(max(BBnight),max(BBday)); % [-]
 cday = CCday/max(max(CCnight),max(CCday)); % [-] Fraction of C at z during day
 cnight = CCnight/max(max(CCnight),max(CCday)); % [-]
+pday = PPday/max(max(PPnight),max(PPday)); % [-] Fraction of P at z during day
+pnight = PPnight/max(max(PPnight),max(PPday)); % [-]
 fday = FFday/max(max(FFnight),max(FFday)); % [-] Fraction of F at z during day
 fnight = FFnight/max(max(FFnight),max(FFday)); % [-]
 jday = JJday/max(max(JJnight),max(JJday)); % [-] Fraction of J at z during day
@@ -72,32 +76,36 @@ mnight = mmnight/max(max(mmnight),max(mmday)); % [-]
 
 %% 
 figure
-subplot(231)
+subplot(242)
 plot_rescaling(CCday,CCnight,P)
-title('Copepods')
+title('Small copepods')
 % yticks([0 100 200 300 400 500 1000])
 
-subplot(232)
+subplot(243)
+plot_rescaling(PPday,PPnight,P)
+title('Predatory copepods')
+
+subplot(244)
 plot_rescaling(FFday, FFnight, P)
 title('Forage fish')
 % yticks([0 100 200 300 400 500 1000])
 
-subplot(233)
+subplot(245)
 plot_rescaling(mmday,mmnight,P)
 title('Mesopelagic')
 % yticks([0 100 200 300 400 500 1000])
 
-subplot(234)
+subplot(246)
 plot_rescaling(JJday,JJnight,P)
 title('Jellies')
 % yticks([0 100 200 300 400 500 1000])
 
-subplot(235)
+subplot(247)
 plot_rescaling(AAday, AAnight, P)
 title('Top predators')
 % yticks([0 100 200 300 400 500 1000])
 
-subplot(236)
+subplot(248)
 plot_rescaling(BBday, BBnight, P)
 title('Bathypelagic')
 % yticks([0 100 200 300 400 500 1000])
