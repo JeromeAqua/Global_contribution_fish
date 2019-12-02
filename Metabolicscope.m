@@ -2,7 +2,7 @@ function [SMRdepth, MSN, MSD, MASK] = Metabolicscope(player,P)
 
 K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant
 
-t = 0:0.5:25; % [degree C] temperature
+t = 0:0.5:30; % [degree C] temperature
 Cw = 0:0.5:21; % [kPa] Oxygen partial pressure in the water
 [O,T] = meshgrid(Cw,t); % [kPa - degree C] Mesh with the values of both points at each node in the O2-T space - interpolated after to have the good values in the water column
 

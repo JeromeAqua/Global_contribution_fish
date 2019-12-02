@@ -1,14 +1,16 @@
 %Replicator code
 %global C F J M A B %the global variables are the proportions of each population using each strategy
-Niter = 0.8*10^5; % [-] number of iterations of the replicator equation
+Niter = 3*10^5; % [-] number of iterations of the replicator equation
 Iavg = Niter; %100000; % [-] How many of the last time steps do we save?
 dtfact = 0.05; %Max percentage of change per time step
-% sig = 0.03; % Parameter used for the Gaussian filter default = 0.3
+sig = 0.2; % Parameter used for the Gaussian filter default = 0.3
+sigf = 0.7; % Parameter used for the Gaussian filter on the fitness matrices
 reinit = 1; %Do we start from the last simulation or do we initialize strategy matrices?
 
-minimort = 0.05;
+minimort = 0.01; % [day^-1] Background mortality
+minimortC = 0.1; % [day^-1] Background mortality for small copepods
 
-for k=2%2:4
+for k=4
     P = Parameters3(k);
 
 %Coefficient to prevent extinction of strategies - and bugs in the OMZ
@@ -23,13 +25,13 @@ dP0 = coeff*P.P;
 
 %Initialization of the different strategy matrices
 if reinit==1
-    C = rand(P.n).*P.MaskC + dC0; C = C/sum(sum(C)); % [-] random distributions at first - we can also use ones(n) to have equal distribution
-    PC = rand(P.n).*P.MaskP + dP0; PC = PC/sum(sum(PC));
-    F = rand(P.n).*P.MaskF + dF0; F = F/sum(sum(F)); 
-    M = rand(P.n).*P.MaskM + dM0; M = M/sum(sum(M));
+    C = ones(P.n).*P.MaskC + dC0; C = C/sum(sum(C)); % [-] random distributions at first - we can also use ones(n) to have equal distribution
+    PC = ones(P.n).*P.MaskP + dP0; PC = PC/sum(sum(PC));
+    F = ones(P.n).*P.MaskF + dF0; F = F/sum(sum(F)); 
+    M = ones(P.n).*P.MaskM + dM0; M = M/sum(sum(M));
     A = ones(P.n).*P.MaskA + dA0; A = A/sum(sum(A));
-    B = rand(P.n).*P.MaskB + dB0; B = B/sum(sum(B));
-    J = rand(P.n).*P.MaskJ + dJ0; J = J/sum(sum(J));
+    B = ones(P.n).*P.MaskB + dB0; B = B/sum(sum(B));
+    J = ones(P.n).*P.MaskJ + dJ0; J = J/sum(sum(J));
     
     A(P.MaskA==0) = 0;
     PC(P.MaskP==0) = 0;
@@ -243,7 +245,7 @@ while notdone
     mCN = sum(mCnight,1); % [day^-1]
     MortNi = repmat(mCN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
 
-    MortC = minimort+ P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
+    MortC = minimortC+ P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
 
 %Predatory Copepod
     mPday = (P.IDF.*P.EDFP*pref('forage','predcop')./NF1*P.n^2*P.F.*F/P.wF +...
@@ -329,14 +331,51 @@ while notdone
 
 %Fitnesses
     fitA = (IA  - P.CA/P.wA - P.metA) ./(0.01*((P.sigma*Aday'+(1-P.sigma)*Anight)/(P.n*P.A)).^2); % [day^-1] Fitness of top predator - Frequency-dependent mortality rate
-    fitC = (IC  - P.CC/P.wC - P.metC)./MortC;%- 0.2 ; % [day^-1]
-    fitP = (IP  - P.CP/P.wP - P.metP)./MortP;%- 0.2 ; % [day^-1]
-    fitJ = (IJ  - P.CJ/P.wJ - P.metJ)./MortJ;%-0.1 ; % [day^-1]
-    fitF = (IF  - P.CF/P.wF - P.metF)./MortF;%-0.05; % [day^-1]
-    fitM = (IM  - P.CM/P.wM - P.metM)./MortM;%-0.05; % [day^-1]
-    fitB = (IB  - P.CB/P.wB - P.metB)./MortB;%-0.03; % [day^-1]
+    fitC = (IC  - P.CC/P.wC - P.metC)./MortC; %-(0.001*((P.sigma*Cday'+(1-P.sigma)*Cnight)/(P.n*P.C)).^2);%- 0.2 ; % [day^-1]
+    fitP = (IP  - P.CP/P.wP - P.metP)./MortP; %-(0.001*((P.sigma*Pday'+(1-P.sigma)*Pnight)/(P.n*P.P)).^2);%- 0.2 ; % [day^-1]
+    fitJ = (IJ  - P.CJ/P.wJ - P.metJ)./MortJ; %-(0.001*((P.sigma*Jday'+(1-P.sigma)*Jnight)/(P.n*P.J)).^2);%-0.1 ; % [day^-1]
+    fitF = (IF  - P.CF/P.wF - P.metF)./MortF; %-(0.001*((P.sigma*Fday'+(1-P.sigma)*Fnight)/(P.n*P.F)).^2);%-0.05; % [day^-1]
+    fitM = (IM  - P.CM/P.wM - P.metM)./MortM; %-(0.001*((P.sigma*Mday'+(1-P.sigma)*Mnight)/(P.n*P.M)).^2);%-0.05; % [day^-1]
+    fitB = (IB  - P.CB/P.wB - P.metB)./MortB; %-(0.001*((P.sigma*Bday'+(1-P.sigma)*Bnight)/(P.n*P.B)).^2);%-0.03; % [day^-1]
+    
+%     GA = (IA  - P.CA/P.wA - P.metA);
+%     MA = (0.01*((P.sigma*Aday'+(1-P.sigma)*Anight)/(P.n*P.A)).^2);
+%     GC = (IC  - P.CC/P.wC - P.metC);
+%     GP = (IP  - P.CP/P.wP - P.metP);
+%     GJ = (IJ  - P.CJ/P.wJ - P.metJ);
+%     GF = (IF  - P.CF/P.wF - P.metF);
+%     GM = (IM  - P.CM/P.wM - P.metM);
+%     GB = (IB  - P.CB/P.wB - P.metB);
+%     
+%     fitA(fitA<0) = GA(fitA<0)./MA(fitA<0);
+%     fitC(fitC<0) = GC(fitC<0)./MortC(fitC<0);
+%     fitP(fitP<0) = GP(fitP<0)./MortP(fitP<0);
+%     fitJ(fitJ<0) = GJ(fitJ<0)./MortJ(fitJ<0);
+%     fitF(fitF<0) = GF(fitF<0)./MortF(fitF<0);
+%     fitM(fitM<0) = GM(fitM<0)./MortM(fitM<0);
+%     fitB(fitB<0) = GB(fitB<0)./MortB(fitB<0);
     
     
+    
+    if i<Niter-1
+    x = 0.8;
+    fitA = (1-x)*fitA + x*fita2;
+    fitB = (1-x)*fitB + x*fitb2;
+    fitC = (1-x)*fitC + x*fitc2;
+    fitF = (1-x)*fitF + x*fitf2;
+    fitM = (1-x)*fitM + x*fitm2;  
+    fitJ = (1-x)*fitJ + x*fitj2;
+    fitP = (1-x)*fitP + x*fitp2;
+    end
+    
+% %Applying a Gaussian filter - tries
+%     fitA = imgaussfilt(fitA,sigf);
+%     fitC = imgaussfilt(fitC,sigf);
+%     fitP = imgaussfilt(fitP,sigf);
+%     fitB = imgaussfilt(fitB,sigf);
+%     fitF = imgaussfilt(fitF,sigf);
+%     fitJ = imgaussfilt(fitJ,sigf);
+%     fitM = imgaussfilt(fitM,sigf);    
     
 %     
 %     fitF = sign(fitF).*log10(1+abs(fitF.*P.MaskF)); % Transformation to make it flatter - just a try for now
@@ -367,13 +406,13 @@ while notdone
 
 
 %the proportionality factor is dynamic so that maximum increase is at most 2% per time step
-     factA = dtfact/max([FAmax, -FAmin]); % [day]
-     factB = dtfact/max([FBmax, -FBmin]);
-     factC = dtfact/max([FCmax, -FCmin]);
-     factP = dtfact/max([FPmax, -FPmin]);
-     factJ = dtfact/max([FJmax, -FJmin]);
-     factM = dtfact/max([FMmax, -FMmin]);
-     factF = dtfact/max([FFmax, -FFmin]);
+     factA = abs(dtfact/max([FAmax]));%, -FAmin]); % [day]
+     factB = abs(dtfact/max([FBmax]));%, -FBmin]);
+     factC = abs(dtfact/max([FCmax]));%, -FCmin]);
+     factP = abs(dtfact/max([FPmax]));%, -FPmin]);
+     factJ = abs(dtfact/max([FJmax]));%, -FJmin]);
+     factM = abs(dtfact/max([FMmax]));%, -FMmin]);
+     factF = abs(dtfact/max([FFmax]));%, -FFmin]);
 
 %increment, the core of the replicator equation
     A = A.*(1 + factA*fitA.*P.MaskA); % [-] Proportion of all strategies, before renormalization
@@ -400,7 +439,7 @@ while notdone
 %     J = J/sum(sum(J));
 %     F = F/sum(sum(F));  
 %     PC = PC/sum(sum(PC)); 
-    
+%     
 % %Applying a Gaussian filter - tries
 %     A = imgaussfilt(A,sig);
 %     C = imgaussfilt(C,sig);
@@ -409,7 +448,7 @@ while notdone
 %     F = imgaussfilt(F,sig);
 %     J = imgaussfilt(J,sig);
 %     M = imgaussfilt(M,sig);
-    
+%     
     
     %Removing the impossible places -- just a try for now
     F(P.MaskF==0) = 0;
@@ -444,6 +483,16 @@ while notdone
      Jday = P.n*P.J*sum(J,2)'; % [gC m^-3] Average concentration in each layer during day for tactile predator
      Jnight = P.n*P.J*sum(J,1); % [gC m^-3] Average concentration in each layer during night
      
+     %Try for now fitnesses are also from the previous time step
+     fita2 = fitA;
+     fitb2 = fitB;
+     fitc2 = fitC;
+     fitf2 = fitF;
+     fitj2 = fitJ;
+     fitm2 = fitM;
+     fitp2 = fitP;
+  
+     
      
 %Save historic of convergence
     if i<Iavg
@@ -472,6 +521,16 @@ while notdone
     end
     
      notdone = (i>0);
+     
+%      if i==Niter-1
+%          A = max(fitA,dA0); A = A/sum(sum(A));
+%          B = max(fitB,dB0); B = B/sum(sum(B));
+%          C = max(fitC,dC0); C = C/sum(sum(C)); 
+%          F = max(fitF,dF0); F = F/sum(sum(F));
+%          J = max(fitJ,dJ0); J = J/sum(sum(J));
+%          M = max(fitM,dM0); M = M/sum(sum(M));
+%          P = max(fitP,dP0); P = P/sum(sum(P));
+%      end
 end
 toc
 filename = strcat('Run_',num2str(k),'.mat');

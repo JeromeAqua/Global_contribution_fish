@@ -5,7 +5,7 @@ if strcmp(predator,'copepod')
     if strcmp(prey,'phyto')
         out = 1;
     elseif strcmp(prey,'detritus')
-        out = 0.1;
+        out = 0.0;
     else
         out = NaN;
     end   
@@ -93,7 +93,7 @@ if strcmp(prey,'detritus')
     zi = (zext(2:end)+zext(1:end-1))/2;
     fz = 20*ones(n,1);
     
-    tresh = 400; % [m]
+    tresh = 700; % [m] 400m 700m
     fz(zi<tresh) = 1+19*zi(zi<tresh)/tresh;
     out = out*fz;
 end

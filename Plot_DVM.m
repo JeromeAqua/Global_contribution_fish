@@ -12,7 +12,7 @@
 % mday = mmday/(P.n*P.M); % [-] Fraction of M at z during day
 % mnight = mmnight/(P.n*P.M); % [-]
 
-imean = 10^4;
+imean = Niter/2;
 AAday = mean(MAday(:,end-imean:end),2);
 AAnight = mean(MAnight(:,end-imean:end),2);
 mmday = mean(MMday(:,end-imean:end),2);
