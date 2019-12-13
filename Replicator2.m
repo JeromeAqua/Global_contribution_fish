@@ -1,6 +1,6 @@
 %Replicator code
 %global C F J M A B %the global variables are the proportions of each population using each strategy
-Niter = 3*10^5; % [-] number of iterations of the replicator equation
+Niter = 10^5; % [-] number of iterations of the replicator equation
 Iavg = Niter; %100000; % [-] How many of the last time steps do we save?
 dtfact = 0.05; %Max percentage of change per time step
 sig = 0.2; % Parameter used for the Gaussian filter default = 0.3
@@ -30,6 +30,7 @@ if reinit==1
     M = ones(P.n).*P.MaskM + dM0; M = M/sum(sum(M));
     A = ones(P.n).*P.MaskA + dA0; A = A/sum(sum(A));
     J = ones(P.n).*P.MaskJ + dJ0; J = J/sum(sum(J));
+    D = zeros(P.n,7); % first time step will be without detritus, but that's ok as they come later
     
     A(P.MaskA==0) = 0;
     PC(P.MaskP==0) = 0;
@@ -78,29 +79,92 @@ while notdone
     i = i - 1;
 
 %Denominators for ingestion rates calculations
-    NF1 = P.IDF + P.EDFd.*repmat(pref('forage','detritus'),1,P.n).*repmat(P.D',1,P.n)     +P.EDFC.*pref('forage','copepod').*repmat(Cday',1,P.n)+ P.EDFP.*pref('forage','predcop').*repmat(Pday',1,P.n)+...
+    NF1 = P.IDF + sum(P.EDFd.*repmat(pref('forage','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n),3)  +P.EDFC.*pref('forage','copepod').*repmat(Cday',1,P.n)+ P.EDFP.*pref('forage','predcop').*repmat(Pday',1,P.n)+...
                   P.EDFM.*pref('forage','meso').*repmat(Mday',1,P.n); % [gC day^-1] Denominator for ingestion function of forage fish during day
-    NF0 = P.INF + P.ENFd.*repmat(pref('forage','detritus')',P.n,1).*repmat(P.D,P.n,1)      +P.ENFC.*pref('forage','copepod').*repmat(Cnight,P.n,1)+P.ENFP.*pref('forage','predcop').*repmat(Pnight,P.n,1)+...
+    NF0 = P.INF + sum(P.ENFd.*repmat(pref('forage','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]),3)      +P.ENFC.*pref('forage','copepod').*repmat(Cnight,P.n,1)+P.ENFP.*pref('forage','predcop').*repmat(Pnight,P.n,1)+...
                   P.ENFM.*pref('forage','meso').*repmat(Mnight,P.n,1); % [gC day^-1] Denominator for the ingestion function
     NA1 = P.IDA + P.EDAF.*pref('top','forage').*repmat(Fday',1,P.n)+P.EDAJ.*pref('top','tactile').*repmat(Jday',1,P.n)+...
                   P.EDAM.*pref('top','meso').*repmat(Mday',1,P.n); % [gC day^-1] Denominator for ingestion function of top predator during day
     NA0 = P.INA + P.ENAF.*pref('top','forage').*repmat(Fnight,P.n,1)+P.ENAJ.*pref('top','tactile').*repmat(Jnight,P.n,1)+...
                   P.ENAM.*pref('top','meso').*repmat(Mnight,P.n,1); % [gC day^-1] Denominator for the ingestion function           
-    NC1 = P.IDC + P.EDCp.*pref('copepod','phyto').*repmat(P.R',1,P.n)+P.EDCd.*repmat(pref('copepod','detritus'),1,P.n).*repmat(P.D',1,P.n); % [gC day^-1] Denominator for ingestion function of copepods during day
-    NC0 = P.INC + P.ENCp.*pref('copepod','phyto').*repmat(P.R,P.n,1)+P.ENCd.*repmat(pref('copepod','detritus')',P.n,1).*repmat(P.D,P.n,1); % [gC day^-1] Denominator for the ingestion function                   
-    NP1 = P.IDP + P.EDPp.*pref('predcop','phyto').*repmat(P.R',1,P.n)+P.EDPd.*repmat(pref('predcop','detritus'),1,P.n).*repmat(P.D',1,P.n); % [gC day^-1] Denominator for ingestion function of copepods during day
-    NP0 = P.INP + P.ENPp.*pref('predcop','phyto').*repmat(P.R,P.n,1)+P.ENPd.*repmat(pref('predcop','detritus')',P.n,1).*repmat(P.D,P.n,1); % [gC day^-1] Denominator for the ingestion function                      
+    NC1 = P.IDC + P.EDCp.*pref('copepod','phyto').*repmat(P.R',1,P.n)+sum(P.EDCd.*repmat(pref('copepod','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n),3); % [gC day^-1] Denominator for ingestion function of copepods during day
+    NC0 = P.INC + P.ENCp.*pref('copepod','phyto').*repmat(P.R,P.n,1)+sum(P.ENCd.*repmat(pref('copepod','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]),3); % [gC day^-1] Denominator for the ingestion function                   
+    NP1 = P.IDP + P.EDPp.*pref('predcop','phyto').*repmat(P.R',1,P.n)+sum(P.EDPd.*repmat(pref('predcop','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n),3); % [gC day^-1] Denominator for ingestion function of copepods during day
+    NP0 = P.INP + P.ENPp.*pref('predcop','phyto').*repmat(P.R,P.n,1)+sum(P.ENPd.*repmat(pref('predcop','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]),3); % [gC day^-1] Denominator for the ingestion function                      
     %J: No denominator because functional response type I
-    NM1 = P.IDM + P.EDMd.*repmat(pref('meso','detritus'),1,P.n).*repmat(P.D',1,P.n)+P.EDMC.*pref('meso','copepod').*repmat(Cday',1,P.n)+P.EDMP.*pref('meso','predcop').*repmat(Pday',1,P.n); % [gC day^-1] Denominator for ingestion function of mesopelagic during day
-    NM0 = P.INM + P.ENMd.*repmat(pref('meso','detritus')',P.n,1).*repmat(P.D,P.n,1)+P.ENMC.*pref('meso','copepod').*repmat(Cnight,P.n,1)+P.ENMP.*pref('meso','predcop').*repmat(Pnight,P.n,1); % [gC day^-1] Denominator for the ingestion function                   
+    NM1 = P.IDM + sum(P.EDMd.*repmat(pref('meso','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n),3)+P.EDMC.*pref('meso','copepod').*repmat(Cday',1,P.n)+P.EDMP.*pref('meso','predcop').*repmat(Pday',1,P.n); % [gC day^-1] Denominator for ingestion function of mesopelagic during day
+    NM0 = P.INM + sum(P.ENMd.*repmat(pref('meso','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]),3)+P.ENMC.*pref('meso','copepod').*repmat(Cnight,P.n,1)+P.ENMP.*pref('meso','predcop').*repmat(Pnight,P.n,1); % [gC day^-1] Denominator for the ingestion function                   
     
 %Ingestion rates
+
+    % First of detritus in case a rescaling is needed
+     IFD1 = P.IDF.*P.EDFd.*repmat(pref('forage','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n)  ./NF1;
+     IFD0 = P.INF.*P.ENFd.*repmat(pref('forage','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3])  ./NF0;
+     IMD1 = P.IDM.*P.EDMd.*repmat(pref('meso','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n)  ./NM1; 
+     IMD0 = P.INM.*P.ENMd.*repmat(pref('meso','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3])  ./NM0; 
+     ICD1 = P.IDC.*P.EDCd.*repmat(pref('copepod','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n)  ./NC1;
+     ICD0 = P.INC.*P.ENCd.*repmat(pref('copepod','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3])  ./NC0;
+     IPD1 = P.IDP.*P.EDPd.*repmat(pref('predcop','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n)  ./NP1;
+     IPD0 = P.INP.*P.ENPd.*repmat(pref('predcop','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3])  ./NP0;
+     
+        IFD1(isnan(IFD1)) = 0;
+        IFD0(isnan(IFD0)) = 0;
+        IMD1(isnan(IMD1)) = 0;
+        IMD0(isnan(IMD0)) = 0;
+        IPD1(isnan(IPD1)) = 0;
+        IPD0(isnan(IPD0)) = 0;
+        ICD1(isnan(ICD1)) = 0;
+        ICD0(isnan(ICD0)) = 0;
+     
+        %Make sure that they do not eat more than there actually is
+        ConsdayD = squeeze(sum(IFD1.*repmat(Fday',1,1,7)/P.wF+IPD1.*repmat(Pday',1,1,7)/P.wP+ICD1.*repmat(Cday',1,1,7)/P.wC+IMD1.*repmat(Mday',1,1,7)/P.wM,2)); 
+        ConsnigD = squeeze(sum(permute(IFD0,[2 1 3]).*repmat(Fnight',1,1,7)/P.wF+permute(IPD0,[2 1 3]).*repmat(Pnight',1,1,7)/P.wP+permute(ICD0,[2 1 3]).*repmat(Cnight',1,1,7)/P.wC+...
+                                permute(IMD0,[2 1 3]).*repmat(Mnight',1,1,7)/P.wM,2));
+        ConsD = P.sigma*ConsdayD + (1-P.sigma)*ConsnigD;
+        
+        resc = ones(P.n,7);
+        max_ing = 0.8; %maximum percentage of detritus that we allow to be eaten in one day
+        for depth=1:P.n
+            for detr = 1:7
+                if ConsD(depth,detr) > max_ing*D(depth,detr)                  
+                    resc(depth,detr) = max_ing*D(depth,detr)/ConsD(depth,detr);
+                    IFD1(depth,:,detr) = IFD1(depth,:,detr)*resc(depth,detr);
+                    IFD0(:,depth,detr) = IFD0(:,depth,detr)*resc(depth,detr);
+                    IMD1(depth,:,detr) = IMD1(depth,:,detr)*resc(depth,detr);
+                    IMD0(:,depth,detr) = IMD0(:,depth,detr)*resc(depth,detr);
+                    ICD1(depth,:,detr) = ICD1(depth,:,detr)*resc(depth,detr);
+                    ICD0(:,depth,detr) = ICD0(:,depth,detr)*resc(depth,detr);
+                    IPD1(depth,:,detr) = IPD1(depth,:,detr)*resc(depth,detr);
+                    IPD0(:,depth,detr) = IPD0(:,depth,detr)*resc(depth,detr);
+                end
+            end
+        end
+        
+    
+        ConsdayD = ConsdayD.*resc;
+        ConsnigD = ConsnigD.*resc;
+        ConsD = ConsD.*resc;
+        
+        RESC = repmat(reshape(resc,P.n,1,7),1,P.n,1);
+        
+        % Denominators again but with the good rescaling
+    NF1 = P.IDF + sum(P.EDFd.*repmat(pref('forage','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n).*RESC,3)  +P.EDFC.*pref('forage','copepod').*repmat(Cday',1,P.n)+ P.EDFP.*pref('forage','predcop').*repmat(Pday',1,P.n)+...
+                  P.EDFM.*pref('forage','meso').*repmat(Mday',1,P.n); % [gC day^-1] Denominator for ingestion function of forage fish during day
+    NF0 = P.INF + sum(P.ENFd.*repmat(pref('forage','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]).*RESC,3)      +P.ENFC.*pref('forage','copepod').*repmat(Cnight,P.n,1)+P.ENFP.*pref('forage','predcop').*repmat(Pnight,P.n,1)+...
+                  P.ENFM.*pref('forage','meso').*repmat(Mnight,P.n,1); % [gC day^-1] Denominator for the ingestion function
+    NC1 = P.IDC + P.EDCp.*pref('copepod','phyto').*repmat(P.R',1,P.n)+sum(P.EDCd.*repmat(pref('copepod','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n).*RESC,3); % [gC day^-1] Denominator for ingestion function of copepods during day
+    NC0 = P.INC + P.ENCp.*pref('copepod','phyto').*repmat(P.R,P.n,1)+sum(P.ENCd.*repmat(pref('copepod','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]).*RESC,3); % [gC day^-1] Denominator for the ingestion function                   
+    NP1 = P.IDP + P.EDPp.*pref('predcop','phyto').*repmat(P.R',1,P.n)+sum(P.EDPd.*repmat(pref('predcop','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n).*RESC,3); % [gC day^-1] Denominator for ingestion function of copepods during day
+    NP0 = P.INP + P.ENPp.*pref('predcop','phyto').*repmat(P.R,P.n,1)+sum(P.ENPd.*repmat(pref('predcop','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]).*RESC,3); % [gC day^-1] Denominator for the ingestion function                      
+    NM1 = P.IDM + sum(P.EDMd.*repmat(pref('meso','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n).*RESC,3)+P.EDMC.*pref('meso','copepod').*repmat(Cday',1,P.n)+P.EDMP.*pref('meso','predcop').*repmat(Pday',1,P.n); % [gC day^-1] Denominator for ingestion function of mesopelagic during day
+    NM0 = P.INM + sum(P.ENMd.*repmat(pref('meso','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n).*RESC,[2,1,3]),3)+P.ENMC.*pref('meso','copepod').*repmat(Cnight,P.n,1)+P.ENMP.*pref('meso','predcop').*repmat(Pnight,P.n,1); % [gC day^-1] Denominator for the ingestion function                   
+
+
+
     IFC1 = P.IDF.*P.EDFC*pref('forage','copepod').* repmat(Cday' ,1,P.n)./NF1; % [gC day^-1] Ingestion rate of copepods during daytime by forage fish
     IFC0 = P.INF.*P.ENFC*pref('forage','copepod').* repmat(Cnight,P.n,1)./NF0;
     IFP1 = P.IDP.*P.EDFP*pref('forage','predcop').* repmat(Pday' ,1,P.n)./NF1; % [gC day^-1] Ingestion rate of copepods during daytime by forage fish
     IFP0 = P.INP.*P.ENFP*pref('forage','predcop').* repmat(Pnight,P.n,1)./NF0;
-    IFD1 = P.IDF.*P.EDFd*repmat(pref('forage','detritus'),1,P.n).*repmat(P.D',1,P.n)  ./NF1;
-    IFD0 = P.INF.*P.ENFd*repmat(pref('forage','detritus')',P.n,1).*repmat(P.D ,P.n,1)  ./NF0;
     IFM1 = P.IDF.*P.EDFM*pref('forage','meso')    .*repmat(Mday' ,1,P.n)./NF1;
     IFM0 = P.INF.*P.ENFM*pref('forage','meso')    .*repmat(Mnight,P.n,1)./NF0;
 
@@ -113,14 +177,10 @@ while notdone
     
     ICR1 = P.IDC.*P.EDCp*pref('copepod','phyto') .*repmat(P.R',1,P.n)./NC1; % [gC day^-1] Ingestion rate of phytoplankton during daytime by copepods
     ICR0 = P.INC.*P.ENCp*pref('copepod','phyto') .*repmat(P.R, P.n,1)./NC0;
-    ICD1 = P.IDC.*P.EDCd*repmat(pref('copepod','detritus'),1,P.n).*repmat(P.D',1,P.n)  ./NC1;
-    ICD0 = P.INC.*P.ENCd*repmat(pref('copepod','detritus')',P.n,1).*repmat(P.D ,P.n,1)  ./NC0;
-    
+        
     IPR1 = P.IDP.*P.EDPp*pref('predcop','phyto') .*repmat(P.R',1,P.n)./NP1; % [gC day^-1] Ingestion rate of phytoplankton during daytime by copepods
     IPR0 = P.INP.*P.ENPp*pref('predcop','phyto') .*repmat(P.R, P.n,1)./NP0;
-    IPD1 = P.IDP.*P.EDPd*repmat(pref('predcop','detritus'),1,P.n).*repmat(P.D',1,P.n)  ./NP1;
-    IPD0 = P.INP.*P.ENPd*repmat(pref('predcop','detritus')',P.n,1).*repmat(P.D ,P.n,1)  ./NP0;
-
+   
     IJC1 = P.EDJC*pref('tactile','copepod').*repmat(Cday',1,P.n); % [gC day^-1] Ingestion rate of copepods during daytime by tactile predators - note the Type I functional response
     IJC0 = P.ENJC*pref('tactile','copepod').*repmat(Cnight,P.n,1);
     IJP1 = P.EDJP*pref('tactile','predcop').*repmat(Pday',1,P.n); % [gC day^-1] Ingestion rate of copepods during daytime by tactile predators - note the Type I functional response
@@ -132,8 +192,6 @@ while notdone
     IMC0 = P.INM.*P.ENMC*pref('meso','copepod') .*repmat(Cnight, P.n,1)./NM0;
     IMP1 = P.IDM.*P.EDMP*pref('meso','predcop') .*repmat(Pday',1,P.n)./NM1; % [gC day^-1] Ingestion rate of copepods during daytime by mesopelagic fish
     IMP0 = P.INM.*P.ENMP*pref('meso','predcop') .*repmat(Pnight, P.n,1)./NM0;
-    IMD1 = P.IDM.*P.EDMd*repmat(pref('meso','detritus'),1,P.n).*repmat(P.D',1,P.n)  ./NM1; 
-    IMD0 = P.INM.*P.ENMd*repmat(pref('meso','detritus')',P.n,1).*repmat(P.D ,P.n,1)  ./NM0; 
 
         
 %Remove all the NaN of ingestion rates when they do not feed at all
@@ -175,12 +233,12 @@ while notdone
     
 
 %Assimilation rates
-    IC = (P.sigma*(P.fCR*ICR1+P.fCd*ICD1)+(1-P.sigma)*(P.fCR*ICR0+P.fCd*ICD0))/P.wC; % [day^-1] Total assimilation rate per individual per strategy for copepods
-    IP = (P.sigma*(P.fPR*IPR1+P.fPd*IPD1)+(1-P.sigma)*(P.fPR*IPR0+P.fPd*IPD0))/P.wP; % [day^-1] Total assimilation rate per individual per strategy for copepods
-    IF = P.fF*(P.sigma*(IFD1+IFC1+IFD1+IFM1)+(1-P.sigma)*(IFD0+IFC0+IFP0+IFM0))/P.wF; % [day^-1] Total assimilation rate per individual per strategy for forage fish
+    IC = (P.sigma*(P.fCR*ICR1+P.fCd*sum(ICD1,3))+(1-P.sigma)*(P.fCR*ICR0+P.fCd*sum(ICD0,3)))/P.wC; % [day^-1] Total assimilation rate per individual per strategy for copepods
+    IP = (P.sigma*(P.fPR*IPR1+P.fPd*sum(IPD1,3))+(1-P.sigma)*(P.fPR*IPR0+P.fPd*sum(IPD0,3)))/P.wP; % [day^-1] Total assimilation rate per individual per strategy for copepods
+    IF = P.fF*(P.sigma*(IFP1+IFC1+sum(IFD1,3)+IFM1)+(1-P.sigma)*(sum(IFD0,3)+IFC0+IFP0+IFM0))/P.wF; % [day^-1] Total assimilation rate per individual per strategy for forage fish
     IA = P.fA*(P.sigma*(IAF1+IAJ1+IAM1)+(1-P.sigma)*(IAF0+IAJ0+IAM0))/P.wA; % [day^-1] Total assimilation rate per individual per strategy for top predator
     IJ = P.fJ*(P.sigma*(IJC1+IJP1+IJM1)+(1-P.sigma)*(IJC0+IJP0+IJM0))/P.wJ; % [day^-1] Total assimilation rate per individual per strategy for tactile predator
-    IM = (P.sigma*(P.fMd*IMD1+P.fMC*IMC1+P.fMC*IMP1)+(1-P.sigma)*(P.fMd*IMD0+P.fMC*IMC0+P.fMC*IMP0))/P.wM; % [day^-1] Total assimilation rate per individual per strategy for mesopelagic fish
+    IM = (P.sigma*(P.fMd*sum(IMD1,3)+P.fMC*IMC1+P.fMC*IMP1)+(1-P.sigma)*(P.fMd*sum(IMD0,3)+P.fMC*IMC0+P.fMC*IMP0))/P.wM; % [day^-1] Total assimilation rate per individual per strategy for mesopelagic fish
     
 %Mortality rates due to predation - we calculate the mortality rate imposed by all strategies (predators) at each depth before redistributing it equally among prey
 %Copepod
@@ -327,6 +385,43 @@ while notdone
 %     fitJ = sigmo(fitJ);
 %     fitC = sigmo(fitC);
 %     fitP = sigmo(fitP);
+
+
+%%%%%%%%%%%%%%%%%% NOW FECAL PELLET FLUX CALCULATION %%%%%%%%%%%%%%%%%%%%%%
+
+%first calculation of the production at each depth - for each size (k+1 sizes): k for copepods, 1 for fish
+
+C0F = (1-P.fF)*(P.sigma*sum(sum(IFD1,3)+IFC1+IFP1+IFM1,2).*Fday'+(1-P.sigma)*sum(sum(IFD0,3)+IFC0+IFP0+IFM0)'.*Fnight')/P.wF / (P.alpha - P.SR(5)/P.zi(1)); % [gC/m3] Detritus concentration where each fish is creating it - from formaula 7 Stamieszkin et al 2015
+C0C = (P.sigma*((1-P.fCR)*sum(ICR1,2)+(1-P.fCd)*sum(sum(ICD1,3),2)).*Cday'+(1-P.sigma)*((1-P.fCR)*sum(ICR0)'+(1-P.fCd)*sum(sum(ICD0,3))').*Cnight')/P.wC / (P.alpha - P.SR(2)/P.zi(1));
+C0P = (P.sigma*((1-P.fPR)*sum(IPR1,2)+(1-P.fPd)*sum(sum(IPD1,3),2)).*Pday'+(1-P.sigma)*((1-P.fPR)*sum(IPR0)'+(1-P.fPd)*sum(sum(IPD0,3))').*Pnight')/P.wP / (P.alpha - P.SR(3)/P.zi(1));
+C0A = (1-P.fA)*(P.sigma*sum(IAF1+IAJ1+IAM1,2).*Aday'+(1-P.sigma)*sum(IAF0+IAJ0+IAM0)'.*Anight')/P.wA / (P.alpha - P.SR(6)/P.zi(1));
+C0M = (P.sigma*(sum((1-P.fMd)*sum(IMD1,3)+(1-P.fMC)*IMC1+(1-P.fMC)*IMP1,2).*Mday')+(1-P.sigma)*sum((1-P.fMd)*sum(IMD0,3)+(1-P.fMC)*IMC0+(1-P.fMC)*IMP0)'.*Mnight')/P.wM / (P.alpha - P.SR(4)/P.zi(1));
+C0J = (1-P.fJ)*(P.sigma*sum(IJC1+IJP1+IJM1,2).*Jday'+(1-P.sigma)*sum(IJC0+IJP0+IJM0)'.*Jnight')/P.wJ / (P.alpha - P.SR(7)/P.zi(1));
+
+Dnew = [P.BD', zeros(P.n,6)];
+        
+D0 = [C0C C0P C0M C0F C0A C0J]; % [gC /m3] Concentration of detritus where it is produced, i.e. "beginning of Martin curves" - in the order C P M F A J
+
+        %Calculation of the curves sinking from the sources     
+        for j=2:7  %for each detritus sizes (i.e. each producing population)
+                for ii=P.n:-1:1 % go backbward to not count detritus twice 
+                    Dnew(ii:P.n,j) = Dnew(ii:P.n,j) + D0(ii,j-1).*exp(P.alpha/P.SR(j)*(-P.zi(ii:P.n)'+P.zi(ii)));   %%% !!!!!!!!!!!!!! changed sign of exp, is it correct ? 
+                end
+        end
+        
+        %Removal of the detritus eaten previously
+        for j=1:7  %for each detritus sizes (backgr+zpk + fish)
+                for ii=P.n:-1:1 % go backbward to not count detritus twice 
+                    Dnew(ii:P.n,j) = Dnew(ii:P.n,j) - ConsD(ii,j)*P.dZ/P.SR(j).*exp(P.alpha/P.SR(j)*(-P.zi(ii:P.n)'+P.zi(ii)));    %%% !!!!!!!!!!!
+                end
+        end
+
+        Dnew(Dnew<0) = 0;
+        
+        pD = 0.9; %0.9   
+        D = pD*D + (1-pD)*Dnew;  
+        
+        
 
 %%% NOW IS THE REPLICATOR PART
     FAmax = max(max(fitA)); FAmin = min(min(fitA));

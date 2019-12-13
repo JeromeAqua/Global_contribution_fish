@@ -99,6 +99,8 @@ P.gamma = 0.5; % [-] Cross sectional area efficiently scanned for fish
 P.R  = chlasurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration r*exp(-(P.zi-50).^2/30^2)/P.ZMAX / sum(exp(-(P.zi-50).^2/30^2)) ; % 10 is chla to C ratio - assumed error in data, in gchla/m3 and not mg chla / m3
 P.D = 5*10^-5*min(50^-0.86,(P.zi-50).^-0.86)/50^(-0.86)+0.1*10^-5*(P.zi-400).^-0.86/400^(-0.86).*(P.zi>400); % [gC / m^3] Detritus concentration - 5*10^-5*.. for k=1 and 4
 
+P.BD = 5*10^-5*min(50^-0.86,(P.zi-50).^-0.86)/50^(-0.86)+0.1*10^-5*(P.zi-400).^-0.86/400^(-0.86).*(P.zi>400); % [gC / m^3] Background detritus flux coming from dead phyto etc
+
 VisD = @(R,K,lpred) max(0.01*lpred, min(10*lpred, R*sqrt(P.LD./(K+P.LD))')); % [m] Depth-dependent visual range of fish during daytime
 VisN = @(R,K,lpred) max(0.01*lpred, min(10*lpred, R*sqrt(P.LN./(K+P.LN)))); % [m] Depth-dependent visual range of fish during nighttime
 
@@ -125,7 +127,7 @@ P.propC = 3; % %of oxygen saturation above which zooplankton are oxyregulators
 
 %predatory Copepod
 P.P = p/P.ZMAX; % [gC m^-3] Mean concentration in the water column
-P.lP = 3*10^-3; % [m] Typical length for copepod
+P.lP = 10*10^-3; % [m] Typical length for copepod
 P.wP = 1.4*10^-4*(100*P.lP)^2.74; % [gC] Weight of a typical copepod
 P.uP = speed(P.lP); % [m/day] Max copepod speed
 P.RP = 0.5*P.lP; % [m] Sensing range for copepods
@@ -232,6 +234,11 @@ P.mM = 6*P.tM; % [day^-1] MMR at P.T0M
 % P.MSNM = min(1,max(0,P.MSNM));%/max(max(P.MSNM)); % [-] same de-unitization
 
 
+%Detritus terms
+P.alpha = 0.1; % [day^-1] Degradation rate of marine snow
+P.SR = [P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 1 1 1 1];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
+
+
 %% Clearance rates
 %%%DECREASED MIN RANGE FOR F AND A
 
@@ -240,7 +247,7 @@ P_success2_2;
 % PNAM = linspace(0.001,0.01,size(P.zi,2))';
 
 %Forage fish
-P.EDFd = repmat(PDFd,P.n,P.n)*P.gamma*pi*P.uF.*P.MSDF.*(repmat(VisD(0.5,10^-0,P.lF),1,P.n).^2-0); % [m^3 day^-1] clearance rate of forage fish during daytime with visual feeding -0 because detritus cannot see or escape
+P.EDFd = repmat(repmat(PDFd,P.n,P.n)*P.gamma*pi*P.uF.*P.MSDF.*(repmat(VisD(0.5,10^-0,P.lF),1,P.n).^2-0),1,1,7); % [m^3 day^-1] clearance rate of forage fish during daytime with visual feeding -0 because detritus cannot see or escape
 % P.EDFd = max(P.EDFd, 0.5*pi*P.uF*P.MSDF*(0.1*P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 P.EDFb = repmat(PDFb,P.n,P.n)*P.gamma*pi*P.uF.*P.MSDF.*(repmat(VisD(0.5,10^-0,P.lF),1,P.n).^2-0); % [m^3 day^-1] clearance rate of forage fish during daytime with visual feeding -0 because benthos cannot see or escape
@@ -249,13 +256,13 @@ P.EDFb = repmat(PDFb,P.n,P.n)*P.gamma*pi*P.uF.*P.MSDF.*(repmat(VisD(0.5,10^-0,P.
 P.EDFC = repmat(PDFC,1,P.n)*P.gamma*pi*P.uF.*P.MSDF.*(repmat(VisD(0.2,10^-0,P.lF),1,P.n).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of forage fish during daytime with visual feeding
 % P.EDFC = max(P.EDFC, 0.5*pi*P.uF*P.MSDF*(0.1*P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.EDFP = repmat(PDFP,1,P.n)*P.gamma*pi*P.uF.*P.MSDF.*(repmat(VisD(1,10^-0,P.lF),1,P.n).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of forage fish during daytime with visual feeding
+P.EDFP = repmat(PDFP,1,P.n)*P.gamma*pi*P.uF.*P.MSDF.*(repmat(VisD(2,10^-0,P.lF),1,P.n).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of forage fish during daytime with visual feeding
 % P.EDFC = max(P.EDFC, 0.5*pi*P.uF*P.MSDF*(0.1*P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 P.EDFM = repmat(PDFM,1,P.n)*P.gamma*pi*P.uF.*P.MSDF.*(repmat(VisD(2,10^-2,P.lF),1,P.n).^2);%-repmat(VisDM(P.lF),1,P.n).^2); % [m^3 day^-1] clearance rate of forage fish during daytime with visual feeding
 % P.EDFM = max(P.EDFM, 0.5*pi*P.uF*P.MSDF*(0.1*P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.ENFd = repmat(PNFd',P.n,P.n)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(0.5,10^-0,P.lF),P.n,1).^2-0); % [m^3 day^-1] clearance rate of forage fish during nighttime with visual feeding -0 because detritus cannot see or escape
+P.ENFd = repmat(repmat(PNFd',P.n,P.n)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(0.5,10^-0,P.lF),P.n,1).^2-0),1,1,7); % [m^3 day^-1] clearance rate of forage fish during nighttime with visual feeding -0 because detritus cannot see or escape
 % P.ENFd = max(P.ENFd, 0.5*pi*P.uF*P.MSNF*(0.1*P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 P.ENFb = repmat(PNFb',P.n,P.n)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(0.5,10^-0,P.lF),P.n,1).^2-0); % [m^3 day^-1] clearance rate of forage fish during nighttime with visual feeding -0 because benthos cannot see or escape
@@ -264,7 +271,7 @@ P.ENFb = repmat(PNFb',P.n,P.n)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(0.5,10^-0,P
 P.ENFC = repmat(PNFC',P.n,1)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(0.2,10^-0,P.lF),P.n,1).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of forage fish during nighttime with visual feeding
 % P.ENFC = max(P.ENFC, 0.5*pi*P.uF*P.MSNF*(0.1*P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.ENFP = repmat(PNFP',P.n,1)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(1,10^-0,P.lF),P.n,1).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of forage fish during nighttime with visual feeding
+P.ENFP = repmat(PNFP',P.n,1)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(2,10^-0,P.lF),P.n,1).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of forage fish during nighttime with visual feeding
 % P.ENFC = max(P.ENFC, 0.5*pi*P.uF*P.MSNF*(0.1*P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 P.ENFM = repmat(PNFM',P.n,1)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(2,10^-2,P.lF),P.n,1).^2);%-repmat(VisNM(P.lF),P.n,1).^2); % [m^3 day^-1] clearance rate of forage fish during nighttime with visual feeding
@@ -291,37 +298,37 @@ P.ENAM =repmat(PNAM',P.n,1)*P.gamma*pi*P.uA.*P.MSNA.*(repmat(VisN(5,10^-5,P.lA),
 % P.ENAM = max(P.ENAM, 0.5*pi*P.uA*P.MSNA*(0.1*P.lA/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 %Mesopelagic fish
-P.EDMd = repmat(PDMd,P.n,P.n)*P.gamma*pi*P.uM.*P.MSDM.*(repmat(VisD(0.2,10^-8,P.lM),1,P.n).^2-0); % [m^3 day^-1] clearance rate of mesopelagic fish during daytime with visual feeding
+P.EDMd = repmat(repmat(PDMd,P.n,P.n)*P.gamma*pi*P.uM.*P.MSDM.*(repmat(VisD(0.2,10^-8,P.lM),1,P.n).^2-0),1,1,7); % [m^3 day^-1] clearance rate of mesopelagic fish during daytime with visual feeding
 % P.EDMd = max(P.EDMd, 0.5*pi*P.uM*P.MSDM*(P.lM/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 P.EDMC = repmat(PDMC,1,P.n)*P.gamma*pi*P.uM.*P.MSDM.*(repmat(VisD(0.1,10^-8,P.lM),1,P.n).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during daytime with visual feeding
 % P.EDMC = max(P.EDMC, 0.5*pi*P.uM*P.MSDM*(P.lM/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.EDMP = repmat(PDMP,1,P.n)*P.gamma*pi*P.uM.*P.MSDM.*(repmat(VisD(0.2,10^-8,P.lM),1,P.n).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during daytime with visual feeding
+P.EDMP = repmat(PDMP,1,P.n)*P.gamma*pi*P.uM.*P.MSDM.*(repmat(VisD(2,10^-8,P.lM),1,P.n).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during daytime with visual feeding
 % P.EDMC = max(P.EDMC, 0.5*pi*P.uM*P.MSDM*(P.lM/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.ENMd = repmat(PNMd',P.n,P.n)*P.gamma*pi*P.uM.*P.MSNM.*(repmat(VisN(0.5,10^-8,P.lM),P.n,1).^2-0); % [m^3 day^-1] clearance rate of mesopelagic fish during nighttime with visual feeding
+P.ENMd = repmat(repmat(PNMd',P.n,P.n)*P.gamma*pi*P.uM.*P.MSNM.*(repmat(VisN(0.5,10^-8,P.lM),P.n,1).^2-0),1,1,7); % [m^3 day^-1] clearance rate of mesopelagic fish during nighttime with visual feeding
 % P.ENMd = max(P.ENMd, 0.5*pi*P.uM*P.MSNM*(P.lM/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 P.ENMC = repmat(PNMC',P.n,1)*P.gamma*pi*P.uM.*P.MSNM.*(repmat(VisN(0.1,10^-8,P.lM),P.n,1).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during nighttime with visual feeding
 % P.ENMC = max(P.ENMC, 0.5*pi*P.uM*P.MSNM*(P.lM/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.ENMP = repmat(PNMP',P.n,1)*P.gamma*pi*P.uM.*P.MSNM.*(repmat(VisN(0.5,10^-8,P.lM),P.n,1).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during nighttime with visual feeding
+P.ENMP = repmat(PNMP',P.n,1)*P.gamma*pi*P.uM.*P.MSNM.*(repmat(VisN(2,10^-8,P.lM),P.n,1).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during nighttime with visual feeding
 % P.ENMC = max(P.ENMC, 0.5*pi*P.uM*P.MSNM*(P.lM/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 %Copepod
 P.EDCp = repmat(PDCp,P.n,P.n)*pi*(P.RC)^2*P.uC.*P.MSDC; % [m^3 day^-1] Clearance rate of copepod during day - ignored swimming speed and size of prey, so detection distance is just the fluid signal of the (moving) predator
 P.ENCp = repmat(PNCp',P.n,P.n)*pi*(P.RC)^2*P.uC.*P.MSNC; % [m^3 day^-1] Clearance rate of copepod during night - ignored as during day
 
-P.EDCd = repmat(PDCd,P.n,P.n).*pi*(P.RC)^2*P.uC.*P.MSDC; % [m^3 day^-1] - no need to change anything here because we assume that both phytoplankton and detritus do not actively avoid prey
-P.ENCd = repmat(PNCd',P.n,P.n).*pi*(P.RC)^2*P.uC.*P.MSNC; % [m^3 day^-1]
+P.EDCd = repmat(repmat(PDCd,P.n,P.n).*pi*(P.RC)^2*P.uC.*P.MSDC,1,1,7); % [m^3 day^-1] - no need to change anything here because we assume that both phytoplankton and detritus do not actively avoid prey
+P.ENCd = repmat(repmat(PNCd',P.n,P.n).*pi*(P.RC)^2*P.uC.*P.MSNC,1,1,7); % [m^3 day^-1]
 
 %Predatory copepod
 P.EDPp = repmat(PDPp,P.n,P.n)*pi*(P.RP)^2*P.uP.*P.MSDP; % [m^3 day^-1] Clearance rate of copepod during day - ignored swimming speed and size of prey, so detection distance is just the fluid signal of the (moving) predator
 P.ENPp = repmat(PNPp',P.n,P.n)*pi*(P.RP)^2*P.uP.*P.MSNP; % [m^3 day^-1] Clearance rate of copepod during night - ignored as during day
 
-P.EDPd = repmat(PDPd,P.n,P.n)*pi*(P.RP)^2*P.uP.*P.MSDP; % [m^3 day^-1] - no need to change anything here because we assume that both phytoplankton and detritus do not actively avoid prey
-P.ENPd = repmat(PNPd',P.n,P.n)*pi*(P.RP)^2*P.uP.*P.MSNP; % [m^3 day^-1]
+P.EDPd = repmat(repmat(PDPd,P.n,P.n)*pi*(P.RP)^2*P.uP.*P.MSDP,1,1,7); % [m^3 day^-1] - no need to change anything here because we assume that both phytoplankton and detritus do not actively avoid prey
+P.ENPd = repmat(repmat(PNPd',P.n,P.n)*pi*(P.RP)^2*P.uP.*P.MSNP,1,1,7); % [m^3 day^-1]
 
 %Tactile predator
 P.EDJM = repmat(PDJM,1,P.n)*pi*P.uJ.*P.MSDJ*(0.089*(P.RJ)^2);%-repmat(VisDM(P.lJ),1,P.n).^2); % [m^3 day^-1] Clearance rate of tactile predator during day - 0.089 is the filtering efficiency for jellyfish
