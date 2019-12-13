@@ -22,8 +22,6 @@ elseif strcmp(predator,'predcop')
 elseif strcmp(predator,'forage')
     if strcmp(prey,'detritus')
         out = 0;
-    elseif strcmp(prey,'benthos')
-        out = 0.0;
     elseif strcmp(prey,'copepod')
         out = 1;
     elseif strcmp(prey,'predcop')
@@ -41,8 +39,6 @@ elseif strcmp(predator,'top')
         out = 0.1;
     elseif strcmp(prey,'meso')
         out = 0.2;
-    elseif strcmp(prey,'bathy')
-        out = 0.5;
     else
         out = NaN;
     end        
@@ -68,21 +64,7 @@ elseif strcmp(predator,'meso')
     else
         out = NaN;
     end                             
-                
-elseif strcmp(predator,'bathy')
-    if strcmp(prey,'detritus')
-        out = 0;
-    elseif strcmp(prey,'benthos')
-        out = 1;
-    elseif strcmp(prey,'copepod')
-        out = 0;
-    elseif strcmp(prey,'predcop')
-        out = 0;
-    elseif strcmp(prey,'meso')
-        out = 0.1;
-    else
-        out = NaN;
-    end                 
+                  
                                         
 end
 

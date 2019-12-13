@@ -86,19 +86,7 @@ elseif strcmp(player,'top')
     MMR = M(T,O);
     SMR = S(T);
     MS = MMR - SMR; % [day^-1] Metabolic scope at each possible point in the O2 - T space 
-    
-    
-elseif strcmp(player,'bathy')
-    
-    S = @(temp) P.tB*P.QB.^((temp-P.T0B)/10); % [day^-1] standard metabolic rate as a function of temperature
-    MMRmax = @(temp,O2) min(P.mB*P.QB.^((temp-P.T0B)/10), P.mB*P.QB.^((P.TmB-P.T0B)/10)) ; % [day^-1] higher bound of maximum metabolic rate at each T
-    M = @(temp,O2) min(S(temp)./P.pcritB.*O2,MMRmax(temp));
-    
-    MMR = M(T,O);
-    SMR = S(T);
-    MS = MMR - SMR; % [day^-1] Metabolic scope at each possible point in the O2 - T space 
-    
-    
+
 end
 
     %Day position changes with lines, night position changes with columns

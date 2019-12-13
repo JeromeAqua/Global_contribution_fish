@@ -95,47 +95,6 @@ for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic sc
 end
 
 
-%%%%%%% Predator is bathypelagic fish %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Prey = detritus
-PDBd = 1; % detritus cannot move
-
-% Prey = benthos
-PDBb = 1; % same for benthos
-
-% Prey = copepods
-
-PDBC = nan(P.n,1);
-
-VisZ = P.RC;
-
-for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
-
-    PDBC(zz) = captureproba2(VisZ,vmax(P.wB)*P.MSDB(zz,1),vmax(P.wC)*P.MSDC(zz,1),P.uC*P.MSDC(zz,1)/24/3600,P.lB,P.lC);
-end
-
-% Prey = predcopepods
-
-PDBP = nan(P.n,1);
-
-VisZ = P.RP;
-
-for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
-
-    PDBP(zz) = captureproba2(VisZ,vmax(P.wB)*P.MSDB(zz,1),vmax(P.wP)*P.MSDP(zz,1),P.uP*P.MSDP(zz,1)/24/3600,P.lB,P.lP);
-end
-
-% Prey = mesopelagic fish
-
-PDBM = nan(P.n,1);
-
-VisZ = DetectD(0.3,10^-3,P.lM);
-for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
-
-    PDBM(zz) = captureproba2(VisZ(zz),vmax(P.wB)*P.MSDB(zz,1),vmax(P.wM)*P.MSDM(zz,1),P.uM*P.MSDM(zz,1)/24/3600,P.lB,P.lM);
-    
-end
-
 %%%%%%% Predator is top predatory fish %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Prey = jellies
@@ -172,16 +131,6 @@ for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic sc
 end
 
 
-% Prey = bathypelagic fish
-
-PDAB = nan(P.n,1);
-
-VisZ = DetectD(1.5,10^-25,P.lB);
-for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
-
-    PDAB(zz) = captureproba2(VisZ(zz),vmax(P.wA)*P.MSDA(zz,1),vmax(P.wB)*P.MSDB(zz,1),P.uB*P.MSDB(zz,1)/24/3600,P.lA,P.lB);
-    
-end
 
 %%%%%%% Predator is copepods %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -303,47 +252,6 @@ for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic sc
 end
 
 
-%%%%%%% Predator is bathypelagic fish %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Prey = detritus
-PNBd = 1; % detritus cannot move
-
-% Prey = benthos
-PNBb = 1; % same for benthos
-
-% Prey = copepods
-
-PNBC = nan(P.n,1);
-
-VisZ =P.lC;% P.RC;
-
-for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
-
-    PNBC(zz) = captureproba2(VisZ,vmax(P.wB)*P.MSNB(1,zz),vmax(P.wC)*P.MSNC(1,zz),P.uC*P.MSNC(1,zz)/24/3600,P.lB,P.lC);
-end
-
-% Prey = predatory copepod
-
-PNBP = nan(P.n,1);
-
-VisZ =P.lP;
-
-for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
-
-    PNBP(zz) = captureproba2(VisZ,vmax(P.wB)*P.MSNB(1,zz),vmax(P.wP)*P.MSNP(1,zz),P.uP*P.MSNP(1,zz)/24/3600,P.lB,P.lP);
-end
-
-% Prey = mesopelagic fish
-
-PNBM = nan(P.n,1);
-
-VisZ = DetectN(0.3,10^-3,P.lM);
-for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
-
-    PNBM(zz) = captureproba2(VisZ(zz),vmax(P.wB)*P.MSNB(1,zz),vmax(P.wM)*P.MSNM(1,zz),P.uM*P.MSNM(1,zz)/24/3600,P.lB,P.lM);
-    
-end
-
 %%%%%%% Predator is top predatory fish %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Prey = jellies
@@ -379,17 +287,6 @@ for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic sc
     
 end
 
-
-% Prey = bathypelagic fish
-
-PNAB = nan(P.n,1);
-
-VisZ = DetectN(1.5,10^-25,P.lB);
-for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
-
-    PNAB(zz) = captureproba2(VisZ(zz),vmax(P.wA)*P.MSNA(1,zz),vmax(P.wB)*P.MSNB(1,zz),P.uB*P.MSNB(1,zz)/24/3600,P.lA,P.lB);
-    
-end
 
 %%%%%%% Predator is copepods %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
