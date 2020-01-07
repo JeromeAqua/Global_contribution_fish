@@ -10,7 +10,7 @@ reinit = 1; %Do we start from the last simulation or do we initialize strategy m
 minimort = 0.01; % [day^-1] Background mortality
 minimortC = 0.1; % [day^-1] Background mortality for small copepods
 
-for k=4
+for k=2
     P = Parameters3(k);
 
 %Coefficient to prevent extinction of strategies - and bugs in the OMZ
@@ -391,12 +391,12 @@ while notdone
 
 %first calculation of the production at each depth - for each size (k+1 sizes): k for copepods, 1 for fish
 
-C0F = (1-P.fF)*(P.sigma*sum(sum(IFD1,3)+IFC1+IFP1+IFM1,2).*Fday'+(1-P.sigma)*sum(sum(IFD0,3)+IFC0+IFP0+IFM0)'.*Fnight')/P.wF / (P.alpha - P.SR(5)/P.zi(1)); % [gC/m3] Detritus concentration where each fish is creating it - from formaula 7 Stamieszkin et al 2015
-C0C = (P.sigma*((1-P.fCR)*sum(ICR1,2)+(1-P.fCd)*sum(sum(ICD1,3),2)).*Cday'+(1-P.sigma)*((1-P.fCR)*sum(ICR0)'+(1-P.fCd)*sum(sum(ICD0,3))').*Cnight')/P.wC / (P.alpha - P.SR(2)/P.zi(1));
-C0P = (P.sigma*((1-P.fPR)*sum(IPR1,2)+(1-P.fPd)*sum(sum(IPD1,3),2)).*Pday'+(1-P.sigma)*((1-P.fPR)*sum(IPR0)'+(1-P.fPd)*sum(sum(IPD0,3))').*Pnight')/P.wP / (P.alpha - P.SR(3)/P.zi(1));
-C0A = (1-P.fA)*(P.sigma*sum(IAF1+IAJ1+IAM1,2).*Aday'+(1-P.sigma)*sum(IAF0+IAJ0+IAM0)'.*Anight')/P.wA / (P.alpha - P.SR(6)/P.zi(1));
-C0M = (P.sigma*(sum((1-P.fMd)*sum(IMD1,3)+(1-P.fMC)*IMC1+(1-P.fMC)*IMP1,2).*Mday')+(1-P.sigma)*sum((1-P.fMd)*sum(IMD0,3)+(1-P.fMC)*IMC0+(1-P.fMC)*IMP0)'.*Mnight')/P.wM / (P.alpha - P.SR(4)/P.zi(1));
-C0J = (1-P.fJ)*(P.sigma*sum(IJC1+IJP1+IJM1,2).*Jday'+(1-P.sigma)*sum(IJC0+IJP0+IJM0)'.*Jnight')/P.wJ / (P.alpha - P.SR(7)/P.zi(1));
+C0F = (1-P.fF)*(P.sigma*sum(sum(IFD1,3)+IFC1+IFP1+IFM1,2).*Fday'+(1-P.sigma)*sum(sum(IFD0,3)+IFC0+IFP0+IFM0)'.*Fnight')/P.wF / (P.alpha + P.SR(5)/P.zi(1)); % [gC/m3] Detritus concentration where each fish is creating it - from formaula 7 Stamieszkin et al 2015
+C0C = (P.sigma*((1-P.fCR)*sum(ICR1,2)+(1-P.fCd)*sum(sum(ICD1,3),2)).*Cday'+(1-P.sigma)*((1-P.fCR)*sum(ICR0)'+(1-P.fCd)*sum(sum(ICD0,3))').*Cnight')/P.wC / (P.alpha + P.SR(2)/P.zi(1));
+C0P = (P.sigma*((1-P.fPR)*sum(IPR1,2)+(1-P.fPd)*sum(sum(IPD1,3),2)).*Pday'+(1-P.sigma)*((1-P.fPR)*sum(IPR0)'+(1-P.fPd)*sum(sum(IPD0,3))').*Pnight')/P.wP / (P.alpha + P.SR(3)/P.zi(1));
+C0A = (1-P.fA)*(P.sigma*sum(IAF1+IAJ1+IAM1,2).*Aday'+(1-P.sigma)*sum(IAF0+IAJ0+IAM0)'.*Anight')/P.wA / (P.alpha + P.SR(6)/P.zi(1));
+C0M = (P.sigma*(sum((1-P.fMd)*sum(IMD1,3)+(1-P.fMC)*IMC1+(1-P.fMC)*IMP1,2).*Mday')+(1-P.sigma)*sum((1-P.fMd)*sum(IMD0,3)+(1-P.fMC)*IMC0+(1-P.fMC)*IMP0)'.*Mnight')/P.wM / (P.alpha + P.SR(4)/P.zi(1));
+C0J = (1-P.fJ)*(P.sigma*sum(IJC1+IJP1+IJM1,2).*Jday'+(1-P.sigma)*sum(IJC0+IJP0+IJM0)'.*Jnight')/P.wJ / (P.alpha + P.SR(7)/P.zi(1));
 
 Dnew = [P.BD', zeros(P.n,6)];
         
@@ -405,14 +405,14 @@ D0 = [C0C C0P C0M C0F C0A C0J]; % [gC /m3] Concentration of detritus where it is
         %Calculation of the curves sinking from the sources     
         for j=2:7  %for each detritus sizes (i.e. each producing population)
                 for ii=P.n:-1:1 % go backbward to not count detritus twice 
-                    Dnew(ii:P.n,j) = Dnew(ii:P.n,j) + D0(ii,j-1).*exp(P.alpha/P.SR(j)*(-P.zi(ii:P.n)'+P.zi(ii)));   %%% !!!!!!!!!!!!!! changed sign of exp, is it correct ? 
+                    Dnew(ii:P.n,j) = Dnew(ii:P.n,j) + D0(ii,j-1).*exp(P.alpha/P.SR(j)*(-P.zi(ii:P.n)'+P.zi(ii)));
                 end
         end
         
         %Removal of the detritus eaten previously
         for j=1:7  %for each detritus sizes (backgr+zpk + fish)
                 for ii=P.n:-1:1 % go backbward to not count detritus twice 
-                    Dnew(ii:P.n,j) = Dnew(ii:P.n,j) - ConsD(ii,j)*P.dZ/P.SR(j).*exp(P.alpha/P.SR(j)*(-P.zi(ii:P.n)'+P.zi(ii)));    %%% !!!!!!!!!!!
+                    Dnew(ii:P.n,j) = Dnew(ii:P.n,j) - ConsD(ii,j)*P.dZ/P.SR(j).*exp(P.alpha/P.SR(j)*(-P.zi(ii:P.n)'+P.zi(ii)));  
                 end
         end
 
@@ -420,7 +420,6 @@ D0 = [C0C C0P C0M C0F C0A C0J]; % [gC /m3] Concentration of detritus where it is
         
         pD = 0.9; %0.9   
         D = pD*D + (1-pD)*Dnew;  
-        
         
 
 %%% NOW IS THE REPLICATOR PART
@@ -441,7 +440,7 @@ D0 = [C0C C0P C0M C0F C0A C0J]; % [gC /m3] Concentration of detritus where it is
      factF = abs(dtfact/max([FFmax]));%, -FFmin]);
 
 %increment, the core of the replicator equation
-    A = A.*(1 + factA*fitA.*P.MaskA); % [-] Proportion of all strategies, before renormalization
+%     A = A.*(1 + factA*fitA.*P.MaskA); % [-] Proportion of all strategies, before renormalization
     C = C.*(1 + factC*fitC.*P.MaskC);
     PC = PC.*(1 + factP*fitP.*P.MaskP);
     J = J.*(1 + factJ*fitJ.*P.MaskJ);

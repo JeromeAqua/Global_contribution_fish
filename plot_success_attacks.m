@@ -19,11 +19,11 @@ hold on
 plot(PDAJ, P.zi,'--','LineWidth',2)
 xlabel('Jelly')
 
-subplot(544)
-plot(PNAB, P.zi,'LineWidth',2)
-hold on
-plot(PDAB, P.zi,'--','LineWidth',2)
-xlabel('Bathy')
+% subplot(544)
+% plot(PNAB, P.zi,'LineWidth',2)
+% hold on
+% plot(PDAB, P.zi,'--','LineWidth',2)
+% xlabel('Bathy')
 
 subplot(545)
 plot(PNFC, P.zi,'LineWidth',2)
@@ -38,18 +38,18 @@ hold on
 plot(PDFM, P.zi,'--','LineWidth',2)
 xlabel('Meso')
 
-subplot(549)
-plot(PNBC,P.zi,'LineWidth',2)
-hold on
-plot(PDBC, P.zi,'--','LineWidth',2)
-xlabel('Copepod')
-ylabel('Bathy')
+% subplot(549)
+% plot(PNBC,P.zi,'LineWidth',2)
+% hold on
+% plot(PDBC, P.zi,'--','LineWidth',2)
+% xlabel('Copepod')
+% ylabel('Bathy')
 
-subplot(5,4,10)
-plot(PNBM, P.zi,'LineWidth',2)
-hold on
-plot(PDBM, P.zi,'--','LineWidth',2)
-xlabel('Meso')
+% subplot(5,4,10)
+% plot(PNBM, P.zi,'LineWidth',2)
+% hold on
+% plot(PDBM, P.zi,'--','LineWidth',2)
+% xlabel('Meso')
 
 subplot(5,4,13)
 plot(PNMC,P.zi,'LineWidth',2)
