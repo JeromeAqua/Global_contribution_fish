@@ -14,15 +14,15 @@ if k==1
     P.T = interp1(depth, TNA, P.zi); % [degree C] Temperature
     P.pO2 = interp1(depth, pO2NA, P.zi); % [kPa] oxygen partial pressure
     P.zo = 41.13; % [m] MLD
-    P.klight = 0.0223; % [m^-1] Light attenuation coefficient in the water column
+    P.klight = 0.0223+0.02; % [m^-1] Light attenuation coefficient in the water column
     P.sigma = 0.6819; % [-] Proportion of daytime in 24h
-    chlasurf = 0.012; % [mg chla / m^3] Surface concentration of chlorophyll a
-    c = 0.5*12*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
-    p = 0.5*12*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
+    chlasurf = 0.0425; % [mg chla / m^3] Surface concentration of chlorophyll a %0.012
+    c = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
+    p = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
     f = 0.5;%0.5; % [gC m^-2] total abundance of forage fish in the water column 2
-    m = 5; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
-    a = 0.000001;%005;%0.001; % [gC m^-2] total abundance of top predators in the water column
-    j = 0.0001; % [gC m^-2] total abundance of tactile predators in the water column
+    m = 3; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
+    a = 0.1;%005;%0.001; % [gC m^-2] total abundance of top predators in the water column
+    j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
     r =  12*10^-3; % [gC m^-3] Phytoplankton concentration in the water column 
     
 elseif k==2
@@ -32,42 +32,42 @@ elseif k==2
     P.klight = 0.0240; % [m^-1] Light attenuation coefficient in the water column
     P.sigma = 0.6521; % [-] Proportion of daytime in 24h
     chlasurf = 0.0592; % [mg chla / m^3] Surface concentration of chlorophyll a  
-    c = 2*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
-    p = 2*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column 4
-    f = 0.6; % [gC m^-2] total abundance of forage fish in the water column 2
-    m = 5; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
-    a = 1; % [gC m^-2] total abundance of top predators in the water column
-    j = 0.01; % [gC m^-2] total abundance of tactile predators in the water column
+    c = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
+    p = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column 4
+    f = 0.5; % [gC m^-2] total abundance of forage fish in the water column 2
+    m = 7; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
+    a = 0.1; % [gC m^-2] total abundance of top predators in the water column
+    j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
     r = 12*10^-3; % [gC m^-3] Phytoplankton concentration in the water column 
     
 elseif k==3
     P.T = interp1(depth, TWP, P.zi); % [degree C] Temperature
     P.pO2 = interp1(depth, pO2WP, P.zi); % [kPa] oxygen partial pressure
     P.zo = 53.52; % [m] MLD
-    P.klight = 0.0227; % [m^-1] Light attenuation coefficient in the water column
+    P.klight = 0.0227+0.01; % [m^-1] Light attenuation coefficient in the water column
     P.sigma = 0.5840; % [-] Proportion of daytime in 24h
-    chlasurf = 0.08;% 0.0449; % [mg chla / m^3] Surface concentration of chlorophyll a  
-    c = 5*10^-2*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
-    p = 10^-2*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column 4
-    f = 0.01; % [gC m^-2] total abundance of forage fish in the water column 2
+    chlasurf = 0.0449;% 0.08; % [mg chla / m^3] Surface concentration of chlorophyll a  
+    c = 0.5*3*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
+    p = 0.5*3*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column 4
+    f = 0.5; % [gC m^-2] total abundance of forage fish in the water column 2
     m = 6; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
     a = 0.1; % [gC m^-2] total abundance of top predators in the water column
-    j = 0.0001; % [gC m^-2] total abundance of tactile predators in the water column
+    j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
     r = 12*10^-3; % [gC m^-3] Phytoplankton concentration in the water column 
     
 elseif k==4
     P.T = interp1(depth, TEP, P.zi); % [degree C] Temperature
     P.pO2 = interp1(depth, pO2EP, P.zi); % [kPa] oxygen partial pressure %single(linspace(20,20,size(P.zi,2)));%
     P.zo = 29.51; % [m] MLD
-    P.klight = 0.0264; % [m^-1] Light attenuation coefficient in the water column
+    P.klight = 0.0264+0.02; % [m^-1] Light attenuation coefficient in the water column
     P.sigma = 0.604; % [-] Proportion of daytime in 24h
     chlasurf = 0.0780; % [mg chla / m^3] Surface concentration of chlorophyll a  
-    c = 10^-3*P.zo; %10; % [gC m^-2] total abundance of copepods in the water column 4  
-    p = 6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column 4  
-    f = 0.05; % [gC m^-2] total abundance of forage fish in the water column 2
-    m = 5; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
-    a = 0.01;%0.5;%0.005; % [gC m^-2] total abundance of top predators in the water column
-    j = 0.01; % [gC m^-2] total abundance of tactile predators in the water column
+    c = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of copepods in the water column 4  
+    p = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column 4  
+    f = 0.1; % [gC m^-2] total abundance of forage fish in the water column 2
+    m = 7; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
+    a = 1;%0.5;%0.005; % [gC m^-2] total abundance of top predators in the water column
+    j = 0.1; % [gC m^-2] total abundance of tactile predators in the water column
     r = 6*10^-3; % [gC m^-3] Phytoplankton concentration in the water column  
 end
 
@@ -157,8 +157,8 @@ P.fF = 0.65; % [-] Assimilation efficiency for forage fish
 
 P.T0F = mean(P.T(P.zi<200)); % [ºC] Reference temperature for forage fish - 15 for 1-4
 P.TmF = max(P.T); % [ºC] Maximum temperature for forage fish before decline - 20 for 1-4
-P.QF = 2; % [-] Q10 for forage fish
-P.pcritF = 4; % [kPa] Pcrit for forage fish - constant with temperature for now
+P.QF = 1.5; % [-] Q10 for forage fish
+P.pcritF = 5; % [kPa] Pcrit for forage fish - constant with temperature for now
 P.tF = 0.0014*P.wF^-0.25; % [day^-1] SMR at P.TF 
 P.mF = 6*P.tF; % [day^-1] MMR at P.TF 
 [P.SMRF, P.MSNF, P.MSDF, P.MaskF] = Metabolicscope('forage',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, metabolic scope during day, during night, and mask of available strategies
@@ -229,16 +229,19 @@ P.QM = 2; % [-] Q10 for mesopelagic fish
 P.pcritM = 0.2; % [kPa] Pcrit for mesopelagic fish - constant with temperature for now
 P.tM = 0.0014*P.wM^-0.25; % [day^-1] SMR at P.T0M 
 P.mM = 6*P.tM; % [day^-1] MMR at P.T0M 
-[P.SMRM, P.MSNM, P.MSDM, P.MaskM] = Metabolicscope('meso',P); % [day^-1, day^-1, day^-1, -] epth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
+[P.SMRM, P.MSNM, P.MSDM, P.MaskM] = Metabolicscope('meso',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
 % P.MSDM = min(1,max(0,P.MSDM));%/max(max(P.MSDM)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 % P.MSNM = min(1,max(0,P.MSNM));%/max(max(P.MSNM)); % [-] same de-unitization
 
-
 %Detritus terms
-P.alpha = 0.05; % [day^-1] Degradation rate of marine snow
-P.SR = [P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 10 10 10 10];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
+P.SR = [0.5 1 10 50 100 500 100]; %[P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 10 10 10 10];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
+K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant
+qrem = 1.5; % [-] Q10 for remineralization rate of POC
+Tref = mean(P.T(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
+Ko2 = 10*0.0224./K(P.T); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
 
-
+P.alpha = 0.25*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
+P.alpha = repmat(P.alpha',1,7); % transformation so that it has the same size as D - easier if we want to have specific degradation rates later
 %% Clearance rates
 %%%DECREASED MIN RANGE FOR F AND A
 
@@ -259,7 +262,7 @@ P.EDFC = repmat(PDFC,1,P.n)*P.gamma*pi*P.uF.*P.MSDF.*(repmat(VisD(0.2,10^-0,P.lF
 P.EDFP = repmat(PDFP,1,P.n)*P.gamma*pi*P.uF.*P.MSDF.*(repmat(VisD(2,10^-0,P.lF),1,P.n).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of forage fish during daytime with visual feeding
 % P.EDFC = max(P.EDFC, 0.5*pi*P.uF*P.MSDF*(0.1*P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.EDFM = repmat(PDFM,1,P.n)*P.gamma*pi*P.uF.*P.MSDF.*(repmat(VisD(2,10^-2,P.lF),1,P.n).^2);%-repmat(VisDM(P.lF),1,P.n).^2); % [m^3 day^-1] clearance rate of forage fish during daytime with visual feeding
+P.EDFM = repmat(PDFM,1,P.n)*P.gamma*pi*P.uF.*P.MSDF.*(repmat(VisD(2,10^-0,P.lF),1,P.n).^2);%-repmat(VisDM(P.lF),1,P.n).^2); % [m^3 day^-1] clearance rate of forage fish during daytime with visual feeding
 % P.EDFM = max(P.EDFM, 0.5*pi*P.uF*P.MSDF*(0.1*P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 P.ENFd = repmat(repmat(PNFd',P.n,P.n)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(0.5,10^-0,P.lF),P.n,1).^2-0),1,1,7); % [m^3 day^-1] clearance rate of forage fish during nighttime with visual feeding -0 because detritus cannot see or escape
@@ -274,7 +277,7 @@ P.ENFC = repmat(PNFC',P.n,1)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(0.2,10^-0,P.l
 P.ENFP = repmat(PNFP',P.n,1)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(0.2,10^-0,P.lF),P.n,1).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of forage fish during nighttime with visual feeding
 % P.ENFC = max(P.ENFC, 0.5*pi*P.uF*P.MSNF*(0.1*P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.ENFM = repmat(PNFM',P.n,1)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(0.2,10^-2,P.lF),P.n,1).^2);%-repmat(VisNM(P.lF),P.n,1).^2); % [m^3 day^-1] clearance rate of forage fish during nighttime with visual feeding
+P.ENFM = repmat(PNFM',P.n,1)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(0.2,10^-0,P.lF),P.n,1).^2);%-repmat(VisNM(P.lF),P.n,1).^2); % [m^3 day^-1] clearance rate of forage fish during nighttime with visual feeding
 % P.ENFM = max(P.ENFM, 0.5*pi*P.uF*P.MSNF*(0.1*P.lF/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 
