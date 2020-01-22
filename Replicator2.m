@@ -10,7 +10,7 @@ reinit = 1; %Do we start from the last simulation or do we initialize strategy m
 minimort = 0.01; % [day^-1] Background mortality
 minimortC = 0.1; % [day^-1] Background mortality for small copepods
 
-for k=1:4
+for k=[2:4]
     P = Parameters3(k);
 
 %Coefficient to prevent extinction of strategies - and bugs in the OMZ
@@ -55,6 +55,10 @@ MJday = MAday; MJnight = MAday;
 MMday = MAday; MMnight = MAday;
 MFday = MAday; MFnight = MAday;
 MPday = MAday; MPnight = MAday;
+
+MA = zeros(P.n);
+MC = MA; MJ = MA; MM = MA; MF = MA; MP = MA;
+
 MD = zeros(P.n,7,Iavg);
 
 
@@ -392,12 +396,12 @@ while notdone
 
 %first calculation of the production at each depth - for each size (k+1 sizes): k for copepods, 1 for fish
 
-C0F = (1-P.fF)*(P.sigma*sum(sum(IFD1,3)+IFC1+IFP1+IFM1,2).*Fday'+(1-P.sigma)*sum(sum(IFD0,3)+IFC0+IFP0+IFM0)'.*Fnight')/P.wF ./ (P.alpha(:,5) + P.SR(5)/P.zi(1)); % [gC/m3] Detritus concentration where each fish is creating it - from formaula 7 Stamieszkin et al 2015
-C0C = (P.sigma*((1-P.fCR)*sum(ICR1,2)+(1-P.fCd)*sum(sum(ICD1,3),2)).*Cday'+(1-P.sigma)*((1-P.fCR)*sum(ICR0)'+(1-P.fCd)*sum(sum(ICD0,3))').*Cnight')/P.wC ./ (P.alpha(:,2) + P.SR(2)/P.zi(1));
-C0P = (P.sigma*((1-P.fPR)*sum(IPR1,2)+(1-P.fPd)*sum(sum(IPD1,3),2)).*Pday'+(1-P.sigma)*((1-P.fPR)*sum(IPR0)'+(1-P.fPd)*sum(sum(IPD0,3))').*Pnight')/P.wP ./ (P.alpha(:,3) + P.SR(3)/P.zi(1));
-C0A = (1-P.fA)*(P.sigma*sum(IAF1+IAJ1+IAM1,2).*Aday'+(1-P.sigma)*sum(IAF0+IAJ0+IAM0)'.*Anight')/P.wA ./ (P.alpha(:,6) + P.SR(6)/P.zi(1));
-C0M = (P.sigma*(sum((1-P.fMd)*sum(IMD1,3)+(1-P.fMC)*IMC1+(1-P.fMC)*IMP1,2).*Mday')+(1-P.sigma)*sum((1-P.fMd)*sum(IMD0,3)+(1-P.fMC)*IMC0+(1-P.fMC)*IMP0)'.*Mnight')/P.wM ./ (P.alpha(:,4) + P.SR(4)/P.zi(1));
-C0J = (1-P.fJ)*(P.sigma*sum(IJC1+IJP1+IJM1,2).*Jday'+(1-P.sigma)*sum(IJC0+IJP0+IJM0)'.*Jnight')/P.wJ ./ (P.alpha(:,7) + P.SR(7)/P.zi(1));
+C0F = (1-P.fF)*(P.sigma*sum(sum(IFD1,3)+IFC1+IFP1+IFM1,2).*Fday'+(1-P.sigma)*sum(sum(IFD0,3)+IFC0+IFP0+IFM0)'.*Fnight')/P.wF ./ (P.alpha(:,5) + P.SR(5)/P.dZ); % [gC/m3] Detritus concentration where each fish is creating it - from formaula 7 Stamieszkin et al 2015
+C0C = (P.sigma*((1-P.fCR)*sum(ICR1,2)+(1-P.fCd)*sum(sum(ICD1,3),2)).*Cday'+(1-P.sigma)*((1-P.fCR)*sum(ICR0)'+(1-P.fCd)*sum(sum(ICD0,3))').*Cnight')/P.wC ./ (P.alpha(:,2) + P.SR(2)/P.dZ);
+C0P = (P.sigma*((1-P.fPR)*sum(IPR1,2)+(1-P.fPd)*sum(sum(IPD1,3),2)).*Pday'+(1-P.sigma)*((1-P.fPR)*sum(IPR0)'+(1-P.fPd)*sum(sum(IPD0,3))').*Pnight')/P.wP ./ (P.alpha(:,3) + P.SR(3)/P.dZ);
+C0A = (1-P.fA)*(P.sigma*sum(IAF1+IAJ1+IAM1,2).*Aday'+(1-P.sigma)*sum(IAF0+IAJ0+IAM0)'.*Anight')/P.wA ./ (P.alpha(:,6) + P.SR(6)/P.dZ);
+C0M = (P.sigma*(sum((1-P.fMd)*sum(IMD1,3)+(1-P.fMC)*IMC1+(1-P.fMC)*IMP1,2).*Mday')+(1-P.sigma)*sum((1-P.fMd)*sum(IMD0,3)+(1-P.fMC)*IMC0+(1-P.fMC)*IMP0)'.*Mnight')/P.wM ./ (P.alpha(:,4) + P.SR(4)/P.dZ);
+C0J = (1-P.fJ)*(P.sigma*sum(IJC1+IJP1+IJM1,2).*Jday'+(1-P.sigma)*sum(IJC0+IJP0+IJM0)'.*Jnight')/P.wJ ./ (P.alpha(:,7) + P.SR(7)/P.dZ);
 
 Dnew = [P.BD', zeros(P.n,6)];
         
@@ -539,6 +543,13 @@ D0 = [C0C C0P C0M C0F C0A C0J]; % [gC /m3] Concentration of detritus where it is
         FitF(Iavg-i) = max(max(fitF));
         FitM(Iavg-i) = max(max(fitM));
         
+        MA = MA + A/Iavg;
+        MC = MC + C/Iavg;
+        MF = MF + F/Iavg;
+        MJ = MJ + J/Iavg;
+        MM = MM + M/Iavg;
+        MP = MP + PC/Iavg;
+        
         MD(:,:,Iavg-i) = D;
     end
     
@@ -555,7 +566,7 @@ D0 = [C0C C0P C0M C0F C0A C0J]; % [gC /m3] Concentration of detritus where it is
 %      end
 end
 toc
-filename = strcat('Run_B_',num2str(k),'.mat');
+filename = strcat('Run_F_',num2str(k),'.mat');
 save(filename)
 
 Plot_DVM;

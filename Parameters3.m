@@ -20,7 +20,7 @@ if k==1
     c = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
     p = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
     f = 0.5;%0.5; % [gC m^-2] total abundance of forage fish in the water column 2
-    m = 3; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
+    m = 1.7; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
     a = 0.1;%005;%0.001; % [gC m^-2] total abundance of top predators in the water column
     j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
     r =  12*10^-3; % [gC m^-3] Phytoplankton concentration in the water column 
@@ -35,7 +35,7 @@ elseif k==2
     c = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
     p = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column 4
     f = 0.5; % [gC m^-2] total abundance of forage fish in the water column 2
-    m = 7; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
+    m = 1.7; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
     a = 0.1; % [gC m^-2] total abundance of top predators in the water column
     j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
     r = 12*10^-3; % [gC m^-3] Phytoplankton concentration in the water column 
@@ -50,7 +50,7 @@ elseif k==3
     c = 0.5*3*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
     p = 0.5*3*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column 4
     f = 0.5; % [gC m^-2] total abundance of forage fish in the water column 2
-    m = 6; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
+    m = 1.7; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
     a = 0.1; % [gC m^-2] total abundance of top predators in the water column
     j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
     r = 12*10^-3; % [gC m^-3] Phytoplankton concentration in the water column 
@@ -65,8 +65,8 @@ elseif k==4
     c = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of copepods in the water column 4  
     p = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column 4  
     f = 0.1; % [gC m^-2] total abundance of forage fish in the water column 2
-    m = 7; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
-    a = 1;%0.5;%0.005; % [gC m^-2] total abundance of top predators in the water column
+    m = 1.7; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
+    a = 0.1; %0.5;%0.005; % [gC m^-2] total abundance of top predators in the water column
     j = 0.1; % [gC m^-2] total abundance of tactile predators in the water column
     r = 6*10^-3; % [gC m^-3] Phytoplankton concentration in the water column  
 end
@@ -134,7 +134,7 @@ P.RP = 0.5*P.lP; % [m] Sensing range for copepods
 P.fPR = 0.7; % [-] Assimilation efficiency for copepods eating the resource
 P.fPd = 0.7; % [-] Assimilation efficiency for copepods eating detritus
 
-P.T0P = 10; % [ºC] Reference temperature for copepods
+P.T0P =  10; % [ºC] Reference temperature for copepods
 P.TmP = 15; % [ºC] Maximum temperature for zooplankton before decline
 P.QP = 2; % [-] Q10 for copepods
 P.pcritP = @(t) 0.5; % [kPa] Pcrit, where MMR = SMR
@@ -155,7 +155,7 @@ P.uF = speed(P.lF); % [m/day] Max forage fish speed
 % P.KF = 0.1; % [W/m^2] Half-saturation constant for light for forage fish
 P.fF = 0.65; % [-] Assimilation efficiency for forage fish
 
-P.T0F = mean(P.T(P.zi<200)); % [ºC] Reference temperature for forage fish - 15 for 1-4
+P.T0F =  mean(P.T(P.zi<200)); % [ºC] Reference temperature for forage fish - 15 for 1-4
 P.TmF = max(P.T); % [ºC] Maximum temperature for forage fish before decline - 20 for 1-4
 P.QF = 1.5; % [-] Q10 for forage fish
 P.pcritF = 5; % [kPa] Pcrit for forage fish - constant with temperature for now
@@ -176,7 +176,7 @@ P.uA = speed(P.lA); % [m/day] Max top predator speed
 % VisNA = @(l) min(10*P.lA, P.RA*sqrt(P.LN./(P.KA+P.LN))*(10*l/P.lA)); % [m] Depth-dependent visual range of top predator during nighttime
 P.fA = 0.65; % [-] Assimilation efficiency for top predator
 
-P.T0A = 18; % [ºC] Reference temperature for top predator
+P.T0A = P.T(10);% 18; % [ºC] Reference temperature for top predator
 P.TmA = max(P.T); % [ºC] Maximum temperature for top predator before decline
 P.QA = 2; % [-] Q10 for top predator
 P.pcritA = 0.5; % [kPa] Pcrit for top predator - constant with temperature for now
@@ -220,7 +220,7 @@ P.uM = speed(P.lM); % [m/day] Max mesopelagic fish speed
 % P.KM = 10^-6; % [W/m^2] Half-saturation constant for light for mesopelagic fish
 % VisDM = @(l) min(10*P.lM, P.RM*sqrt(P.LD./(P.KM+P.LD))'*(10*l/P.lM)); % [m] Depth-dependent visual range of mesopelagic fish during daytime
 % VisNM = @(l) min(10*P.lM, P.RM*sqrt(P.LN./(P.KM+P.LN))*(10*l/P.lM)); % [m] Depth-dependent visual range of forage mesopelagic during daytime
-P.fMC = 0.65; % [-] Assimilation efficiency for mesopelagic fish feeding on copepods
+P.fMC = 0.85; % [-] Assimilation efficiency for mesopelagic fish feeding on copepods - 0.65 before
 P.fMd = 0.065; % [-] Assimilation efficiency for mesopelagic fish feeding on detritus
 
 P.T0M = 6; % [ºC] Reference temperature for mesopelagic fish
