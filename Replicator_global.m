@@ -1,5 +1,8 @@
 %Replicator code
-%global C F J M A B %the global variables are the proportions of each population using each strategy
+
+load global_env_data.mat
+load global_bio_data.mat
+
 Niter = 10^5; % [-] number of iterations of the replicator equation
 Iavg = Niter; %100000; % [-] How many of the last time steps do we save?
 dtfact = 0.05; %Max percentage of change per time step
@@ -10,8 +13,10 @@ reinit = 1; %Do we start from the last simulation or do we initialize strategy m
 minimort = 0.01; % [day^-1] Background mortality
 minimortC = 0.1; % [day^-1] Background mortality for small copepods
 
-for k=[4]
-    P = Parameters3(k);
+for lat=1:size(latitude,2)
+    for lon=1:size(longitude,2)       
+        if seafloor(lat,lon) > 200 && latitude(lat)>=-40 && latitude(lat)<=50 && WC(lat,lon)==1 && -154<=longitude(lon) && longitude(lon)<=-120%not near the coast nor at the poles - and for now only where we have planktonic data
+            P = Parameters_global(lon,lat);
 
 %Coefficient to prevent extinction of strategies - and bugs in the OMZ
 coeff = 10^-12;%10^-6; % [-] 10^-5
@@ -566,9 +571,12 @@ D0 = [C0C C0P C0M C0F C0A C0J]; % [gC /m3] Concentration of detritus where it is
 %      end
 end
 toc
-filename = strcat('Run_F_',num2str(k),'.mat');
+
+Carbon_export;
+
+filename = strcat('Run_lat-',num2str(lat),'_long-',num2str(lon),'.mat');
 save(filename)
 
-Plot_DVM;
-drawnow
+        end
+    end
 end

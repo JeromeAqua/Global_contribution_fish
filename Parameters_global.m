@@ -1,6 +1,7 @@
-function P = Parameters3(k)
+function P = Parameters_global(long,lat)
 %% Parameter file
-
+load global_env_data.mat
+load global_bio_data.mat
 %Environment set-up
 P.ZMAX = 1000; % [m] Maximum depth
 P.n = 50; % [-] Number of water layers that we want
@@ -8,75 +9,31 @@ P.zext = linspace(0,P.ZMAX,P.n+1); % [m] Boundaries of water layers - later we c
 P.zi = (P.zext(2:end)+P.zext(1:end-1))/2; % [m] Average depth of each water layer, the one we use in reality 
 P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
 
-%Environmental parameters
-load O_T_4_basins.mat
-if k==1
-    P.T = interp1(depth, TNA, P.zi); % [degree C] Temperature
-    P.pO2 = interp1(depth, pO2NA, P.zi); % [kPa] oxygen partial pressure
-    P.zo = 41.13; % [m] MLD
-    P.klight = 0.0223+0.02; % [m^-1] Light attenuation coefficient in the water column
-    P.sigma = 0.6819; % [-] Proportion of daytime in 24h
-    chlasurf = 0.0425; % [mg chla / m^3] Surface concentration of chlorophyll a %0.012
-    c = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
-    p = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
-    f = 0.5;%0.5; % [gC m^-2] total abundance of forage fish in the water column 2
-    m = 1.7; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
-    a = 0.1;%005;%0.001; % [gC m^-2] total abundance of top predators in the water column
-    j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
-    r =  12*10^-3; % [gC m^-3] Phytoplankton concentration in the water column 
+[~,idxlat] = max(lat==latitude);
+[~,idxlon] = max(long==longitude);
+
+    P.T = interp1(depth, squeeze(T(idxlat,idxlon,:)), P.zi); % [degree C] Temperature
+    P.pO2 = interp1(depth, squeeze(pO2(idxlat,idxlon,:)), P.zi); % [kPa] oxygen partial pressure
+    P.zo = mldbar(idxlat,idxlon); % [m] MLD
+    P.zm = P.zo/2; % [m] Sharpness of the transition to from the mixed layer to depleted layers
+
+    P.klight = KLIGHT(idxlat,idxlon); %0.0423; % [m^-1] Light attenuation coefficient in the water column
+    P.sigma = 0.5; % [-] Proportion of daytime in 24h - YEARLY CRUDE AVERAGE SO FAR
     
-elseif k==2
-    P.T = interp1(depth, TI, P.zi); % [degree C] Temperature
-    P.pO2 = interp1(depth, pO2I, P.zi); % [kPa] oxygen partial pressure
-    P.zo = 26.54; % [m] MLD
-    P.klight = 0.0240; % [m^-1] Light attenuation coefficient in the water column
-    P.sigma = 0.6521; % [-] Proportion of daytime in 24h
-    chlasurf = 0.0592; % [mg chla / m^3] Surface concentration of chlorophyll a  
-    c = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
-    p = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column 4
-    f = 0.5; % [gC m^-2] total abundance of forage fish in the water column 2
-    m = 1.7; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
-    a = 0.1; % [gC m^-2] total abundance of top predators in the water column
+    chlasurf = phyto_obs(idxlat,idxlon); % [mg chla / m^3] Surface concentration of chlorophyll a %0.012
+    c = 10^-3*Small_Z(idxlat,idxlon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
+    p = 10^-3*Big_Z(idxlat,idxlon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
+    f = 0.1;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
+    m = 0.2; % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7
+    a = 0.05;%005;%0.001; % [gC m^-2] total abundance of top predators in the water column 0.1
     j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
-    r = 12*10^-3; % [gC m^-3] Phytoplankton concentration in the water column 
-    
-elseif k==3
-    P.T = interp1(depth, TWP, P.zi); % [degree C] Temperature
-    P.pO2 = interp1(depth, pO2WP, P.zi); % [kPa] oxygen partial pressure
-    P.zo = 53.52; % [m] MLD
-    P.klight = 0.0227+0.01; % [m^-1] Light attenuation coefficient in the water column
-    P.sigma = 0.5840; % [-] Proportion of daytime in 24h
-    chlasurf = 0.0449;% 0.08; % [mg chla / m^3] Surface concentration of chlorophyll a  
-    c = 0.5*3*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
-    p = 0.5*3*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column 4
-    f = 0.5; % [gC m^-2] total abundance of forage fish in the water column 2
-    m = 1.7; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
-    a = 0.1; % [gC m^-2] total abundance of top predators in the water column
-    j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
-    r = 12*10^-3; % [gC m^-3] Phytoplankton concentration in the water column 
-    
-elseif k==4
-    P.T = interp1(depth, TEP, P.zi); % [degree C] Temperature
-    P.pO2 = interp1(depth, pO2EP, P.zi); % [kPa] oxygen partial pressure %single(linspace(20,20,size(P.zi,2)));%
-    P.zo = 29.51; % [m] MLD
-    P.klight = 0.0264+0.02; % [m^-1] Light attenuation coefficient in the water column
-    P.sigma = 0.604; % [-] Proportion of daytime in 24h
-    chlasurf = 0.0780; % [mg chla / m^3] Surface concentration of chlorophyll a  
-    c = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of copepods in the water column 4  
-    p = 0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column 4  
-    f = 0.1; % [gC m^-2] total abundance of forage fish in the water column 2
-    m = 0.17; % [gC m^-2] total abundance of mesopelagic fish in the water column 4
-    a = 0.1; %0.5;%0.005; % [gC m^-2] total abundance of top predators in the water column
-    j = 0.1; % [gC m^-2] total abundance of tactile predators in the water column
-    r = 6*10^-3; % [gC m^-3] Phytoplankton concentration in the water column  
-end
+   
 
 P.Lmax = 1000; % [W/m^2] Surface irradiance during daytime
 P.rho = 10^-5; % [-] Fraction of daytime light during nighttime
 P.LD = P.Lmax*exp(-P.klight*P.zi); % [W/m^2] Depth-dependent day light levels
 P.LN = P.rho*P.LD; % [W/m^2] Depth-dependent night light levels
 
-P.zm = 30; % [m] Sharpness of the transition to from the mixed layer to depleted layers
 
 %Useful functions
 speed = @(l) 3600*24*0.9112*l^0.825; % [m/day] (max) size-dependent swimming speed for fish and copepods, l in m
@@ -96,7 +53,7 @@ P.gamma = 0.5; % [-] Cross sectional area efficiently scanned for fish
 
 %%%%%%%%%%% ABUNDANCES %%%%%%%%%%%%%
 
-P.R  = chlasurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration r*exp(-(P.zi-50).^2/30^2)/P.ZMAX / sum(exp(-(P.zi-50).^2/30^2)) ; % 10 is chla to C ratio - assumed error in data, in gchla/m3 and not mg chla / m3
+P.R  = 10^-3*chlasurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration r*exp(-(P.zi-50).^2/30^2)/P.ZMAX / sum(exp(-(P.zi-50).^2/30^2)) ; % 10 is chla to C ratio - assumed error in data, in gchla/m3 and not mg chla / m3
 P.D =  5*10^-5*min(50^-0.86,(P.zi-50).^-0.86)/50^(-0.86)+0.1*10^-5*(P.zi-400).^-0.86/400^(-0.86).*(P.zi>400); % [gC / m^3] Detritus concentration - 5*10^-5*.. for k=1 and 4
 
 P.BD =10^-7*ones(size(P.zi)); % 5*10^-7*min(50^-0.86,(P.zi-50).^-0.86)/50^(-0.86)+0.1*10^-5*(P.zi-400).^-0.86/400^(-0.86).*(P.zi>400); % [gC / m^3] Background detritus flux coming from dead phyto etc
