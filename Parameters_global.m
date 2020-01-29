@@ -1,4 +1,4 @@
-function P = Parameters_global(long,lat)
+function P = Parameters_global(lon,lat)
 %% Parameter file
 load global_env_data.mat
 load global_bio_data.mat
@@ -9,23 +9,23 @@ P.zext = linspace(0,P.ZMAX,P.n+1); % [m] Boundaries of water layers - later we c
 P.zi = (P.zext(2:end)+P.zext(1:end-1))/2; % [m] Average depth of each water layer, the one we use in reality 
 P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
 
-[~,idxlat] = max(lat==latitude);
-[~,idxlon] = max(long==longitude);
+% [~,idxlat] = max(lat==latitude);
+% [~,idxlon] = max(lon==longitude);
 
-    P.T = interp1(depth, squeeze(T(idxlat,idxlon,:)), P.zi); % [degree C] Temperature
-    P.pO2 = interp1(depth, squeeze(pO2(idxlat,idxlon,:)), P.zi); % [kPa] oxygen partial pressure
-    P.zo = mldbar(idxlat,idxlon); % [m] MLD
+    P.T = interp1(depth, squeeze(T(lat,lon,:)), P.zi); % [degree C] Temperature
+    P.pO2 = interp1(depth, squeeze(pO2(lat,lon,:)), P.zi); % [kPa] oxygen partial pressure
+    P.zo = mldbar(lat,lon); % [m] MLD
     P.zm = P.zo/2; % [m] Sharpness of the transition to from the mixed layer to depleted layers
 
-    P.klight = KLIGHT(idxlat,idxlon); %0.0423; % [m^-1] Light attenuation coefficient in the water column
+    P.klight = KLIGHT(lat,lon); %0.0423; % [m^-1] Light attenuation coefficient in the water column
     P.sigma = 0.5; % [-] Proportion of daytime in 24h - YEARLY CRUDE AVERAGE SO FAR
     
-    chlasurf = phyto_obs(idxlat,idxlon); % [mg chla / m^3] Surface concentration of chlorophyll a %0.012
-    c = 10^-3*Small_Z(idxlat,idxlon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
-    p = 10^-3*Big_Z(idxlat,idxlon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
-    f = 0.1;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
+    chlasurf = phyto_obs(lat,lon); % [mg chla / m^3] Surface concentration of chlorophyll a %0.012
+    c = 10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
+    p = c/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
+    f = 0.01;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
     m = 0.2; % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7
-    a = 0.05;%005;%0.001; % [gC m^-2] total abundance of top predators in the water column 0.1
+    a = 0.005;%005;%0.001; % [gC m^-2] total abundance of top predators in the water column 0.1
     j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
    
 
@@ -191,13 +191,13 @@ P.mM = 6*P.tM; % [day^-1] MMR at P.T0M
 % P.MSNM = min(1,max(0,P.MSNM));%/max(max(P.MSNM)); % [-] same de-unitization
 
 %Detritus terms
-P.SR = [0.5 1 10 50 100 500 100]; %[P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 10 10 10 10];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
+P.SR = [1 10 50 100 200 500 200]; %[5 50 150 200 800 1000 500]; %[P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 10 10 10 10];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
 K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant
 qrem = 1.5; % [-] Q10 for remineralization rate of POC
 Tref = mean(P.T(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
 Ko2 = 10*0.0224./K(P.T); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
 
-P.alpha = 0.25*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
+P.alpha = 0.5*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
 P.alpha = repmat(P.alpha',1,7); % transformation so that it has the same size as D - easier if we want to have specific degradation rates later
 %% Clearance rates
 %%%DECREASED MIN RANGE FOR F AND A

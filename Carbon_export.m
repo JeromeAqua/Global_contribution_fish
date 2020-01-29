@@ -38,6 +38,7 @@ DegPOC(1:end-1,6) = Dmean(:,7).*(1-exp(-P.alpha(:,7)*P.dZ/P.SR(7)))*P.SR(7); % [
 DegPOC(end,:) = P.SR(2:end).*Dmean(end,2:end).*exp(-P.alpha(end,2:end)*P.dZ./P.SR(2:end)); % [gC m^-2 day^-1] Faecal pellets going below ZMAX, they wont be remineralized so we count them as export
 DegPOC_depth = cumsum(DegPOC,1,'reverse'); DegPOC_depth = DegPOC_depth(1:end-1,:); % [gC m^-2 day^-1] Degradation of faecal pellets below each depth
 
+%%
 % figure
 % subplot(221)
 % semilogx(10^3*DegPOC_depth(1:end,:), P.zi(1:end))
@@ -80,6 +81,6 @@ DegPOC_depth = cumsum(DegPOC,1,'reverse'); DegPOC_depth = DegPOC_depth(1:end-1,:
 % xlim(10^3*[10^-6 0.5])
 % 
 % figure
-% plot(DIC./DegPOC, P.zi)
+% plot(DIC./DegPOC(1:50,:), P.zi)
 % set(gca,'ydir','reverse')
 

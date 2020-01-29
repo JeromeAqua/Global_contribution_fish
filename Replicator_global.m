@@ -13,8 +13,14 @@ reinit = 1; %Do we start from the last simulation or do we initialize strategy m
 minimort = 0.01; % [day^-1] Background mortality
 minimortC = 0.1; % [day^-1] Background mortality for small copepods
 
-for lat=1:size(latitude,2)
-    for lon=1:size(longitude,2)       
+zlattest = [68 46 47 49 40];
+zlongtest = [78 111 111 111 113];
+for j=2%1:size(zlattest,2)
+    lat=zlattest(j);
+    lon=zlongtest(j);
+
+% for lat=1:size(latitude,2)
+%     for lon=1:size(longitude,2)       
         if seafloor(lat,lon) > 200 && latitude(lat)>=-40 && latitude(lat)<=50 && WC(lat,lon)==1 && -154<=longitude(lon) && longitude(lon)<=-120%not near the coast nor at the poles - and for now only where we have planktonic data
             P = Parameters_global(lon,lat);
 
@@ -574,9 +580,9 @@ toc
 
 Carbon_export;
 
-filename = strcat('Run_lat-',num2str(lat),'_long-',num2str(lon),'.mat');
+filename = strcat('TEST_2_lat_',num2str(latitude(lat)),'_long_',num2str(longitude(lon)),'.mat');
 save(filename)
 
         end
     end
-end
+% end
