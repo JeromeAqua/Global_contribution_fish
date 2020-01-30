@@ -24,8 +24,8 @@ P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
     c = 10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
     p = c/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
     f = 0.01;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
-    m = 0.2; % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7
-    a = 0.005;%005;%0.001; % [gC m^-2] total abundance of top predators in the water column 0.1
+    m = 0.1; % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7
+    a = 0.01;%005;%0.001; % [gC m^-2] total abundance of top predators in the water column 0.1
     j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
    
 
@@ -191,7 +191,7 @@ P.mM = 6*P.tM; % [day^-1] MMR at P.T0M
 % P.MSNM = min(1,max(0,P.MSNM));%/max(max(P.MSNM)); % [-] same de-unitization
 
 %Detritus terms
-P.SR = [1 10 50 100 200 500 200]; %[5 50 150 200 800 1000 500]; %[P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 10 10 10 10];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
+P.SR = [1 10 60 200 400 1000 500]; %[5 50 150 200 800 1000 500]; %[P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 10 10 10 10];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
 K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant
 qrem = 1.5; % [-] Q10 for remineralization rate of POC
 Tref = mean(P.T(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC

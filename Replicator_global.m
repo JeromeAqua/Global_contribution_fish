@@ -13,9 +13,11 @@ reinit = 1; %Do we start from the last simulation or do we initialize strategy m
 minimort = 0.01; % [day^-1] Background mortality
 minimortC = 0.1; % [day^-1] Background mortality for small copepods
 
-zlattest = [68 46 47 49 40];
-zlongtest = [78 111 111 111 113];
-for j=2%1:size(zlattest,2)
+zlattest = [36    53    48    55    55    48    64    65    68    47    66    65    69    63    46    47    49    52    40,...
+            49    57    42    44    46    52    55    57    44    46    47    43    45];
+zlongtest = [ 5    43    44    45    59    68    74    78    78    81    83    88    88    89   111   111   111   111   113,...
+            138   165   167   168   169   170   170   170   175   175   175   176   176];
+for j=1:size(zlattest,2)
     lat=zlattest(j);
     lon=zlongtest(j);
 
@@ -419,16 +421,16 @@ Dnew = [P.BD', zeros(P.n,6)];
 D0 = [C0C C0P C0M C0F C0A C0J]; % [gC /m3] Concentration of detritus where it is produced, i.e. "beginning of Martin curves" - in the order C P M F A J
 
         %Calculation of the curves sinking from the sources     
-        for j=2:7  %for each detritus sizes (i.e. each producing population)
+        for jj=2:7  %for each detritus sizes (i.e. each producing population)
                 for ii=P.n:-1:1 % go backbward to not count detritus twice 
-                    Dnew(ii:P.n,j) = Dnew(ii:P.n,j) + D0(ii,j-1).*exp(P.alpha(ii:P.n,j)/P.SR(j).*(-P.zi(ii:P.n)'+P.zi(ii)));
+                    Dnew(ii:P.n,jj) = Dnew(ii:P.n,jj) + D0(ii,jj-1).*exp(P.alpha(ii:P.n,jj)/P.SR(jj).*(-P.zi(ii:P.n)'+P.zi(ii)));
                 end
         end
         
         %Removal of the detritus eaten previously
-        for j=1:7  %for each detritus sizes (backgr+zpk + fish)
+        for jj=1:7  %for each detritus sizes (backgr+zpk + fish)
                 for ii=P.n:-1:1 % go backbward to not count detritus twice 
-                    Dnew(ii:P.n,j) = Dnew(ii:P.n,j) - ConsD(ii,j)*P.dZ/P.SR(j).*exp(P.alpha(ii:P.n,j)/P.SR(j).*(-P.zi(ii:P.n)'+P.zi(ii)));  
+                    Dnew(ii:P.n,jj) = Dnew(ii:P.n,jj) - ConsD(ii,jj)*P.dZ/P.SR(jj).*exp(P.alpha(ii:P.n,jj)/P.SR(jj).*(-P.zi(ii:P.n)'+P.zi(ii)));  
                 end
         end
 
