@@ -21,11 +21,12 @@ P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
     P.sigma = 0.5; % [-] Proportion of daytime in 24h - YEARLY CRUDE AVERAGE SO FAR
     
     chlasurf = phyto_obs(lat,lon); % [mg chla / m^3] Surface concentration of chlorophyll a %0.012
-    c = 10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
-    p = c/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
-    f = 0.01;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
+    P.R  = 10^-3*chlasurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration r*exp(-(P.zi-50).^2/30^2)/P.ZMAX / sum(exp(-(P.zi-50).^2/30^2)) ; % 10 is chla to C ratio - assumed error in data, in gchla/m3 and not mg chla / m3
+    c = sum(P.R.*P.dZ)*0.51/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
+    p = c;%/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
+    f = 0.01;%0.01;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
     m = 0.1; % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7
-    a = 0.01;%005;%0.001; % [gC m^-2] total abundance of top predators in the water column 0.1
+    a = 0.01;%0.01;%005;%0.001; % [gC m^-2] total abundance of top predators in the water column 0.1
     j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
    
 
@@ -53,7 +54,6 @@ P.gamma = 0.5; % [-] Cross sectional area efficiently scanned for fish
 
 %%%%%%%%%%% ABUNDANCES %%%%%%%%%%%%%
 
-P.R  = 10^-3*chlasurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration r*exp(-(P.zi-50).^2/30^2)/P.ZMAX / sum(exp(-(P.zi-50).^2/30^2)) ; % 10 is chla to C ratio - assumed error in data, in gchla/m3 and not mg chla / m3
 P.D =  5*10^-5*min(50^-0.86,(P.zi-50).^-0.86)/50^(-0.86)+0.1*10^-5*(P.zi-400).^-0.86/400^(-0.86).*(P.zi>400); % [gC / m^3] Detritus concentration - 5*10^-5*.. for k=1 and 4
 
 P.BD =10^-7*ones(size(P.zi)); % 5*10^-7*min(50^-0.86,(P.zi-50).^-0.86)/50^(-0.86)+0.1*10^-5*(P.zi-400).^-0.86/400^(-0.86).*(P.zi>400); % [gC / m^3] Background detritus flux coming from dead phyto etc
@@ -193,7 +193,7 @@ P.mM = 6*P.tM; % [day^-1] MMR at P.T0M
 %Detritus terms
 P.SR = [1 10 60 200 400 1000 500]; %[5 50 150 200 800 1000 500]; %[P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 10 10 10 10];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
 K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant
-qrem = 1.5; % [-] Q10 for remineralization rate of POC
+qrem = 1.2;%1.5; % [-] Q10 for remineralization rate of POC
 Tref = mean(P.T(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
 Ko2 = 10*0.0224./K(P.T); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
 
