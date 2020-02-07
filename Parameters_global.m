@@ -20,9 +20,9 @@ P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
     P.klight = KLIGHT(lat,lon); %0.0423; % [m^-1] Light attenuation coefficient in the water column
     P.sigma = 0.5; % [-] Proportion of daytime in 24h - YEARLY CRUDE AVERAGE SO FAR
     
-    chlasurf = phyto_obs(lat,lon); % [mg chla / m^3] Surface concentration of chlorophyll a %0.012
-    P.R  = 10^-3*chlasurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration r*exp(-(P.zi-50).^2/30^2)/P.ZMAX / sum(exp(-(P.zi-50).^2/30^2)) ; % 10 is chla to C ratio - assumed error in data, in gchla/m3 and not mg chla / m3
-    c = sum(P.R.*P.dZ)*0.51/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
+    physurf = phyto_obs(lat,lon); % [mg C / m^3] Surface concentration of phytoplankton
+    P.R  = 10^-3*physurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration 
+    c = 10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4 - sum(P.R.*P.dZ)*0.51/2;
     p = c;%/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
     f = 0.01;%0.01;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
     m = 0.1; % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7

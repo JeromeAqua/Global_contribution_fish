@@ -55,19 +55,22 @@ POC_computed = 10^3*POC_computed; % [mgC /m^2 /day]
 %%
 a = colormap(flipud(jet));
 figure
+subplot(121)
 for kkk=1:length(POC_observed)
-    plot(POC_observed(kkk), POC_computed(kkk),'o','MarkerFaceColor', a(floor(64*Z_traps(kkk)/2000),:)) %k');%
+    loglog(POC_observed(kkk), POC_computed(kkk),'o','MarkerFaceColor', a(floor(64*Z_traps(kkk)/2000),:)) %k');%
     hold on
 end
 mm = min([POC_observed; POC_computed]);
 MM = max([POC_observed; POC_computed]);
-plot([mm MM], [mm MM], 'k')
+loglog([mm MM], [mm MM], 'k')
 xlabel('Observed POC flux [gC/m^2/day]')
 ylabel('Modeled POC flux [gC / m^2 /day]')
 
 colorbar
 caxis([50 2000])
 error = 1/size(POC_observed,1)*sum((POC_observed-POC_computed).^2)
+subplot(121)
+histogram(POC_observed-POC_computed)
 
 % hh = [];% 5to know the respective contributions of the different
 % %populations to POC
