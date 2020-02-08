@@ -1,5 +1,5 @@
 %Replicator code
-
+addpath C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data
 load global_env_data.mat
 load global_bio_data.mat
 
@@ -17,9 +17,9 @@ zlattest = [36    53    48    55    55    48    64    65    68    47    66    65
             49    57    42    44    46    52    55    57    44    46    47    43    45];
 zlongtest = [ 5    43    44    45    59    68    74    78    78    81    83    88    88    89   111   111   111   111   113,...
             138   165   167   168   169   170   170   170   175   175   175   176   176];
-for j=15%1:size(zlattest,2)
-    lat=zlattest(j);
-    lon=zlongtest(j);
+for j=1%1:size(zlattest,2)
+    lat=46; % zlattest(j);
+    lon=111; %zlongtest(j);
 
 % for lat=1:size(latitude,2)
 %     for lon=1:size(longitude,2)       
@@ -582,7 +582,7 @@ toc
 
 Carbon_export;
 
-filename = strcat('TEST_petrik_lat_',num2str(latitude(lat)),'_long_',num2str(longitude(lon)),'.mat');
+filename = strcat('newtest_b_lat_',num2str(latitude(lat)),'_long_',num2str(longitude(lon)),'.mat');
 save(filename)
 
         end

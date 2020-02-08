@@ -67,7 +67,7 @@ P.C = c/P.ZMAX; % [gC m^-3] Mean concentration in the water column
 P.lC = 0.5*10^-3; % [m] Typical length for copepod
 P.wC = 1.4*10^-4*(100*P.lC)^2.74; % [gC] Weight of a typical copepod
 P.uC = speed(P.lC); % [m/day] Max copepod speed
-P.RC = 0.5*P.lC; % [m] Sensing range for copepods
+P.RC = 0.3*P.lC; % [m] Sensing range for copepods
 P.fCR = 0.7; % [-] Assimilation efficiency for copepods eating the resource
 P.fCd = 0.07; % [-] Assimilation efficiency for copepods eating detritus
 
@@ -75,7 +75,7 @@ P.T0C = mean(P.T(P.zi<200)); % [ºC] Reference temperature for copepods - 15 for 
 P.TmC = max(P.T(P.zi<200)); % [ºC] Maximum temperature for zooplankton before decline - 18 for 1-4
 P.QC = 2; % [-] Q10 for copepods
 P.pcritC = @(t) 3.5; % [kPa] Pcrit, where MMR = SMR
-P.tC = 0.1*0.0052*P.wC^-0.25; % [day^-1] SMR at P.TC  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& DIVIDED BY 10 FOR A TRY %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+P.tC = 0.0052*P.wC^-0.25; % [day^-1] SMR at P.TC  
 P.factMMRC = 3; % Factor of increase between SMRmax and MMRmax: MMRmax = factM*SMRmax 
 P.propC = 3; % %of oxygen saturation above which zooplankton are oxyregulators
 [P.SMRC, P.MSNC, P.MSDC, P.MaskC] = Metabolicscope('copepod',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
@@ -191,7 +191,7 @@ P.mM = 6*P.tM; % [day^-1] MMR at P.T0M
 % P.MSNM = min(1,max(0,P.MSNM));%/max(max(P.MSNM)); % [-] same de-unitization
 
 %Detritus terms
-P.SR = [1 10 60 200 400 1000 500]; %[5 50 150 200 800 1000 500]; %[P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 10 10 10 10];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
+P.SR = [1 50 100 300 500 1000 500]; %[5 50 150 200 800 1000 500]; %[P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 10 10 10 10];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
 K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant
 qrem = 1.2;%1.5; % [-] Q10 for remineralization rate of POC
 Tref = mean(P.T(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
@@ -277,8 +277,8 @@ P.ENMP = repmat(PNMP',P.n,1)*P.gamma*pi*P.uM.*P.MSNM.*(repmat(VisN(0.5,10^-7,P.l
 % P.ENMC = max(P.ENMC, 0.5*pi*P.uM*P.MSNM*(P.lM/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 %Copepod
-P.EDCp = repmat(PDCp,P.n,P.n)*pi*(P.RC)^2*P.uC.*P.MSDC; % [m^3 day^-1] Clearance rate of copepod during day - ignored swimming speed and size of prey, so detection distance is just the fluid signal of the (moving) predator
-P.ENCp = repmat(PNCp',P.n,P.n)*pi*(P.RC)^2*P.uC.*P.MSNC; % [m^3 day^-1] Clearance rate of copepod during night - ignored as during day
+P.EDCp = 0.8*repmat(PDCp,P.n,P.n)*pi*(P.RC)^2*P.uC.*P.MSDC; % [m^3 day^-1] Clearance rate of copepod during day - ignored swimming speed and size of prey, so detection distance is just the fluid signal of the (moving) predator
+P.ENCp = 0.8*repmat(PNCp',P.n,P.n)*pi*(P.RC)^2*P.uC.*P.MSNC; % [m^3 day^-1] Clearance rate of copepod during night - ignored as during day
 
 P.EDCd = repmat(repmat(PDCd,P.n,P.n).*pi*(P.RC)^2*P.uC.*P.MSDC,1,1,7); % [m^3 day^-1] - no need to change anything here because we assume that both phytoplankton and detritus do not actively avoid prey
 P.ENCd = repmat(repmat(PNCd',P.n,P.n).*pi*(P.RC)^2*P.uC.*P.MSNC,1,1,7); % [m^3 day^-1]
@@ -303,7 +303,7 @@ P.ENJP = repmat(PNJP',P.n,1)*pi*P.uJ.*P.MSNJ*(0.089*(P.RJ)^2);%-P.RC.^2); % [m^3
 P.metC = repmat(P.SMRC',1,P.n)*P.sigma + repmat(P.SMRC,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for copepod
 P.metP = repmat(P.SMRP',1,P.n)*P.sigma + repmat(P.SMRP,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for copepod
 P.metA = repmat(P.SMRA',1,P.n)*P.sigma + repmat(P.SMRA,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for top predator
-P.metM = 0.05*( repmat(P.SMRM',1,P.n)*P.sigma + repmat(P.SMRM,P.n,1)*(1-P.sigma)); % [day^-1] Standard metabolic cost associated with each strategy for mesopelagic fish
+P.metM = ( repmat(P.SMRM',1,P.n)*P.sigma + repmat(P.SMRM,P.n,1)*(1-P.sigma)); % [day^-1] Standard metabolic cost associated with each strategy for mesopelagic fish
 P.metF = repmat(P.SMRF',1,P.n)*P.sigma + repmat(P.SMRF,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for forage fish
 P.metJ = repmat(P.SMRJ',1,P.n)*P.sigma + repmat(P.SMRJ,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for tactile predator
 

@@ -1,20 +1,22 @@
 %% Dummy q matrix for now
- load('TEST_RUNS_lat_0_long_-140.mat')
- load global_env_data.mat
+%  load('TEST_RUNS_lat_0_long_-140.mat')
+% load('newtest_b_lat_0_long_-140.mat')
+% load global_env_data.mat
 
 longitude = 0:2:358; %[0:2:178, -180:2:-2]; %What we will use for our runs
 latitude = -90:2:90;
 
- Niter= a; Iavg= b;  P= c; MAday= d; MAnight= e; MCday=f; MCnight=g; MPday=h; MPnight=i; MFday=j; MFnight=k; MJday=l; MJnight=m;
- MMday=n; MMnight=o; DegPOC_depth=p; DIC_dept=q; Dmean=r; MA=s; MC=t; MF=u; MJ=v; MM=w; MP=x; MD=y; FitA=z; FitC=aa; FitF=bb; FitJ=cc; FitM=dd; FitP=ee;
+%  Niter= a; Iavg= b;  P= c; MAday= d; MAnight= e; MCday=f; MCnight=g; MPday=h; MPnight=i; MFday=j; MFnight=k; MJday=l; MJnight=m;
+%  MMday=n; MMnight=o; DegPOC_depth=p; DIC_dept=q; Dmean=r; MA=s; MC=t; MF=u; MJ=v; MM=w; MP=x; MD=y; FitA=z; FitC=aa; FitF=bb; FitJ=cc; FitM=dd; FitP=ee;
 
- Carbon_export;
+%  Carbon_export;
  
-  concerned = 2:7;
-%   q = [sum(DIC(:,concerned),2)/P.dZ; zeros(10,1)]; % [gC / m^3 / day] - if we want to calculate it for respiration
+  concerned = 7;
+%    q = [sum(DIC(:,concerned),2)/P.dZ; zeros(10,1)]; % [gC / m^3 / day] - if we want to calculate it for respiration
  
-depth_size = [repmat(P.dZ,P.n,1); 1; diff(add_on)']; % if we want to calculate it for faecal pellet excretion
 add_on = linspace(P.ZMAX+1,5000,10); % [m]
+depth_size = [repmat(P.dZ,P.n,1); 1; diff(add_on)']; % if we want to calculate it for faecal pellet excretion
+
 q = [ sum(DegPOC(1:end-1,concerned),2)/P.dZ; sum(repmat(Dmean(end,concerned),size(add_on,2),1).*exp(-repmat(P.alpha(end,concerned)./P.SR(concerned),size(add_on,2),1).*repmat(add_on'-P.zi(end),1,length(concerned))).*P.alpha(end,concerned),2)]; % [gc / m^3 / day]   
 
 q = repmat(reshape(q,[1 1 P.n+10]),size(latitude,2),size(longitude,2),1);
@@ -80,7 +82,7 @@ cseq = -A\q_source_OCIM;
 % total carbon sequestration in PgC
 totCseq = V'*cseq/1e15; % [PgC] everything was in gC before
 
-X = ['export is ', num2str(totexp), ' PgC/yr; total sequestration is ', num2str(totCseq), ' PgC for population ', num2str(concerned)];
+X = ['export is ', num2str(totexp), ' PgC/yr; total sequestration is ', num2str(totCseq), ' PgC, residence time is ', num2str(totCseq/totexp),' yrs for population ', num2str(concerned)];
 disp(X)
 
 
