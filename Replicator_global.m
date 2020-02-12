@@ -23,7 +23,7 @@ for j=1%1:size(zlattest,2)
 
 % for lat=1:size(latitude,2)
 %     for lon=1:size(longitude,2)       
-        if seafloor(lat,lon) > 200 && latitude(lat)>=-40 && latitude(lat)<=50 && WC(lat,lon)==1 && -154<=longitude(lon) && longitude(lon)<=-120%not near the coast nor at the poles - and for now only where we have planktonic data
+        if seafloor(lat,lon) > 200 && latitude(lat)>=-40 && latitude(lat)<=50 && ~isnan(Big_Z(lat,lon))% && WC(lat,lon)==1 %&& -154<=longitude(lon) && longitude(lon)<=-120%not near the coast nor at the poles - and for now only where we have planktonic data
             P = Parameters_global(lon,lat);
 
 %Coefficient to prevent extinction of strategies - and bugs in the OMZ
@@ -116,7 +116,7 @@ while notdone
 %Ingestion rates
 
     % First of detritus in case a rescaling is needed
-     IFD1 = P.IDF.*P.EDFd.*repmat(pref('forage','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n)  ./NF1;
+     IFD1 = P.IDF.*P.EDFd.*repmat(pref('forage','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n)  ./NF1; %[gC day^-1]
      IFD0 = P.INF.*P.ENFd.*repmat(pref('forage','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3])  ./NF0;
      IMD1 = P.IDM.*P.EDMd.*repmat(pref('meso','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n)  ./NM1; 
      IMD0 = P.INM.*P.ENMd.*repmat(pref('meso','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3])  ./NM0; 
@@ -352,24 +352,8 @@ while notdone
     fitJ = (IJ  - P.CJ/P.wJ - P.metJ)./MortJ; %-(0.001*((P.sigma*Jday'+(1-P.sigma)*Jnight)/(P.n*P.J)).^2);%-0.1 ; % [day^-1]
     fitF = (IF  - P.CF/P.wF - P.metF)./MortF; %-(0.001*((P.sigma*Fday'+(1-P.sigma)*Fnight)/(P.n*P.F)).^2);%-0.05; % [day^-1]
     fitM = (IM  - P.CM/P.wM - P.metM)./MortM; %-(0.001*((P.sigma*Mday'+(1-P.sigma)*Mnight)/(P.n*P.M)).^2);%-0.05; % [day^-1]
-    
-%     GA = (IA  - P.CA/P.wA - P.metA);
-%     MA = (0.01*((P.sigma*Aday'+(1-P.sigma)*Anight)/(P.n*P.A)).^2);
-%     GC = (IC  - P.CC/P.wC - P.metC);
-%     GP = (IP  - P.CP/P.wP - P.metP);
-%     GJ = (IJ  - P.CJ/P.wJ - P.metJ);
-%     GF = (IF  - P.CF/P.wF - P.metF);
-%     GM = (IM  - P.CM/P.wM - P.metM);
-%     
-%     fitA(fitA<0) = GA(fitA<0)./MA(fitA<0);
-%     fitC(fitC<0) = GC(fitC<0)./MortC(fitC<0);
-%     fitP(fitP<0) = GP(fitP<0)./MortP(fitP<0);
-%     fitJ(fitJ<0) = GJ(fitJ<0)./MortJ(fitJ<0);
-%     fitF(fitF<0) = GF(fitF<0)./MortF(fitF<0);
-%     fitM(fitM<0) = GM(fitM<0)./MortM(fitM<0);
-    
-    
-    
+     
+        
     if i<Niter-1
     x = 0.8;
     fitA = (1-x)*fitA + x*fita2;
@@ -380,59 +364,82 @@ while notdone
     fitP = (1-x)*fitP + x*fitp2;
     end
     
-% %Applying a Gaussian filter - tries
-%     fitA = imgaussfilt(fitA,sigf);
-%     fitC = imgaussfilt(fitC,sigf);
-%     fitP = imgaussfilt(fitP,sigf);
-%     fitF = imgaussfilt(fitF,sigf);
-%     fitJ = imgaussfilt(fitJ,sigf);
-%     fitM = imgaussfilt(fitM,sigf);    
+%     %% Weird try for now - taking into account other members of the population
+%     rati=0.5;
+%     fitA = rati*fitA+(1-rati)*sum(sum(fitA.*A));
+%     fitC = rati*fitC+(1-rati)*sum(sum(fitC.*C));
+%     fitF = rati*fitF+(1-rati)*sum(sum(fitF.*F));
+%     fitM = rati*fitM+(1-rati)*sum(sum(fitM.*M));
+%     fitJ = rati*fitJ+(1-rati)*sum(sum(fitJ.*J));
+%     fitP = rati*fitP+(1-rati)*sum(sum(fitP.*PC));
     
-%     
-%     fitF = sign(fitF).*log10(1+abs(fitF.*P.MaskF)); % Transformation to make it flatter - just a try for now
-%     fitA = sign(fitA).*log10(1+abs(fitA.*P.MaskA));
-%     fitC = sign(fitC).*log10(1+abs(fitC.*P.MaskC));
-%     fitP = sign(fitP).*log10(1+abs(fitP.*P.MaskP));
-%     fitM = sign(fitM).*log10(1+abs(fitM.*P.MaskM));
-%     fitJ = sign(fitJ).*log10(1+abs(fitJ.*P.MaskJ));
-
-% sigmo = @(x) 1./(1+exp(-50*x))-1/2;
-%     fitF = sigmo(fitF);
-%     fitA = sigmo(fitA);
-%     fitM = sigmo(fitM);
-%     fitJ = sigmo(fitJ);
-%     fitC = sigmo(fitC);
-%     fitP = sigmo(fitP);
-
 
 %%%%%%%%%%%%%%%%%% NOW FECAL PELLET FLUX CALCULATION %%%%%%%%%%%%%%%%%%%%%%
 
 %first calculation of the production at each depth - for each size (k+1 sizes): k for copepods, 1 for fish
 
-C0F = (1-P.fF)*(P.sigma*sum(sum(IFD1,3)+IFC1+IFP1+IFM1,2).*Fday'+(1-P.sigma)*sum(sum(IFD0,3)+IFC0+IFP0+IFM0)'.*Fnight')/P.wF ./ (P.alpha(:,5) + P.SR(5)/P.dZ); % [gC/m3] Detritus concentration where each fish is creating it - from formaula 7 Stamieszkin et al 2015
-C0C = (P.sigma*((1-P.fCR)*sum(ICR1,2)+(1-P.fCd)*sum(sum(ICD1,3),2)).*Cday'+(1-P.sigma)*((1-P.fCR)*sum(ICR0)'+(1-P.fCd)*sum(sum(ICD0,3))').*Cnight')/P.wC ./ (P.alpha(:,2) + P.SR(2)/P.dZ);
-C0P = (P.sigma*((1-P.fPR)*sum(IPR1,2)+(1-P.fPd)*sum(sum(IPD1,3),2)).*Pday'+(1-P.sigma)*((1-P.fPR)*sum(IPR0)'+(1-P.fPd)*sum(sum(IPD0,3))').*Pnight')/P.wP ./ (P.alpha(:,3) + P.SR(3)/P.dZ);
-C0A = (1-P.fA)*(P.sigma*sum(IAF1+IAJ1+IAM1,2).*Aday'+(1-P.sigma)*sum(IAF0+IAJ0+IAM0)'.*Anight')/P.wA ./ (P.alpha(:,6) + P.SR(6)/P.dZ);
-C0M = (P.sigma*(sum((1-P.fMd)*sum(IMD1,3)+(1-P.fMC)*IMC1+(1-P.fMC)*IMP1,2).*Mday')+(1-P.sigma)*sum((1-P.fMd)*sum(IMD0,3)+(1-P.fMC)*IMC0+(1-P.fMC)*IMP0)'.*Mnight')/P.wM ./ (P.alpha(:,4) + P.SR(4)/P.dZ);
-C0J = (1-P.fJ)*(P.sigma*sum(IJC1+IJP1+IJM1,2).*Jday'+(1-P.sigma)*sum(IJC0+IJP0+IJM0)'.*Jnight')/P.wJ ./ (P.alpha(:,7) + P.SR(7)/P.dZ);
+%Detritus are produced where we eat
+% C0F = (1-P.fF)*(P.sigma*sum(sum(IFD1,3)+IFC1+IFP1+IFM1,2).*Fday'+(1-P.sigma)*sum(sum(IFD0,3)+IFC0+IFP0+IFM0)'.*Fnight')/P.wF ./ (P.alpha(:,5) + P.SR(5)/P.dZ); % [gC/m3] Detritus concentration where each fish is creating it - from formaula 7 Stamieszkin et al 2015
+% C0C = (P.sigma*((1-P.fCR)*sum(ICR1,2)+(1-P.fCd)*sum(sum(ICD1,3),2)).*Cday'+(1-P.sigma)*((1-P.fCR)*sum(ICR0)'+(1-P.fCd)*sum(sum(ICD0,3))').*Cnight')/P.wC ./ (P.alpha(:,2) + P.SR(2)/P.dZ);
+% C0P = (P.sigma*((1-P.fPR)*sum(IPR1,2)+(1-P.fPd)*sum(sum(IPD1,3),2)).*Pday'+(1-P.sigma)*((1-P.fPR)*sum(IPR0)'+(1-P.fPd)*sum(sum(IPD0,3))').*Pnight')/P.wP ./ (P.alpha(:,3) + P.SR(3)/P.dZ);
+% C0A = (1-P.fA)*(P.sigma*sum(IAF1+IAJ1+IAM1,2).*Aday'+(1-P.sigma)*sum(IAF0+IAJ0+IAM0)'.*Anight')/P.wA ./ (P.alpha(:,6) + P.SR(6)/P.dZ);
+% C0M = (P.sigma*(sum((1-P.fMd)*sum(IMD1,3)+(1-P.fMC)*IMC1+(1-P.fMC)*IMP1,2).*Mday')+(1-P.sigma)*sum((1-P.fMd)*sum(IMD0,3)+(1-P.fMC)*IMC0+(1-P.fMC)*IMP0)'.*Mnight')/P.wM ./ (P.alpha(:,4) + P.SR(4)/P.dZ);
+% C0J = (1-P.fJ)*(P.sigma*sum(IJC1+IJP1+IJM1,2).*Jday'+(1-P.sigma)*sum(IJC0+IJP0+IJM0)'.*Jnight')/P.wJ ./ (P.alpha(:,7) + P.SR(7)/P.dZ);
 
-Dnew = [P.BD', zeros(P.n,6)];
-        
-D0 = [C0C C0P C0M C0F C0A C0J]; % [gC /m3] Concentration of detritus where it is produced, i.e. "beginning of Martin curves" - in the order C P M F A J
+% % % %Detritus are produced at all positions equally
+% % % C0F = (1-P.fF)*((sum(sum(IFD1,3)+IFC1+IFP1+IFM1,2)*P.sigma+(1-P.sigma)*sum(sum(IFD0,3)+IFC0+IFP0+IFM0)').*(P.sigma*Fday'+(1-P.sigma)*Fnight'))/P.wF ./ (P.alpha(:,5) + P.SR(5)/P.dZ); % [gC/m3] Detritus concentration where each fish is creating it - from formaula 7 Stamieszkin et al 2015
+% % % C0C = (((1-P.fCR)*P.sigma*sum(ICR1,2)+(1-P.fCd)*P.sigma*sum(sum(ICD1,3),2))+((1-P.fCR)*(1-P.sigma)*sum(ICR0)'+(1-P.fCd)*(1-P.sigma)*sum(sum(ICD0,3))')).*((1-P.sigma)*Cnight'+P.sigma*Cday')/P.wC ./ (P.alpha(:,2) + P.SR(2)/P.dZ);
+% % % C0P = (((1-P.fPR)*P.sigma*sum(IPR1,2)+(1-P.fPd)*P.sigma*sum(sum(IPD1,3),2))+((1-P.fPR)*(1-P.sigma)*sum(IPR0)'+(1-P.fPd)*(1-P.sigma)*sum(sum(IPD0,3))')).*((1-P.sigma)*Pnight'+P.sigma*Pday')/P.wP ./ (P.alpha(:,3) + P.SR(3)/P.dZ);
+% % % C0A = ((1-P.fA)*(P.sigma*sum(IAF1+IAJ1+IAM1,2)+(1-P.sigma)*sum(IAF0+IAJ0+IAM0)')).*((1-P.sigma)*Anight'+P.sigma*Aday')/P.wA ./ (P.alpha(:,6) + P.SR(6)/P.dZ);
+% % % C0M = (sum((1-P.fMd)*sum(IMD1,3)*P.sigma+(1-P.fMC)*IMC1*P.sigma+(1-P.fMC)*IMP1*P.sigma,2)+sum((1-P.fMd)*sum(IMD0,3)*(1-P.sigma)+(1-P.fMC)*IMC0*(1-P.sigma)+(1-P.fMC)*IMP0*(1-P.sigma))').*(P.sigma*Mday'+(1-P.sigma)*Mnight')/P.wM ./ (P.alpha(:,4) + P.SR(4)/P.dZ);
+% % % C0J = (1-P.fJ)*(sum(IJC1+IJP1+IJM1,2)*P.sigma+sum(IJC0+IJP0+IJM0)'*(1-P.sigma)).*((1-P.sigma)*Jnight'+P.sigma*Jday')/P.wJ ./ (P.alpha(:,7) + P.SR(7)/P.dZ);
+% % % 
+% % % 
+% % % Dnew = [P.BD', zeros(P.n,6)];
+% % %         
+% % % D0 = [C0C C0P C0M C0F C0A C0J]; % [gC /m3] Concentration of detritus where it is produced, i.e. "beginning of Martin curves" - in the order C P M F A J
+% % % 
+% % %         %Calculation of the curves sinking from the sources     
+% % %         for jj=2:7  %for each detritus sizes (i.e. each producing population)
+% % %                 for ii=P.n:-1:1 % go backbward to not count detritus twice 
+% % %                     Dnew(ii:P.n,jj) = Dnew(ii:P.n,jj) + D0(ii,jj-1).*exp(P.alpha(ii:P.n,jj)/P.SR(jj).*(-P.zi(ii:P.n)'+P.zi(ii)));
+% % %                 end
+% % %         end
+% % %         
+% % %         %Removal of the detritus eaten previously
+% % %         for jj=1:7  %for each detritus sizes (backgr+zpk + fish)
+% % %                 for ii=P.n:-1:1 % go backbward to not count detritus twice 
+% % %                     Dnew(ii:P.n,jj) = Dnew(ii:P.n,jj) - ConsD(ii,jj)*P.dZ/P.SR(jj).*exp(P.alpha(ii:P.n,jj)/P.SR(jj).*(-P.zi(ii:P.n)'+P.zi(ii)));  
+% % %                 end
+% % %         end
 
-        %Calculation of the curves sinking from the sources     
-        for jj=2:7  %for each detritus sizes (i.e. each producing population)
-                for ii=P.n:-1:1 % go backbward to not count detritus twice 
-                    Dnew(ii:P.n,jj) = Dnew(ii:P.n,jj) + D0(ii,jj-1).*exp(P.alpha(ii:P.n,jj)/P.SR(jj).*(-P.zi(ii:P.n)'+P.zi(ii)));
-                end
+
+    FecC = (P.sigma*((1-P.fCR)*ICR1+(1-P.fCd)*sum(ICD1,3))+(1-P.sigma)*((1-P.fCR)*ICR0+(1-P.fCd)*sum(ICD0,3)))/P.wC; % [day^-1]
+    FecP = (P.sigma*((1-P.fPR)*IPR1+(1-P.fPd)*sum(IPD1,3))+(1-P.sigma)*((1-P.fPR)*IPR0+(1-P.fPd)*sum(IPD0,3)))/P.wP; % [day^-1]
+    FecF = (1-P.fF)*(P.sigma*(IFP1+IFC1+sum(IFD1,3)+IFM1)+(1-P.sigma)*(sum(IFD0,3)+IFC0+IFP0+IFM0))/P.wF; % [day^-1]
+    FecA = (1-P.fA)*(P.sigma*(IAF1+IAJ1+IAM1)+(1-P.sigma)*(IAF0+IAJ0+IAM0))/P.wA; % [day^-1]
+    FecJ = (1-P.fJ)*(P.sigma*(IJC1+IJP1+IJM1)+(1-P.sigma)*(IJC0+IJP0+IJM0))/P.wJ; % [day^-1]
+    FecM = (P.sigma*((1-P.fMd)*sum(IMD1,3)+(1-P.fMC)*IMC1+(1-P.fMC)*IMP1)+(1-P.sigma)*((1-P.fMd)*sum(IMD0,3)+(1-P.fMC)*IMC0+(1-P.fMC)*IMP0))/P.wM; % [day^-1]
+
+    sourceC = P.C*P.n*(sum(FecC.*C,2)*P.sigma+(1-P.sigma)*sum(FecC.*C,1)'); % [gC / m^3 / day]
+    sourceP = P.P*P.n*(sum(FecP.*PC,2)*P.sigma+(1-P.sigma)*sum(FecC.*PC,1)');
+    sourceM = P.M*P.n*(sum(FecM.*M,2)*P.sigma+(1-P.sigma)*sum(FecC.*M,1)');
+    sourceF = P.F*P.n*(sum(FecF.*F,2)*P.sigma+(1-P.sigma)*sum(FecC.*F,1)');
+    sourceA = P.A*P.n*(sum(FecA.*A,2)*P.sigma+(1-P.sigma)*sum(FecC.*A,1)');
+    sourceJ = P.J*P.n*(sum(FecJ.*J,2)*P.sigma+(1-P.sigma)*sum(FecC.*J,1)');
+
+    SOURCE = [sourceC sourceP sourceM sourceF sourceA sourceJ] - ConsD(:,2:end);
+    
+    Dnew = zeros(P.n,6);
+
+    for detrindex = 1:6
+        Dnew(1,detrindex) = SOURCE(1,detrindex)/(P.SR(detrindex+1)/P.dZ+P.alpha(1,detrindex+1));
+        for depthindex = 2:P.n
+            Dnew(depthindex,detrindex) = (SOURCE(depthindex,detrindex) + P.SR(detrindex+1)/P.dZ*Dnew(depthindex-1,detrindex) )/(P.SR(detrindex+1)/P.dZ+P.alpha(depthindex, detrindex+1));
         end
+    end
         
-        %Removal of the detritus eaten previously
-        for jj=1:7  %for each detritus sizes (backgr+zpk + fish)
-                for ii=P.n:-1:1 % go backbward to not count detritus twice 
-                    Dnew(ii:P.n,jj) = Dnew(ii:P.n,jj) - ConsD(ii,jj)*P.dZ/P.SR(jj).*exp(P.alpha(ii:P.n,jj)/P.SR(jj).*(-P.zi(ii:P.n)'+P.zi(ii)));  
-                end
-        end
+        Dnew = [P.BD' Dnew];
 
         Dnew(Dnew<0) = 0;
         
@@ -582,7 +589,7 @@ toc
 
 Carbon_export;
 
-filename = strcat('newtest_b_lat_',num2str(latitude(lat)),'_long_',num2str(longitude(lon)),'.mat');
+filename = strcat('newtest_G_lat_',num2str(latitude(lat)),'_long_',num2str(longitude(lon)),'.mat');
 save(filename)
 
         end

@@ -1,18 +1,18 @@
 figure
 subplot(221)
-semilogx(10^3*DegPOC_depth(1:end,:), P.zi(1:end))
+semilogx(10^3*DegPOC_depth(1:end,2:end), P.zi(1:end))
 hold on
-semilogx(10^3*sum(DegPOC_depth(1:end,:),2), P.zi(1:end),'--k')
+semilogx(10^3*sum(DegPOC_depth(1:end,2:end),2), P.zi(1:end),'--k')
 set(gca,'ydir','reverse')
-legend('phyto','small cop', 'large cop', 'meso', 'forage', 'top', 'jellyfish','Location', 'NorthOutside','Orientation','horizontal')
+legend('small cop', 'large cop', 'meso', 'forage', 'top', 'jellyfish','Location', 'NorthOutside','Orientation','horizontal')
 ylabel('Depth [m]')
 xlabel('Export due to excretion [mgC/m^2/day]')
 xlim([10^-4 100])
 
 subplot(222)
-semilogx(10^3*DIC_depth(1:end,:), P.zi(1:end))
+semilogx(10^3*DIC_depth(1:end,2:end), P.zi(1:end))
 hold on
-semilogx(10^3*sum(DIC_depth(1:end,:),2), P.zi(1:end),'--k')
+semilogx(10^3*sum(DIC_depth(1:end,2:end),2), P.zi(1:end),'--k')
 set(gca,'ydir','reverse')
 %legend('small cop', 'large cop', 'meso', 'forage', 'top', 'jellyfish')
 ylabel('Depth [m]')
@@ -20,9 +20,9 @@ xlabel('Export due to respiration [mgC/m^2/day]')
 xlim([10^-4 100])
 
 subplot(223)
-semilogx(10^3*DIC_depth(1:end,:)+10^3*DegPOC_depth(1:end,:), P.zi(1:end))
+semilogx(10^3*DIC_depth(1:end,2:end)+10^3*DegPOC_depth(1:end,2:end), P.zi(1:end))
 hold on
-semilogx(10^3*sum(DegPOC_depth(1:end,:),2)+10^3*sum(DIC_depth(1:end,:),2), P.zi(1:end),'--k')
+semilogx(10^3*sum(DegPOC_depth(1:end,2:end),2)+10^3*sum(DIC_depth(1:end,2:end),2), P.zi(1:end),'--k')
 set(gca,'ydir','reverse')
 %legend('small cop', 'large cop', 'meso', 'forage', 'top', 'jellyfish')
 ylabel('Depth [m]')

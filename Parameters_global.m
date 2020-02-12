@@ -22,8 +22,8 @@ P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
     
     physurf = phyto_obs(lat,lon); % [mg C / m^3] Surface concentration of phytoplankton
     P.R  = 10^-3*physurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration 
-    c = 10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4 - sum(P.R.*P.dZ)*0.51/2;
-    p = c;%/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
+    c = 0.5*10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4 - sum(P.R.*P.dZ)*0.51/2;
+    p = 10^-3*Big_Z(lat,lon);%/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
     f = 0.01;%0.01;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
     m = 0.1; % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7
     a = 0.01;%0.01;%005;%0.001; % [gC m^-2] total abundance of top predators in the water column 0.1
@@ -68,7 +68,7 @@ P.lC = 0.5*10^-3; % [m] Typical length for copepod
 P.wC = 1.4*10^-4*(100*P.lC)^2.74; % [gC] Weight of a typical copepod
 P.uC = speed(P.lC); % [m/day] Max copepod speed
 P.RC = 0.3*P.lC; % [m] Sensing range for copepods
-P.fCR = 0.7; % [-] Assimilation efficiency for copepods eating the resource
+P.fCR = 0.85; % [-] Assimilation efficiency for copepods eating the resource
 P.fCd = 0.07; % [-] Assimilation efficiency for copepods eating detritus
 
 P.T0C = mean(P.T(P.zi<200)); % [ºC] Reference temperature for copepods - 15 for 1-4
@@ -88,8 +88,8 @@ P.lP = 10*10^-3; % [m] Typical length for copepod
 P.wP = 1.4*10^-4*(100*P.lP)^2.74; % [gC] Weight of a typical copepod
 P.uP = speed(P.lP); % [m/day] Max copepod speed
 P.RP = 0.5*P.lP; % [m] Sensing range for copepods
-P.fPR = 0.7; % [-] Assimilation efficiency for copepods eating the resource
-P.fPd = 0.7; % [-] Assimilation efficiency for copepods eating detritus
+P.fPR = 0.6; % [-] Assimilation efficiency for copepods eating the resource
+P.fPd = 0.1; % [-] Assimilation efficiency for copepods eating detritus
 
 P.T0P =  10; % [ºC] Reference temperature for copepods
 P.TmP = 15; % [ºC] Maximum temperature for zooplankton before decline
@@ -177,7 +177,7 @@ P.uM = speed(P.lM); % [m/day] Max mesopelagic fish speed
 % P.KM = 10^-6; % [W/m^2] Half-saturation constant for light for mesopelagic fish
 % VisDM = @(l) min(10*P.lM, P.RM*sqrt(P.LD./(P.KM+P.LD))'*(10*l/P.lM)); % [m] Depth-dependent visual range of mesopelagic fish during daytime
 % VisNM = @(l) min(10*P.lM, P.RM*sqrt(P.LN./(P.KM+P.LN))*(10*l/P.lM)); % [m] Depth-dependent visual range of forage mesopelagic during daytime
-P.fMC = 0.85; % [-] Assimilation efficiency for mesopelagic fish feeding on copepods - 0.65 before
+P.fMC = 0.9; %0.85; % [-] Assimilation efficiency for mesopelagic fish feeding on copepods - 0.65 before
 P.fMd = 0.065; % [-] Assimilation efficiency for mesopelagic fish feeding on detritus
 
 P.T0M = 6; % [ºC] Reference temperature for mesopelagic fish
@@ -191,13 +191,13 @@ P.mM = 6*P.tM; % [day^-1] MMR at P.T0M
 % P.MSNM = min(1,max(0,P.MSNM));%/max(max(P.MSNM)); % [-] same de-unitization
 
 %Detritus terms
-P.SR = [1 50 100 300 500 1000 500]; %[5 50 150 200 800 1000 500]; %[P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 10 10 10 10];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
+P.SR = [5 50 100 500 800 1000 500]; %[5 50 150 200 800 1000 500]; %[P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 10 10 10 10];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
 K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant
 qrem = 1.2;%1.5; % [-] Q10 for remineralization rate of POC
 Tref = mean(P.T(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
 Ko2 = 10*0.0224./K(P.T); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
 
-P.alpha = 0.5*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
+P.alpha = 0.25*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
 P.alpha = repmat(P.alpha',1,7); % transformation so that it has the same size as D - easier if we want to have specific degradation rates later
 %% Clearance rates
 %%%DECREASED MIN RANGE FOR F AND A
@@ -308,19 +308,19 @@ P.metF = repmat(P.SMRF',1,P.n)*P.sigma + repmat(P.SMRF,P.n,1)*(1-P.sigma); % [da
 P.metJ = repmat(P.SMRJ',1,P.n)*P.sigma + repmat(P.SMRJ,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for tactile predator
 
 %% STRATEGY-DEPENDENT MAXIMUM INGESTION RATES
-Imax = @(l)  3.6*10^-4*(100*l).^2.55*5; % [gC day^-1] maximum ingestion rate for copepod and fish (no imax for tactile, functional response type I)
+Imax = @(w) 0.054*w^0.75; %@(l)  3.6*10^-4*(100*l).^2.55; % [gC day^-1] maximum ingestion rate for copepod and fish (no imax for tactile, functional response type I)
 miniI = 10^-10; % [gC day^-1] just something to say they can still eat - to prevent dividing by 0 in the mortality rates
 
-P.IDF = max(miniI, Imax(P.lF)*P.MSDF); % [gC day^-1] Strategy-specific max ingestion rate for forage fish
-P.INF = max(miniI, Imax(P.lF)*P.MSNF); % [gC day^-1] Strategy-specific max ingestion rate for forage fish
-P.IDA = max(miniI, Imax(P.lA)*P.MSDA); % [gC day^-1] Strategy-specific max ingestion rate for top predator
-P.INA = max(miniI, Imax(P.lA)*P.MSNA); % [gC day^-1] Strategy-specific max ingestion rate for top predator
-P.IDM = max(miniI, Imax(P.lM)*P.MSDM); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish
-P.INM = max(miniI, Imax(P.lM)*P.MSNM); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish
-P.IDC = max(miniI, Imax(P.lC)*P.MSDC); % [gC day^-1] Strategy-specific max ingestion rate for copepod
-P.INC = max(miniI, Imax(P.lC)*P.MSNC); % [gC day^-1] Strategy-specific max ingestion rate for copepod
-P.IDP = max(miniI, Imax(P.lP)*P.MSDP); % [gC day^-1] Strategy-specific max ingestion rate for copepod
-P.INP = max(miniI, Imax(P.lP)*P.MSNP); % [gC day^-1] Strategy-specific max ingestion rate for copepod
+P.IDF = max(miniI, Imax(P.wF)*P.MSDF); % [gC day^-1] Strategy-specific max ingestion rate for forage fish
+P.INF = max(miniI, Imax(P.wF)*P.MSNF); % [gC day^-1] Strategy-specific max ingestion rate for forage fish
+P.IDA = max(miniI, Imax(P.wA)*P.MSDA); % [gC day^-1] Strategy-specific max ingestion rate for top predator
+P.INA = max(miniI, Imax(P.wA)*P.MSNA); % [gC day^-1] Strategy-specific max ingestion rate for top predator
+P.IDM = max(miniI, Imax(P.wM)*P.MSDM); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish
+P.INM = max(miniI, Imax(P.wM)*P.MSNM); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish
+P.IDC = max(miniI, Imax(P.wC)*P.MSDC); % [gC day^-1] Strategy-specific max ingestion rate for copepod
+P.INC = max(miniI, Imax(P.wC)*P.MSNC); % [gC day^-1] Strategy-specific max ingestion rate for copepod
+P.IDP = max(miniI, Imax(P.wP)*P.MSDP); % [gC day^-1] Strategy-specific max ingestion rate for copepod
+P.INP = max(miniI, Imax(P.wP)*P.MSNP); % [gC day^-1] Strategy-specific max ingestion rate for copepod
 
 %% MIGRATION COST 
 % (adapted from Pinti et al. 2019, but figures are the same -at least for now)

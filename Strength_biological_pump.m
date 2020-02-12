@@ -11,16 +11,17 @@ latitude = -90:2:90;
 
 %  Carbon_export;
  
-  concerned = 7;
-%    q = [sum(DIC(:,concerned),2)/P.dZ; zeros(10,1)]; % [gC / m^3 / day] - if we want to calculate it for respiration
+  concerned = 2;
+%          q = [sum(DIC(:,concerned),2); zeros(10,1)]; % [gC / m^3 / day] - if we want to calculate it for respiration
  
 add_on = linspace(P.ZMAX+1,5000,10); % [m]
 depth_size = [repmat(P.dZ,P.n,1); 1; diff(add_on)']; % if we want to calculate it for faecal pellet excretion
 
-q = [ sum(DegPOC(1:end-1,concerned),2)/P.dZ; sum(repmat(Dmean(end,concerned),size(add_on,2),1).*exp(-repmat(P.alpha(end,concerned)./P.SR(concerned),size(add_on,2),1).*repmat(add_on'-P.zi(end),1,length(concerned))).*P.alpha(end,concerned),2)]; % [gc / m^3 / day]   
+    q =  [ sum(DegPOC(1:end,concerned),2); sum(repmat(bottom(concerned),size(add_on,2),1).*P.alpha(end,concerned).*exp(-repmat(P.alpha(end,concerned)./P.SR(concerned),size(add_on,2),1).*repmat(add_on'-P.zi(end),1,length(concerned))),2)/450]; % [gc / m^3 / day]    %.*exp(-repmat(P.alpha(end,concerned)./P.SR(concerned),size(add_on,2),1).*repmat(add_on'-P.zi(end),1,length(concerned)))
 
 q = repmat(reshape(q,[1 1 P.n+10]),size(latitude,2),size(longitude,2),1);
- 
+%  q(:,:,1:8) = 0; %to remove what stays in the euphotic zone
+
 q = double(q);
  
 for ii=1:size(longitude,2)
@@ -41,8 +42,8 @@ end
  % areas - convert to m^2
 DLON = 0*LON(:,:,1)+1;
 DLAT = 0*LAT(:,:,1)+1;
-DX = (2*pi*6371e3/360)*DLON.*cos(deg2rad(LAT(:,:,1)));
-DY = (2*pi*6371e3/360)*DLAT;
+DX = (2*pi*6371e3/360)*DLON.*cos(deg2rad(LAT(:,:,1)))*(longitude(2)-longitude(1));
+DY = (2*pi*6371e3/360)*DLAT*(latitude(2)-latitude(1));
 Area = DX.*DY; % m^2
 
 %% Load OCIM
@@ -66,7 +67,7 @@ q_source_OCIM = q_OCIM(msk.pkeep)*365.25; % [gc / m^3 /yr] Production at each de
 %% Total export
 VOL = grid.DXT3d.*grid.DYT3d.*grid.DZT3d;
 V = VOL(msk.pkeep);
-totexp = V'*q_OCIM(msk.pkeep)*365.25/1e15; % [PgC / yr]
+totexp = V'*q_source_OCIM/1e15; % [PgC / yr]
 
 %% Preparation of the transport matrix
 m = size(TR,1);
@@ -84,6 +85,3 @@ totCseq = V'*cseq/1e15; % [PgC] everything was in gC before
 
 X = ['export is ', num2str(totexp), ' PgC/yr; total sequestration is ', num2str(totCseq), ' PgC, residence time is ', num2str(totCseq/totexp),' yrs for population ', num2str(concerned)];
 disp(X)
-
-
-

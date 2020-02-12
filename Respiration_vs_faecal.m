@@ -111,7 +111,6 @@ MFnight = mean(MFnight(:,end-imean:end),2);
     NM0 = P.INM + sum(P.ENMd.*repmat(pref('meso','detritus')',P.n,1).*permute(repmat(reshape(Dmean,P.n,1,7),1,P.n).*RESC,[2,1,3]),3)+P.ENMC.*pref('meso','copepod').*repmat(MCnight',P.n,1)+P.ENMP.*pref('meso','predcop').*repmat(MPnight',P.n,1); % [gC day^-1] Denominator for the ingestion function                   
 
 
-
     IFC1 = P.IDF.*P.EDFC*pref('forage','copepod').* repmat(MCday ,1,P.n)./NF1; % [gC day^-1] Ingestion rate of copepods during daytime by forage fish
     IFC0 = P.INF.*P.ENFC*pref('forage','copepod').* repmat(MCnight',P.n,1)./NF0;
     IFP1 = P.IDP.*P.EDFP*pref('forage','predcop').* repmat(MPday ,1,P.n)./NF1; % [gC day^-1] Ingestion rate of copepods during daytime by forage fish
@@ -184,21 +183,21 @@ MFnight = mean(MFnight(:,end-imean:end),2);
     
 
 %Faecal pellet production rates
-    IC = (P.sigma*((1-P.fCR)*ICR1+(1-P.fCd)*sum(ICD1,3))+(1-P.sigma)*((1-P.fCR)*ICR0+(1-P.fCd)*sum(ICD0,3)))/P.wC; % [day^-1] Total assimilation rate per individual per strategy for copepods
-    IP = (P.sigma*((1-P.fPR)*IPR1+(1-P.fPd)*sum(IPD1,3))+(1-P.sigma)*((1-P.fPR)*IPR0+(1-P.fPd)*sum(IPD0,3)))/P.wP; % [day^-1] Total assimilation rate per individual per strategy for copepods
-    IF = (1-P.fF)*(P.sigma*(IFP1+IFC1+sum(IFD1,3)+IFM1)+(1-P.sigma)*(sum(IFD0,3)+IFC0+IFP0+IFM0))/P.wF; % [day^-1] Total assimilation rate per individual per strategy for forage fish
-    IA = (1-P.fA)*(P.sigma*(IAF1+IAJ1+IAM1)+(1-P.sigma)*(IAF0+IAJ0+IAM0))/P.wA; % [day^-1] Total assimilation rate per individual per strategy for top predator
-    IJ = (1-P.fJ)*(P.sigma*(IJC1+IJP1+IJM1)+(1-P.sigma)*(IJC0+IJP0+IJM0))/P.wJ; % [day^-1] Total assimilation rate per individual per strategy for tactile predator
-    IM = (P.sigma*((1-P.fMd)*sum(IMD1,3)+(1-P.fMC)*IMC1+(1-P.fMC)*IMP1)+(1-P.sigma)*((1-P.fMd)*sum(IMD0,3)+(1-P.fMC)*IMC0+(1-P.fMC)*IMP0))/P.wM; % [day^-1] Total assimilation rate per individual per strategy for mesopelagic fish
+    FecC = (P.sigma*((1-P.fCR)*ICR1+(1-P.fCd)*sum(ICD1,3))+(1-P.sigma)*((1-P.fCR)*ICR0+(1-P.fCd)*sum(ICD0,3)))/P.wC; % [day^-1]
+    FecP = (P.sigma*((1-P.fPR)*IPR1+(1-P.fPd)*sum(IPD1,3))+(1-P.sigma)*((1-P.fPR)*IPR0+(1-P.fPd)*sum(IPD0,3)))/P.wP; % [day^-1]
+    FecF = (1-P.fF)*(P.sigma*(IFP1+IFC1+sum(IFD1,3)+IFM1)+(1-P.sigma)*(sum(IFD0,3)+IFC0+IFP0+IFM0))/P.wF; % [day^-1]
+    FecA = (1-P.fA)*(P.sigma*(IAF1+IAJ1+IAM1)+(1-P.sigma)*(IAF0+IAJ0+IAM0))/P.wA; % [day^-1]
+    FecJ = (1-P.fJ)*(P.sigma*(IJC1+IJP1+IJM1)+(1-P.sigma)*(IJC0+IJP0+IJM0))/P.wJ; % [day^-1]
+    FecM = (P.sigma*((1-P.fMd)*sum(IMD1,3)+(1-P.fMC)*IMC1+(1-P.fMC)*IMP1)+(1-P.sigma)*((1-P.fMd)*sum(IMD0,3)+(1-P.fMC)*IMC0+(1-P.fMC)*IMP0))/P.wM; % [day^-1]
 
  
- Fec_C = sum(sum(IC.*MC));
- Fec_P = sum(sum(IP.*MP));
- Fec_F = sum(sum(IF.*MF));
- Fec_M = sum(sum(IM.*MM));
- Fec_A = sum(sum(IA.*MA));
- Fec_J = sum(sum(IJ.*MJ));
- 
+ Fec_C = sum(sum(FecC.*MC));
+ Fec_P = sum(sum(FecP.*MP));
+ Fec_F = sum(sum(FecF.*MF));
+ Fec_M = sum(sum(FecM.*MM));
+ Fec_A = sum(sum(FecA.*MA));
+ Fec_J = sum(sum(FecJ.*MJ));
+  
  disp(['Fecal: ', num2str([Fec_C Fec_P Fec_M Fec_F Fec_A Fec_J])])
  
  disp(['Resp: ', num2str([Resp_C Resp_P Resp_M Resp_F Resp_A Resp_J])])
