@@ -22,6 +22,7 @@ load coast
 geoshow(lat, long,'Color','k')
 surfm(lat_coord, long_coord, DSL_depth,'AlphaData',~isnan(DSL_depth),'EdgeColor','none')
 colorbar
+caxis([200 700])
 title('Computed maximum DSL')
 
 subplot(212)
@@ -40,3 +41,4 @@ geoshow(lat, long,'Color','k')
 surfm(lat_Bianchi, long_Bianchi, ZBianchi','AlphaData',~isnan(ZBianchi),'EdgeColor','none')
 colorbar
 title('Observed DVM depth of deep scattering layer [m]')
+caxis([200 700])
