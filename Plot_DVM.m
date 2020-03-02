@@ -1,17 +1,3 @@
-% %Integral of curves is 1
-% aday = AAday/(P.n*P.A); % [-] Fraction of A at z during day
-% anight = AAnight/(P.n*P.A); % [-]
-% bday = BBday/(P.n*P.B); % [-] Fraction of B at z during day
-% bnight = BBnight/(P.n*P.B); % [-]
-% cday = CCday/(P.n*P.C); % [-] Fraction of C at z during day
-% cnight = CCnight/(P.n*P.C); % [-]
-% fday = FFday/(P.n*P.F); % [-] Fraction of F at z during day
-% fnight = FFnight/(P.n*P.F); % [-]
-% jday = JJday/(P.n*P.J); % [-] Fraction of J at z during day
-% jnight = JJnight/(P.n*P.J); % [-]
-% mday = mmday/(P.n*P.M); % [-] Fraction of M at z during day
-% mnight = mmnight/(P.n*P.M); % [-]
-
 imean = Niter/2;
 AAday = mean(MAday(:,end-imean:end),2);
 AAnight = mean(MAnight(:,end-imean:end),2);
