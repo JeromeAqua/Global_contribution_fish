@@ -17,9 +17,9 @@ zlattest = [36    53    48    55    55    48    64    65    68    47    66    65
             49    57    42    44    46    52    55    57    44    46    47    43    45];
 zlongtest = [ 5    43    44    45    59    68    74    78    78    81    83    88    88    89   111   111   111   111   113,...
             138   165   167   168   169   170   170   170   175   175   175   176   176];
-for j=1%1:size(zlattest,2)
-    lat=46; % zlattest(j);
-    lon=111; %zlongtest(j);
+for j=[9]%11 15]%1:size(zlattest,2)
+     lat= zlattest(j);
+     lon= zlongtest(j);
 
 % for lat=1:size(latitude,2)
 %     for lon=1:size(longitude,2)       
@@ -138,7 +138,7 @@ while notdone
         ConsdayD = squeeze(sum(IFD1.*repmat(Fday',1,1,7)/P.wF+IPD1.*repmat(Pday',1,1,7)/P.wP+ICD1.*repmat(Cday',1,1,7)/P.wC+IMD1.*repmat(Mday',1,1,7)/P.wM,2)); 
         ConsnigD = squeeze(sum(permute(IFD0,[2 1 3]).*repmat(Fnight',1,1,7)/P.wF+permute(IPD0,[2 1 3]).*repmat(Pnight',1,1,7)/P.wP+permute(ICD0,[2 1 3]).*repmat(Cnight',1,1,7)/P.wC+...
                                 permute(IMD0,[2 1 3]).*repmat(Mnight',1,1,7)/P.wM,2));
-        ConsD = P.sigma*ConsdayD + (1-P.sigma)*ConsnigD;
+        ConsD = P.sigma*ConsdayD + (1-P.sigma)*ConsnigD; % [gC / m^3 / day]
         
         resc = ones(P.n,7);
         max_ing = 0.8; %maximum percentage of detritus that we allow to be eaten in one day
@@ -435,7 +435,7 @@ while notdone
     for detrindex = 1:6
         Dnew(1,detrindex) = SOURCE(1,detrindex)/(P.SR(detrindex+1)/P.dZ+P.alpha(1,detrindex+1));
         for depthindex = 2:P.n
-            Dnew(depthindex,detrindex) = (SOURCE(depthindex,detrindex) + P.SR(detrindex+1)/P.dZ*Dnew(depthindex-1,detrindex) )/(P.SR(detrindex+1)/P.dZ+P.alpha(depthindex, detrindex+1));
+            Dnew(depthindex,detrindex) = (SOURCE(depthindex,detrindex) + P.SR(detrindex+1)*Dnew(depthindex-1,detrindex)/P.dZ )/(P.SR(detrindex+1)/P.dZ+P.alpha(depthindex, detrindex+1));
         end
     end
         
@@ -589,7 +589,7 @@ toc
 
 Carbon_export;
 
-filename = strcat('newtest_G_lat_',num2str(latitude(lat)),'_long_',num2str(longitude(lon)),'.mat');
+filename = strcat('newtest_H_lat_',num2str(latitude(lat)),'_long_',num2str(longitude(lon)),'.mat');
 save(filename)
 
         end

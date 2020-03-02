@@ -39,7 +39,7 @@ DegPOC = zeros(P.n ,7);
 % DegPOC(1:end-1,6) = Dmean(:,6).*(1-exp(-P.alpha(:,6)*P.dZ/P.SR(6)))*P.SR(6); % [gC m^-2 day^-1] Degradation of the faecal pellets due to top predators
 % DegPOC(1:end-1,7) = Dmean(:,7).*(1-exp(-P.alpha(:,7)*P.dZ/P.SR(7)))*P.SR(7); % [gC m^-2 day^-1] Degradation of the faecal pellets due to jellyfish
 DegPOC = P.alpha.*Dmean; % [gC m^-3 / day]
-bottom = Dmean(end,1:end).*exp(-P.alpha(end,1:end)./P.SR(1:end)); % [gC m^-2 day^-1] Faecal pellets going below ZMAX, they wont be remineralized so we count them as export
+bottom = Dmean(end,1:end).*P.SR; % [gC m^-2 day^-1] Faecal pellets going below ZMAX, they wont be remineralized so we count them as export
  DegPOC_depth = [bottom + cumsum(DegPOC,1,'reverse')*P.dZ]; % [gC m^-2 day^-1] Degradation of faecal pellets below each depth
 
 %%

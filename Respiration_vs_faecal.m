@@ -18,14 +18,15 @@ MFday = mean(MFday(:,end-imean:end),2);
 MFnight = mean(MFnight(:,end-imean:end),2);
  
  
- %% Respiration  [day^-1]
+ %% Respiration  [gC m^-2 day^-1]
  
- Resp_C = sum(sum(P.metC.*MC));
- Resp_P = sum(sum(P.metP.*MP));
- Resp_M = sum(sum(P.metM.*MM));
- Resp_F = sum(sum(P.metF.*MF));
- Resp_A = sum(sum(P.metA.*MA));
- Resp_J = sum(sum(P.metJ.*MJ));
+ Resp = sum(DIC*P.dZ); 
+ Resp_C = Resp(1);
+ Resp_P = Resp(2);
+ Resp_M = Resp(3);
+ Resp_F = Resp(4);
+ Resp_A = Resp(5);
+ Resp_J = Resp(6);
  
 %% Faecal pellet production
 
@@ -58,7 +59,7 @@ MFnight = mean(MFnight(:,end-imean:end),2);
      IPD1 = P.IDP.*P.EDPd.*repmat(pref('predcop','detritus'),1,P.n).*repmat(reshape(Dmean,P.n,1,7),1,P.n)  ./NP1;
      IPD0 = P.INP.*P.ENPd.*repmat(pref('predcop','detritus')',P.n,1).*permute(repmat(reshape(Dmean,P.n,1,7),1,P.n),[2,1,3])  ./NP0;
      
-        IFD1(isnan(IFD1)) = 0;
+        IFD1(isnan(IFD1)) = 0; % [gC / day]
         IFD0(isnan(IFD0)) = 0;
         IMD1(isnan(IMD1)) = 0;
         IMD0(isnan(IMD0)) = 0;
@@ -190,18 +191,33 @@ MFnight = mean(MFnight(:,end-imean:end),2);
     FecJ = (1-P.fJ)*(P.sigma*(IJC1+IJP1+IJM1)+(1-P.sigma)*(IJC0+IJP0+IJM0))/P.wJ; % [day^-1]
     FecM = (P.sigma*((1-P.fMd)*sum(IMD1,3)+(1-P.fMC)*IMC1+(1-P.fMC)*IMP1)+(1-P.sigma)*((1-P.fMd)*sum(IMD0,3)+(1-P.fMC)*IMC0+(1-P.fMC)*IMP0))/P.wM; % [day^-1]
 
+    
+    sourceC = P.C*P.n*(sum(FecC.*C,2)*P.sigma+(1-P.sigma)*sum(FecC.*C,1)'); % [gC / m^3 / day]
+    sourceP = P.P*P.n*(sum(FecP.*PC,2)*P.sigma+(1-P.sigma)*sum(FecC.*PC,1)');
+    sourceM = P.M*P.n*(sum(FecM.*M,2)*P.sigma+(1-P.sigma)*sum(FecC.*M,1)');
+    sourceF = P.F*P.n*(sum(FecF.*F,2)*P.sigma+(1-P.sigma)*sum(FecC.*F,1)');
+    sourceA = P.A*P.n*(sum(FecA.*A,2)*P.sigma+(1-P.sigma)*sum(FecC.*A,1)');
+    sourceJ = P.J*P.n*(sum(FecJ.*J,2)*P.sigma+(1-P.sigma)*sum(FecC.*J,1)');
+    
  
- Fec_C = sum(sum(FecC.*MC));
- Fec_P = sum(sum(FecP.*MP));
- Fec_F = sum(sum(FecF.*MF));
- Fec_M = sum(sum(FecM.*MM));
- Fec_A = sum(sum(FecA.*MA));
- Fec_J = sum(sum(FecJ.*MJ));
+ Fec_C = sum(sourceC*P.dZ); % [gC / m^2 / day]
+ Fec_P = sum(sourceP*P.dZ);
+ Fec_M = sum(sourceM*P.dZ);
+ Fec_F = sum(sourceF*P.dZ);
+ Fec_A = sum(sourceA*P.dZ);
+ Fec_J = sum(sourceJ*P.dZ);
+ 
+ Fec_C_Net = sum((sourceC-ConsD(:,2))*P.dZ); % [gC / m^2 / day] fecal pellets that will be degraded and not re eaten
+ Fec_P_Net = sum((sourceP-ConsD(:,3))*P.dZ);
+ Fec_M_Net = sum((sourceM-ConsD(:,4))*P.dZ);
+ Fec_F_Net = sum((sourceF-ConsD(:,5))*P.dZ);
+ Fec_A_Net = sum((sourceA-ConsD(:,6))*P.dZ);
+ Fec_J_Net = sum((sourceJ-ConsD(:,7))*P.dZ);
   
  disp(['Fecal: ', num2str([Fec_C Fec_P Fec_M Fec_F Fec_A Fec_J])])
  
  disp(['Resp: ', num2str([Resp_C Resp_P Resp_M Resp_F Resp_A Resp_J])])
  
- disp(['Ratio: ', num2str([Fec_C Fec_P Fec_M Fec_F Fec_A Fec_J]./[Resp_C Resp_P Resp_M Resp_F Resp_A Resp_J])])
+ disp(['Ratio: ', num2str([Fec_C_Net Fec_P_Net Fec_M_Net Fec_F_Net Fec_A_Net Fec_J_Net]./[Resp_C Resp_P Resp_M Resp_F Resp_A Resp_J])])
  
  

@@ -22,7 +22,7 @@ P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
     
     physurf = phyto_obs(lat,lon); % [mg C / m^3] Surface concentration of phytoplankton
     P.R  = 10^-3*physurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration 
-    c = 0.5*10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4 - sum(P.R.*P.dZ)*0.51/2;
+    c = 10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4 - sum(P.R.*P.dZ)*0.51/2;
     p = 10^-3*Big_Z(lat,lon);%/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
     f = 0.01;%0.01;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
     m = 0.1; % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7
