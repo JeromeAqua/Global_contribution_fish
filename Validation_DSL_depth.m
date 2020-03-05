@@ -17,7 +17,10 @@ DSL_depth(DSL_depth==10) = NaN;
 
 figure
 subplot(211)
-axesm('eqdcylin');
+axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+box off
+axis off
 load coast
 geoshow(lat, long,'Color','k')
 surfm(lat_coord, long_coord, DSL_depth,'AlphaData',~isnan(DSL_depth),'EdgeColor','none')
@@ -35,7 +38,10 @@ ZBianchi = -ZBianchi;
 
 % [XBianchi,YBianchi] = meshgrid(long_Bianchi,lat_Bianchi); X = double(X); Y = double(Y);
 
-axesm('eqdcylin');
+axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+box off
+axis off
 load coast
 geoshow(lat, long,'Color','k')
 surfm(lat_Bianchi, long_Bianchi, ZBianchi','AlphaData',~isnan(ZBianchi),'EdgeColor','none')

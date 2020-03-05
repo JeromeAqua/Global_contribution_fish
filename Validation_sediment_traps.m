@@ -83,13 +83,16 @@ ylabel('Modeled POC flux [gC / m^2 /day]')
 colormap('jet')
 colorbar
 caxis([500 3300])
-error = 1/size(POC_observed,1)*sum((POC_observed-POC_computed).^2)
+st_dev = sqrt(1/size(POC_observed,1)*sum((POC_observed-POC_computed).^2))
 subplot(222)
 histogram(POC_observed-POC_computed)
 title('Difference between observed and modeled POC fluxes [gC / m^2 / day]')
 
 subplot(223)
-axesm('eqdcylin');
+axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+box off
+axis off
 load coast
 geoshow(lat, long,'Color','k')
 scatterm(lat_traps, lon_traps, 0.1*Z_traps, POC_computed)%,'filled')
@@ -98,7 +101,10 @@ caxis([0 20])
 title('Computed particle carbon flux [gC / m^2 / day]')
 
 subplot(224)
-axesm('eqdcylin');
+axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+box off
+axis off
 load coast
 geoshow(lat, long,'Color','k')
 scatterm(lat_traps, lon_traps, 0.1*Z_traps, POC_computed-POC_observed)%,'filled')

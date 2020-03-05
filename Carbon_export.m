@@ -15,8 +15,6 @@ FFnight = mean(MFnight(:,end-imean:end),2);
 Dmean = mean(MD(:,:,end-imean:end),3);
 % Dmean(Dmean<10^-8) = 10^-8;
 
-
-
 DIC = zeros(P.n, 6);
 
 DIC(:,1) = P.SMRC'.*((1-P.sigma)*CCnight + P.sigma*CCday); % [gC m^-3 day^-1] Respiration by small copepods at each depth 
