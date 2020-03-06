@@ -1,5 +1,6 @@
 function P = Parameters_global(lon,lat)
 %% Parameter file
+addpath C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data
 load global_env_data.mat
 load global_bio_data.mat
 %Environment set-up
@@ -18,7 +19,7 @@ P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
     P.zm = P.zo/2; % [m] Sharpness of the transition to from the mixed layer to depleted layers
 
     P.klight = KLIGHT(lat,lon); %0.0423; % [m^-1] Light attenuation coefficient in the water column
-    P.sigma = 0.5; % [-] Proportion of daytime in 24h - YEARLY CRUDE AVERAGE SO FAR
+    P.sigma = 0.5; % [-] Proportion of daytime in 24h - 
     
     physurf = phyto_obs(lat,lon); % [mg C / m^3] Surface concentration of phytoplankton
     P.R  = 10^-3*physurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration 
