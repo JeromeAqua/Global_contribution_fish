@@ -16,6 +16,9 @@ for i=1:size(lat_coord,2)
     end
 end
 
+TOT_out(TOT_out==0) = NaN;
+TOT_respi(TOT_respi==0) = NaN;
+TOT_fecal(TOT_fecal==0) = NaN;
 
 figure
 subplot(221)
@@ -51,8 +54,20 @@ load coast
 geoshow(lat, long,'Color','k')
 surfm(lat_coord, long_coord, TOT_out,'AlphaData',~isnan(TOT_out),'EdgeColor','none')
 colorbar
-% caxis([200 700])
+caxis([0 6])
 title('Total carbon recycled by animals [gC / m^2 / day]')
 
 subplot(224)
-text(0.1,0.5,'Here a map of global NPP')
+load('C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\Colleen_biomass\npp_100_1deg_ESM26_5yr_clim_191_195.mat')
+latc = lat; lonc = lon;
+% text(0.1,0.5,'Here a map of global NPP')
+axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+box off
+axis off
+load coast
+geoshow(lat, long,'Color','k')
+surfm(latc, lonc, 10^-3*squeeze(mean(npp_100,1)),'AlphaData',~isnan(squeeze(mean(npp_100,1))),'EdgeColor','none')
+colorbar
+ caxis([0 6])
+title('Total carbon recycled by animals [gC / m^2 / day]')

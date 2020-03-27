@@ -64,8 +64,8 @@ Z_traps = Z_traps(~isnan(POC_computed));
 lat_traps = lat_traps(~isnan(POC_computed));
 lon_traps = lon_traps(~isnan(POC_computed));
 %%
-a = colormap(flipud(jet));
 figure
+a = colormap(flipud(jet));
 subplot(221)
 % for kkk=1:length(POC_observed)
 %     plot(POC_observed(kkk), POC_computed(kkk),'o','MarkerFaceColor', a(floor(64*Z_traps(kkk)/max(Z_traps)),:)) %k');%
