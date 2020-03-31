@@ -6,7 +6,7 @@ box off
 axis off
 load coast
 geoshow(lat, long,'Color','k')
-surfm(lat_coord, long_coord, Glob_FitP','AlphaData',~isnan(DSL_depth),'EdgeColor','none')
+surfm(lat_coord, long_coord, Glob_FitJ','AlphaData',~isnan(DSL_depth),'EdgeColor','none')
 colorbar
 % caxis([200 700])
 title('Fitness of mesopelagic fish')
