@@ -85,7 +85,7 @@ colorbar
 caxis([500 3300])
 st_dev = sqrt(1/size(POC_observed,1)*sum((POC_observed-POC_computed).^2))
 subplot(222)
-histogram(POC_observed-POC_computed)
+histogram(POC_observed-POC_computed,20)
 title('Difference between observed and modeled POC fluxes [mgC / m^2 / day]')
 
 subplot(223)
@@ -107,7 +107,7 @@ box off
 axis off
 load coast
 geoshow(lat, long,'Color','k')
-scatterm(lat_traps, lon_traps, 0.1*Z_traps, POC_computed-POC_observed)%,'filled')
+scatterm(lat_traps, lon_traps, 0.1*Z_traps, POC_computed-POC_observed)%,'filled') % lat - lon - size - color
 colorbar
 % caxis([0 20])
 title('Difference between computed and observed particle flux [mgC / m^2 / day]')

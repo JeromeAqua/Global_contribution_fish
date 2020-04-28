@@ -54,7 +54,7 @@ load coast
 geoshow(lat, long,'Color','k')
 surfm(lat_coord, long_coord, TOT_out,'AlphaData',~isnan(TOT_out),'EdgeColor','none')
 colorbar
-caxis([0 6])
+caxis([0 2.5])
 title('Total carbon recycled by animals [gC / m^2 / day]')
 
 subplot(224)
@@ -69,5 +69,25 @@ load coast
 geoshow(lat, long,'Color','k')
 surfm(latc, lonc, 10^-3*squeeze(mean(npp_100,1)),'AlphaData',~isnan(squeeze(mean(npp_100,1))),'EdgeColor','none')
 colorbar
- caxis([0 6])
-title('Total carbon recycled by animals [gC / m^2 / day]')
+ caxis([0 2.5])
+title('NPP [gC / m^2 / day]')
+
+
+figure
+[xq,yq] = meshgrid(long_coord,lat_coord);
+xq = mod(xq,360);
+NPP_reshaped = interp2(lonc,latc,10^-3*squeeze(mean(npp_100,1)),xq,yq);
+
+axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+box off
+axis off
+load coast
+geoshow(lat, long,'Color','k')
+surfm(yq,xq, ( TOT_out)./NPP_reshaped,'AlphaData',~isnan(NPP_reshaped),'EdgeColor','none')% (NPP_reshaped-TOT_out)./NPP_reshaped
+colormap(jet)
+colorbar
+% xxx = max(max(max(NPP_reshaped- TOT_out)),-min(min(NPP_reshaped- TOT_out)));
+caxis([-6 6])
+% title('(NPP - (resp+fec)) / NPP [-]')
+title(' (resp+fec) / NPP [-]')
