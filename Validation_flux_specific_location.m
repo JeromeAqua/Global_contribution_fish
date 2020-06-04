@@ -1,5 +1,5 @@
 desired_lat = 36; % [degrees]
-desired_lon = -134; % [degrees]
+desired_lon = -40; % [degrees]
 
 [~,lat_idx] = min(abs(desired_lat-lat_coord));
 [~,lon_idx] = min(abs(desired_lon-long_coord));
@@ -16,59 +16,26 @@ JJday = squeeze(Glob_Jday(lon_idx,lat_idx,:))/max(max(squeeze(Glob_Jnight(lon_id
 JJnight = squeeze(Glob_Jnight(lon_idx,lat_idx,:))/max(max(squeeze(Glob_Jnight(lon_idx,lat_idx,:))),max(squeeze(Glob_Jday(lon_idx,lat_idx,:)))); % [-]
 mmday = squeeze(Glob_Mday(lon_idx,lat_idx,:))/max(max(squeeze(Glob_Mnight(lon_idx,lat_idx,:))),max(squeeze(Glob_Mday(lon_idx,lat_idx,:)))); % [-] Fraction of M at z during day
 mmnight = squeeze(Glob_Mnight(lon_idx,lat_idx,:))/max(max(squeeze(Glob_Mnight(lon_idx,lat_idx,:))),max(squeeze(Glob_Mday(lon_idx,lat_idx,:)))); % [-]
+D_depth = squeeze(D_glob(lon_idx,lat_idx,:,:)); % [gC m^-3] Detritus concentration in the water column for the different types considered
 
-%% 
+%%
+s_flux = D_depth.*P.SR*1000; % [gC m^-2 day^-1]
+
+
 figure
-subplot(231)
-plot_rescaling(CCday,CCnight,P)
-title('Small copepods')
-% yticks([0 100 200 300 400 500 1000])
 
-subplot(232)
-plot_rescaling(PPday,PPnight,P)
-title('Predatory copepods')
-
-subplot(233)
-plot_rescaling(FFday, FFnight, P)
-title('Forage fish')
-% yticks([0 100 200 300 400 500 1000])
-
-subplot(234)
-plot_rescaling(mmday,mmnight,P)
-title('Mesopelagic')
-% yticks([0 100 200 300 400 500 1000])
-
-subplot(235)
-plot_rescaling(JJday,JJnight,P)
-title('Jellies')
-% yticks([0 100 200 300 400 500 1000])
-
-subplot(236)
-plot_rescaling(AAday, AAnight, P)
-title('Top predators')
-% yticks([0 100 200 300 400 500 1000])
+plot(s_flux(:,2),P.zi,'r') %sinking flux for intermediate copepods
+hold on
+plot(s_flux(:,3),P.zi,'b') %sinking flux for large copepods
+plot(s_flux(:,4),P.zi,'g') %sinking flux for mesopelagic
+plot(s_flux(:,5),P.zi,'y') %sinking flux for forage fish
+plot(s_flux(:,6),P.zi,'c') %sinking flux for top predators
+plot(s_flux(:,7),P.zi,'k') %sinking flux for jellyfish
+lgd = legend({'intermediate','large', 'mesopelagic','forage fish', 'top predators', 'jellyfish'},'Location','SouthOutside','Orientation','horizontal');
+set(gca,'ydir','reverse')
+ylabel('Depth [m]')
+xlabel('Fecal pellet flux [mgC / m^2 / day]')
 
 
 
-
-function OUT = plot_rescaling(DAY,NIGHT,P)
-    if max(DAY) > max(NIGHT)
-        NIGHT = NIGHT / max(DAY); %rescaling to have the same integral
-        DAY = DAY / max(DAY);      
-    else
-        DAY = DAY / max(NIGHT);
-        NIGHT = NIGHT / max(NIGHT);      
-    end
-    
-    plot(DAY,P.zi,'k')
-    hold on
-    plot(-NIGHT,P.zi,'k')
-    set(gca,'ydir','reverse')
-    xticks([-0.5 0.5])
-    xticklabels({'Night','Day'})
-    xlim([-1 1])
-    
-    plot([0 0], [P.zi(1) P.ZMAX], 'k') % 0line at the middle
-    ylim([0 P.ZMAX])
-end
 

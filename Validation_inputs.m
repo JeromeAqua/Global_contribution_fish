@@ -1,8 +1,18 @@
 addpath C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\Colleen_biomass
 addpath C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\mesopelagic_biomass
-load biomass_mesopelagic_b.mat
+load mesopelagic_bio.mat
 load planktonb.mat
 load fishb.mat
+MESO(:,1) = MESO(:,2);
+idxlon = find(longitude==20);
+long_plot = longitude([idxlon:end,1:idxlon-1]);
+PHIplot = [PHI(:,idxlon:end), PHI(:,1:idxlon-1)];
+INZplot = [INZ(:,idxlon:end), INZ(:,1:idxlon-1)];
+LAZplot = [LAZ(:,idxlon:end), LAZ(:,1:idxlon-1)];
+FORplot = [FOR(:,idxlon:end), FOR(:,1:idxlon-1)];
+MESOplot = [MESO(:,idxlon:end), MESO(:,1:idxlon-1)];
+TOPplot = [TOP(:,idxlon:end), TOP(:,1:idxlon-1)];
+
 
 %Plot to compare if we didn't do stupid things
 figure
@@ -16,7 +26,7 @@ box off
 axis off
 load coast
 geoshow(lat, long,'Color','k')
-surfm(latitude, longitude, PHI,'AlphaData',~isnan(PHI),'EdgeColor','none')
+surfm(latitude, long_plot, PHIplot,'AlphaData',~isnan(PHIplot),'EdgeColor','none')
 c = colorbar;
 c.Location = 'southoutside';
 % caxis([00 1000])
@@ -29,7 +39,7 @@ box off
 axis off
 load coast
 geoshow(lat, long,'Color','k')
-surfm(latitude, longitude, INZ,'AlphaData',~isnan(INZ),'EdgeColor','none')
+surfm(latitude, long_plot, INZplot,'AlphaData',~isnan(INZplot),'EdgeColor','none')
 c = colorbar;
 c.Location = 'southoutside';
 % caxis([00 1000])
@@ -42,7 +52,7 @@ box off
 axis off
 load coast
 geoshow(lat, long,'Color','k')
-surfm(latitude, longitude, LAZ,'AlphaData',~isnan(LAZ),'EdgeColor','none')
+surfm(latitude, long_plot, LAZplot,'AlphaData',~isnan(LAZplot),'EdgeColor','none')
 c = colorbar;
 c.Location = 'southoutside';
 % caxis([00 1000])
@@ -55,7 +65,7 @@ box off
 axis off
 load coast
 geoshow(lat, long,'Color','k')
-surfm(latitude, longitude, FOR,'AlphaData',~isnan(FOR),'EdgeColor','none')
+surfm(latitude, long_plot, FORplot,'AlphaData',~isnan(FORplot),'EdgeColor','none')
 c = colorbar;
 c.Location = 'southoutside';
 % caxis([00 1000])
@@ -68,7 +78,7 @@ box off
 axis off
 load coast
 geoshow(lat, long,'Color','k')
-surfm(latitude, longitude, MESO,'AlphaData',~isnan(MESO),'EdgeColor','none')
+surfm(latitude, long_plot, MESOplot,'AlphaData',~isnan(MESOplot),'EdgeColor','none')
 c = colorbar;
 c.Location = 'southoutside';
 % caxis([00 1000])
@@ -81,7 +91,7 @@ box off
 axis off
 load coast
 geoshow(lat, long,'Color','k')
-surfm(latitude, longitude, TOP,'AlphaData',~isnan(TOP),'EdgeColor','none')
+surfm(latitude, long_plot, TOPplot,'AlphaData',~isnan(TOPplot),'EdgeColor','none')
 c = colorbar;
 c.Location = 'southoutside';
 % caxis([00 1000])

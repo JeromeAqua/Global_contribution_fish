@@ -3,7 +3,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%% CHOOSE THE FUNCTIONAL GROUP HERE %%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-CHOICE = 'C';
+CHOICE = 'J';
 
 %Translate choice into number
 if strcmp(CHOICE,'C')
@@ -98,6 +98,8 @@ colorbar
 caxis([0 1])
 title('% of NPP')
 
+disp(['Mean prop of NPP : ', num2str(mean(mean(TOT_specific./NPP_reshaped,'omitnan'),'omitnan'))])
+disp(['Max prop of NPP : ', num2str(max(max(TOT_specific./NPP_reshaped)))])
 
 % figure
 % [xq,yq] = meshgrid(long_coord,lat_coord);
