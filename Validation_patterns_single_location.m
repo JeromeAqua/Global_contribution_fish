@@ -1,5 +1,5 @@
-desired_lat = 36; % [degrees]
-desired_lon = -134; % [degrees]
+desired_lat = 30; % [degrees]
+desired_lon = -74; % [degrees]
 
 [~,lat_idx] = min(abs(desired_lat-lat_coord));
 [~,lon_idx] = min(abs(desired_lon-long_coord));

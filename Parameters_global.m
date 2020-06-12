@@ -2,11 +2,11 @@ function P = Parameters_global(lon,lat)
 %% Parameter file
 load npp_100_1deg_ESM26_5yr_clim_191_195.mat % Remember that lat and lon names are changed to latc and lonc in the file to avoid issues
 % latc = lat; lonc = lon;
-load biomass_mesopelagic_b.mat % mesopelagic_bio.matmesopelagic_bio.mat
-load planktonb.mat
-load fishb.mat % fish.mat
-load global_env_data.mat
-load global_bio_data.mat
+load C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\mesopelagic_biomass\mesopelagic_bio.mat % mesopelagic_bio.matmesopelagic_bio.mat
+load C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\Colleen_biomass\planktonb.mat
+load C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\Colleen_biomass\fishb.mat % fish.mat
+load C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\global_env_data.mat
+load C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\global_bio_data.mat
 load Latitudinal_irradiance.mat
 
 %Environment set-up
@@ -35,11 +35,11 @@ P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
     
 %     chlasurf = phyto_obs(lat,lon); % [mg chla / m^3] Surface concentration of chlorophyll a %0.012
     P.R  =PHI(lat,lon)*(1-tanh((P.zi-P.zo)/P.zm))/sum((1-tanh((P.zi-P.zo)/P.zm)))/P.dZ; %10^-3*chlasurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration r*exp(-(P.zi-50).^2/30^2)/P.ZMAX / sum(exp(-(P.zi-50).^2/30^2)) ; % 10 is chla to C ratio - assumed error in data, in gchla/m3 and not mg chla / m3
-    c = INZ(lat,lon);%sum(P.R.*P.dZ)*0.51;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
-    p = LAZ(lat,lon);%/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
-    f = FOR(lat,lon);%0.01;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
-    m = MESO(lat,lon); % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7
-    a = TOP(lat,lon); % [gC m^-2] total abundance of top predators in the water column 0.1
+    c = max(10^-15,INZ(lat,lon));%sum(P.R.*P.dZ)*0.51;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
+    p = max(10^-15,LAZ(lat,lon));%/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
+    f = max(10^-15,FOR(lat,lon));%0.01;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
+    m = max(10^-15,MESO(lat,lon)); % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7
+    a = max(10^-15,TOP(lat,lon)); % [gC m^-2] total abundance of top predators in the water column 0.1
     j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
     
     xq = mod(longitude(lon),360);
@@ -82,15 +82,15 @@ VisN = @(R,K,lpred) max(0.01*lpred, min(10*lpred, R*sqrt(P.LN./(K+P.LN)))); % [m
 
 %small Copepod
 P.C = c/P.ZMAX; % [gC m^-3] Mean concentration in the water column
-P.lC = 10^-4; % [m] Typical length for copepod
-P.wC = 1.4*10^-4*(100*P.lC)^2.74; % [gC] Weight of a typical copepod
+P.lC = 5*10^-4; % [m] Typical length for copepod
+P.wC = 10^-6;%1.4*10^-4*(100*P.lC)^2.74; % [gC] Weight of a typical copepod
 P.uC = speed(P.lC); % [m/day] Max copepod speed
 P.RC = 0.5*P.lC; % [m] Sensing range for copepods
 P.fCR = 0.7; % [-] Assimilation efficiency for copepods eating the resource
 P.fCd = 0.07; % [-] Assimilation efficiency for copepods eating detritus
 
-P.T0C = mean(P.T(1:zoind));%mean(P.T(P.zi<100)); % [?C] Reference temperature for copepods - 15 for 1-4
-P.TmC = max(P.T(1:zoind));%max(P.T(P.zi<20)); % [?C] Maximum temperature for zooplankton before decline - 18 for 1-4
+P.T0C = mean(P.T(P.zi<100)); %mean(P.T(1:zoind));% [?C] Reference temperature for copepods - 15 for 1-4
+P.TmC = max(P.T(P.zi<20)); %max(P.T(1:zoind));% [?C] Maximum temperature for zooplankton before decline - 18 for 1-4
 P.QC = 2; % [-] Q10 for copepods
 P.pcritC = @(t) 3.5; % [kPa] Pcrit, where MMR = SMR
 P.tC = 0.0052*P.wC^-0.25; % [day^-1] SMR at P.TC 
@@ -102,8 +102,8 @@ P.propC = 3; % %of oxygen saturation above which zooplankton are oxyregulators
 
 %predatory Copepod
 P.P = p/P.ZMAX; % [gC m^-3] Mean concentration in the water column
-P.lP = 10^-3; % [m] Typical length for copepod
-P.wP = 1.4*10^-4*(100*P.lP)^2.74; % [gC] Weight of a typical copepod
+P.lP = 5*10^-3; % [m] Typical length for copepod
+P.wP = 10^-3.8;%1.4*10^-4*(100*P.lP)^2.74; % [gC] Weight of a typical copepod
 P.uP = speed(P.lP); % [m/day] Max copepod speed
 P.RP = 0.5*P.lP; % [m] Sensing range for copepods
 P.fPR = 0.7; % [-] Assimilation efficiency for copepods eating the resource
@@ -328,19 +328,19 @@ P.metF = repmat(P.SMRF',1,P.n)*P.sigma + repmat(P.SMRF,P.n,1)*(1-P.sigma); % [da
 P.metJ = repmat(P.SMRJ',1,P.n)*P.sigma + repmat(P.SMRJ,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for tactile predator
 
 %% STRATEGY-DEPENDENT MAXIMUM INGESTION RATES
-Imax = @(l)  3.6*10^-4*(100*l).^2.55*5; % [gC day^-1] maximum ingestion rate for copepod and fish (no imax for tactile, functional response type I)
+Imax = @(l) 18*10^-4*(100*l).^2.55; % [gC day^-1] maximum ingestion rate for copepod and fish (no imax for tactile, functional response type I)
 miniI = 10^-10; % [gC day^-1] just something to say they can still eat - to prevent dividing by 0 in the mortality rates
 
-P.IDF = min(0.5*(0.25)^1*P.NPP/(f/P.wF),max(miniI, Imax(P.lF)*P.MSDF)); % [gC day^-1] Strategy-specific max ingestion rate for forage fish
-P.INF = min(0.5*(0.25)^1*P.NPP/(f/P.wF),max(miniI, Imax(P.lF)*P.MSNF)); % [gC day^-1] Strategy-specific max ingestion rate for forage fish
-P.IDA = min(0.5*(0.25)^2*P.NPP/(a/P.wA),max(miniI, Imax(P.lA)*P.MSDA)); % [gC day^-1] Strategy-specific max ingestion rate for top predator
-P.INA = min(0.5*(0.25)^2*P.NPP/(a/P.wA),max(miniI, Imax(P.lA)*P.MSNA)); % [gC day^-1] Strategy-specific max ingestion rate for top predator
-P.IDM = min(0.5*(0.25)^1*P.NPP/(m/P.wM),max(miniI, Imax(P.lM)*P.MSDM)); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish
-P.INM = min(0.5*(0.25)^1*P.NPP/(m/P.wM),max(miniI, Imax(P.lM)*P.MSNM)); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish
-P.IDC = min(0.5*(0.25)^0*P.NPP/(c/P.wC),max(miniI, Imax(P.lC)*P.MSDC)); % [gC day^-1] Strategy-specific max ingestion rate for copepod
-P.INC = min(0.5*(0.25)^0*P.NPP/(c/P.wC),max(miniI, Imax(P.lC)*P.MSNC)); % [gC day^-1] Strategy-specific max ingestion rate for copepod
-P.IDP = min(0.5*(0.25)^0*P.NPP/(p/P.wP),max(miniI, Imax(P.lP)*P.MSDP)); % [gC day^-1] Strategy-specific max ingestion rate for copepod
-P.INP = min(0.5*(0.25)^0*P.NPP/(p/P.wP),max(miniI, Imax(P.lP)*P.MSNP)); % [gC day^-1] Strategy-specific max ingestion rate for copepod
+P.IDF = min(max(miniI, Imax(P.lF)*P.MSDF)); % [gC day^-1] Strategy-specific max ingestion rate for forage fish 1*(0.3)^1*P.NPP/(f/P.wF),
+P.INF = min(max(miniI, Imax(P.lF)*P.MSNF)); % [gC day^-1] Strategy-specific max ingestion rate for forage fish 1*(0.3)^1*P.NPP/(f/P.wF),
+P.IDA = min(max(miniI, Imax(P.lA)*P.MSDA)); % [gC day^-1] Strategy-specific max ingestion rate for top predator 1*(0.3)^2*P.NPP/(a/P.wA),
+P.INA = min(max(miniI, Imax(P.lA)*P.MSNA)); % [gC day^-1] Strategy-specific max ingestion rate for top predator 1*(0.3)^2*P.NPP/(a/P.wA),
+P.IDM = min(max(miniI, Imax(P.lM)*P.MSDM)); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish 1*(0.3)^1*P.NPP/(m/P.wM),
+P.INM = min(max(miniI, Imax(P.lM)*P.MSNM)); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish 1*(0.3)^1*P.NPP/(m/P.wM),
+P.IDC = min(max(miniI, Imax(P.lC)*P.MSDC)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 1*(0.3)^0*P.NPP/(c/P.wC),
+P.INC = min(max(miniI, Imax(P.lC)*P.MSNC)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 1*(0.3)^0*P.NPP/(c/P.wC),
+P.IDP = min(max(miniI, Imax(P.lP)*P.MSDP)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 1*(0.3)^0*P.NPP/(p/P.wP),
+P.INP = min(max(miniI, Imax(P.lP)*P.MSNP)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 1*(0.3)^0*P.NPP/(p/P.wP),
 
 %% MIGRATION COST 
 % (adapted from Pinti et al. 2019, but figures are the same -at least for now)

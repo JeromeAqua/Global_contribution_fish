@@ -103,3 +103,24 @@ title(' (resp+fec) / NPP [-]')
 
 mean(mean( TOT_out./NPP_reshaped,'omitnan'),'omitnan')
 max(max(TOT_out./NPP_reshaped))
+
+%%
+%areas - convert to m^2
+latc = lat; lonc = lon;
+[xq,yq] = meshgrid(long_coord,lat_coord);
+xq = mod(xq,360);
+DLON = 0*xq+1;
+DLAT = 0*yq+1;
+DX = (2*pi*6371e3/360)*DLON.*cos(deg2rad(yq))*(long_coord(2)-long_coord(1));
+DY = (2*pi*6371e3/360)*DLAT*(lat_coord(2)-lat_coord(1));
+Area = DX.*DY; % m^2
+
+glob_prod_fecal = sum(sum( Area.*TOT_fecal*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+
+X = ['Total fecal pellet creation is ', num2str(glob_prod_fecal), ' PgC/yr on a global scale'];
+disp(X)
+
+glob_prod_respi = sum(sum( Area.*TOT_respi*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+
+X = ['Total respiration is ', num2str(glob_prod_respi), ' PgC/yr on a global scale'];
+disp(X)
