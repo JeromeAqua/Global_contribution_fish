@@ -2,7 +2,7 @@
 %  load('TEST_RUNS_lat_0_long_-140.mat')
 % load('newtest_b_lat_0_long_-140.mat')
 % load global_env_data.mat
-
+load Bottomalpha.mat
 longitude = 0:2:358; %[0:2:178, -180:2:-2]; %What we will use for our runs
 latitude = -90:2:90;
 long_coord2 = mod(long_coord,360);
@@ -13,8 +13,8 @@ long_shifted = [long_coord2(long_coord>=0),long_coord2(long_coord<0)];
 
 %  Carbon_export;
  
-  concerned = 6;
-  PATHWAY = 'respiration'; %POC or respiration
+  concerned = 2:7;
+  PATHWAY = 'POC'; %POC or respiration
   
   add_on = linspace(P.ZMAX+1,5000,10); % [m]
   if strcmp(PATHWAY,'respiration')
@@ -45,12 +45,21 @@ long_shifted = [long_coord2(long_coord>=0),long_coord2(long_coord<0)];
         q =  sum(DegPOC_glob(:,:,:,concerned),4); 
         Dmean = D_glob(:,:,end,concerned); % [gC / m3]
         
-        D_to_use = [                      Dmean.*reshape(P.SR(concerned),1,1,1,size(P.SR(concerned),2))/(add_on(1)-P.zi(end))./reshape(P.alpha(end,concerned)+P.SR(concerned),1,1,1,size(P.SR(concerned),2))/(add_on(1)-P.zi(end))];     
-        for ddepth=2:size(add_on,3)
-            D_to_use = cat(3,D_to_use, D_to_use(:,:,end,:).*reshape(P.SR(concerned),1,1,1,size(P.SR(concerned),2))/(add_on(1,1,2)-add_on(1))./reshape(P.alpha(end,concerned)+P.SR(concerned),1,1,1,size(P.SR(concerned),2))/(add_on(1,1,2)-add_on(1)));
-        end    
-        q = cat(3,q, sum(D_to_use.*reshape(P.alpha(end,concerned),1,1,1,size(P.SR(concerned),2)),4));
-%     q = cat(3,q,zeros(size(long_coord,2),size(lat_coord,2),10));
+        factor_z = exp(-alphaend./reshape(P.SR(concerned)./squeeze(add_on(1,1,:)-P.ZMAX),1,1,size(add_on,3),size(P.SR(concerned),2))); % [-]
+        D_to_use = Dmean.*alphaend.*factor_z;%reshape(factor_z,1,1,size(add_on,3),size(P.SR(concerned),2)); % [gC m^-3 day^-1]
+ 
+% Old version        
+%         D_to_use = [                      Dmean.*reshape(P.SR(concerned),1,1,1,size(P.SR(concerned),2))/(add_on(1)-P.zi(end))./reshape(P.alpha(end,concerned)+P.SR(concerned),1,1,1,size(P.SR(concerned),2))/(add_on(1)-P.zi(end))];   % [gC / m^3]  
+%         for ddepth=2:size(add_on,3)
+%             D_to_use = cat(3,D_to_use, D_to_use(:,:,end,:).*reshape(P.SR(concerned),1,1,1,size(P.SR(concerned),2))/(add_on(1,1,2)-add_on(1))./reshape(P.alpha(end,concerned)+P.SR(concerned),1,1,1,size(P.SR(concerned),2))/(add_on(1,1,2)-add_on(1))); % add one depth layer at each time
+%         end    
+%         q = cat(3,q, sum(D_to_use(:,:,1:end-1,:).*reshape(P.alpha(end,concerned),1,1,1,size(P.SR(concerned),2)),4),sum(D_to_use(:,:,end,:).*reshape(P.SR(concerned)/(add_on(1,1,2)-add_on(1)),1,1,1,size(P.SR(concerned),2)),4));
+
+%With new calculation
+        q = cat(3,q, sum(D_to_use(:,:,1:end-1,:),4),sum(Dmean.*factor_z(:,:,end,:) /(add_on(1,1,2)-add_on(1) ),4)); %sum(Dmean.*reshape(factor_z(end,:),1,1,1,size(P.SR(concerned),2)) /(add_on(1,1,2)-add_on(1) ),4));
+
+        
+        %     q = cat(3,q,zeros(size(long_coord,2),size(lat_coord,2),10));
          q =  permute(q,[2 1 3]);
         
         
@@ -60,25 +69,35 @@ long_shifted = [long_coord2(long_coord>=0),long_coord2(long_coord<0)];
         [LLO, LLA] = meshgrid(longitude,latitude);
 
         S = interp2(LLO,LLA,seafloor,XQ,YQ);
-        for ii=1:size(long_coord,2)
+        for ii=1:size(long_coord,2) %Here remove where there is no ground
             for jj=1:size(lat_coord,2)
                 if isnan(S(jj,ii))
                     q(jj,ii,:) = 0;
                 end
             end
         end
-   end
+  end
   
-
-
-q = double(q);
+  
+  q = double(q);
  
         
  
  z = [P.zi'; linspace(P.ZMAX+1,5000,10)'];
  
  q = cat(2,q(:,long_coord>=0,:),q(:,long_coord<0,:)); % Because we need to have increasing longitudes for the interpolation
- 
+  
+%% Load OCIM
+addpath C:\Users\jppi\Documents\MATLAB\Sandwich\OCIM
+load CTL.mat
+grid = output.grid;
+TR = output.TR; % yr^-1
+msk = output.msk;
+M3d = output.M3d; % land = 0. ocean = 1
+[ny,nx,nz] = size(M3d);
+  
+
+  
 
  %% Initial grid
  [LON,LAT,DEPTH] = meshgrid(long_shifted, lat_coord, z);
@@ -90,23 +109,40 @@ DX = (2*pi*6371e3/360)*DLON.*cos(deg2rad(LAT(:,:,1)))*(longitude(2)-longitude(1)
 DY = (2*pi*6371e3/360)*DLAT*(latitude(2)-latitude(1));
 Area = DX.*DY; % m^2
 
-%% Load OCIM
-addpath C:\Users\jppi\Documents\MATLAB\Sandwich\OCIM
-load CTL.mat
-grid = output.grid;
-TR = output.TR; % yr^-1
-msk = output.msk;
-M3d = output.M3d; % land = 0. ocean = 1
-[ny,nx,nz] = size(M3d);
 
 
-%% Interpolate DIC source to new grid
+%% Interpolate source to new grid
 
 q(isnan(q)) = 0;
 q_OCIM = interp3(LON,LAT,DEPTH,q,grid.XT3d,grid.YT3d,grid.ZT3d);
 q_OCIM(isnan(q_OCIM)) = 0; %to be sure that all NaNs are 0
 
-q_source_OCIM = q_OCIM(msk.pkeep)*365.25; % [gc / m^3 /yr] Production at each depth
+
+%% Here we put back the source terms below the seafloor at the seafloor
+  ZZ = [P.zi, squeeze(add_on(1,1,:))']; %Total depth vector
+  Depth_model = squeeze(grid.ZT3d(1,1,:)); % [m]
+  Z_map = zeros(size(q_OCIM,1),size(q_OCIM,2));
+    for ii=1:size(q_OCIM,2) %Here look at the depth of Tim's model
+        for jj=1:size(q_OCIM,1)
+            Z_map(jj,ii) = sum(M3d(jj,ii,:)==1);
+        end
+    end
+    
+    for ii=1:size(q_OCIM,2) %Here put back the source terms below the bottom at the bottom
+        for jj=1:size(q_OCIM,1)
+            if Z_map(jj,ii)>0
+                q_OCIM(jj,ii,Z_map(jj,ii)) = sum(q_OCIM(jj,ii,Z_map(jj,ii):end));
+                q_OCIM(jj,ii,Z_map(jj,ii)+1:end) = 0;
+            else
+                q_OCIM(jj,ii,:)=0;
+            end
+        end
+    end
+            
+    
+    
+    q_source_OCIM = q_OCIM(msk.pkeep)*365.25; % [gc / m^3 /yr] Production at each depth
+
 
 %% Total export
 VOL = grid.DXT3d.*grid.DYT3d.*grid.DZT3d;
