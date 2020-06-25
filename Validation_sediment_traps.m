@@ -4,6 +4,8 @@ load C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\data_jerome2.mat
 obs = FPOC_obs; obs(isnan(obs)) = 0;
 n_obs = obs./obs; n_obs(isnan(n_obs)) = 0; n_obs = sum(sum(sum(n_obs)));
 
+longitude = [0:2:178,-180:2:-2];
+
 add_on = P.ZMAX:200:5000; % [m]
 Zdeep = [P.zi, add_on]; % [m] a deeper water column - to prevent extrapolations as NaN when the traps are deeper than P.ZMAX
 
@@ -101,17 +103,35 @@ colorbar
 title('Computed particle carbon flux [mgC / m^2 / day]')
 
 subplot(224)
-axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+%%
+addpath C:\Users\jppi\Documents\MATLAB\Add-Ons\Toolboxes\cmocean_perceptually-uniform_colormaps\code\cmocean
+figure
+ax1 = axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+hold on
+
+surfm(lat_coord, long_coord, ones(size(Glob_FitC)),'AlphaData',~isnan(MESO),'EdgeColor','none')
+colormap(ax1,jet)
+
+ax2  = axes;
+axis(ax2,'off');
+
+axes(ax2)
+
+ax3 = axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+hold on
+
 geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
 box off
 axis off
 load coast
 geoshow(lat, long,'Color','k')
-scatterm(lat_traps, lon_traps, 0.1*Z_traps, POC_computed-POC_observed)%,'filled') % lat - lon - size - color
-colorbar
-% caxis([0 20])
-title('Difference between computed and observed particle flux [mgC / m^2 / day]')
 
+
+scatterm(lat_traps, lon_traps, 0.1*Z_traps, POC_computed-POC_observed,'LineWidth',2)%,'filled') % lat - lon - size - color
+%colorbar
+caxis([-20 20])
+title('Difference between computed and observed particle flux [mgC / m^2 / day]')
+colormap(ax3,cmocean('balance'))
 
 
 

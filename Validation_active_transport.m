@@ -1,5 +1,6 @@
 %Validation - map of export flux below the euphotic zone
 Resp_eupho = zeros(size(lat_coord,2),size(long_coord,2));
+Resp_tot = Resp_eupho;
 Fecal_eupho = zeros(size(lat_coord,2),size(long_coord,2));
 % EXPORT_migr_euphoF = zeros(size(lat_coord,2),size(long_coord,2));
 
@@ -100,6 +101,13 @@ for i=1:size(lat_coord,2) %10
                               RdepthF(P.zi'>zeupho)*P.dZ+...
                               RdepthA(P.zi'>zeupho)*P.dZ+...
                               RdepthJ(P.zi'>zeupho)*P.dZ); % [gC m^-2 day^-1]
+                          
+             Resp_tot(i,j) = sum(RdepthC*P.dZ+...
+                  RdepthP*P.dZ+...
+                  RdepthM*P.dZ+...
+                  RdepthF*P.dZ+...
+                  RdepthA*P.dZ+...
+                  RdepthJ*P.dZ); % [gC m^-2 day^-1]
              
              
 %              sum(sum(SdepthM*P.M*P.n^2.*Mflux*P.dZ))+...
@@ -418,5 +426,20 @@ DY = (2*pi*6371e3/360)*DLAT*(lat_coord(2)-lat_coord(1));
 Area = DX.*DY; % m^2
 
 
-Byfecal = sum(sum( Area.*Fecal_eupho*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+FEC = zeros(size(Fecal_eupho));
+for i=1:size(Fecal_eupho,1)
+    for j=1:size(Fecal_eupho,2)
+        if squeeze(Glob_M(j,i,1,1)) ~=0 && ~isnan(squeeze(Glob_M(j,i,1,1)))
+            zeupho = interp2(X,Y,ZEUPHO',lat_coord(i),long_coord2(j));
+       
+            source = squeeze( Source_glob(i,j,:,:) + ConsD_glob(i,j,:,:));
+            temp = sum(source,2);
+            FEC(i,j) = sum(temp(P.zi'>zeupho)*P.dZ); % [gC / m^2 / day] 
+        end
+    end
+end
+            
+FEC(squeeze(Glob_A(:,:,1,1))'==0) = NaN;
+
+Byfecal = sum(sum( Area.*FEC*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 Byrespi = sum(sum( Area.*Resp_eupho*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
