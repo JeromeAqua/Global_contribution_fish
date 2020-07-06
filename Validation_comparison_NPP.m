@@ -5,7 +5,7 @@ TOT_fecal = zeros(size(lat_coord,2),size(long_coord,2));
 TOT_out = zeros(size(lat_coord,2),size(long_coord,2));
 TOT_fecala = zeros(size(TOT_fecal));
 TOT_fecalb = zeros(size(TOT_fecal));
-
+load Bottomalpha.mat
 for i=1:size(lat_coord,2)
     for j=1:size(long_coord,2)
         dic = squeeze(DIC_glob(j,i,:,:)); % [gC / m2 / day]
@@ -13,7 +13,7 @@ for i=1:size(lat_coord,2)
         
         doc = squeeze(DegPOC_glob(j,i,:,2:end)); % [gC / m3 / day]
         TOT_fecala(i,j) = sum(sum(doc*P.dZ));
-        TOT_fecalb(i,j) =  sum( doc(end,:)./P.alpha(end,2:end).*P.SR(2:end)); % [gC / m2 / day]
+        TOT_fecalb(i,j) =  sum( doc(end,:)./alphaend(j,i).*P.SR(2:end)); % [gC / m2 / day]
         
         TOT_out(i,j) = TOT_respi(i,j) + TOT_fecala(i,j) + TOT_fecalb(i,j);
     end

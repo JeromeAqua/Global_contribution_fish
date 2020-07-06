@@ -6,7 +6,7 @@ EXPORT_migr_euphoF = zeros(size(lat_coord,2),size(long_coord,2));
 % load Latitudinal_irradiance.mat
 load C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\global_env_data.mat
 
-ZEUPHO = log(100) ./ KLIGHT; % [m] Depth at which we receive 1% of the surface light. Solve 0.01Is = Is exp(-l*z)
+ZEUPHO = log(10) ./ KLIGHT; % [m] Depth at which we receive 1% of the surface light. Solve 0.01Is = Is exp(-l*z)
 
 longitude2 = mod(longitude,360);
 long_coord2 = mod(long_coord,360); %same axis but from 0 to 360

@@ -33,16 +33,16 @@ load coast
 geoshow(lat, long,'Color','k')
 surfm(lat_coord, long_plot, DSL_plot,'AlphaData',~isnan(DSL_plot));%,'EdgeColor','none')
 hold on
-A = xlsread('C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\Klevjer2016.xls');
- LongKlevjer = A(:,5);
-LatKlevjer = A(:,6);
-WMDKlevjer = A(:,11);
-scatterm(LatKlevjer, LongKlevjer, 20, WMDKlevjer,'filled')
-hold on 
-scatterm(LatKlevjer, LongKlevjer, 20, 'k')
+% A = xlsread('C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\Klevjer2016.xls');
+%  LongKlevjer = A(:,5);
+% LatKlevjer = A(:,6);
+% WMDKlevjer = A(:,11);
+% scatterm(LatKlevjer, LongKlevjer, 20, WMDKlevjer,'filled')
+% hold on 
+% scatterm(LatKlevjer, LongKlevjer, 20, 'k')
 colormap('jet')
 colorbar
-% caxis([200 800])
+caxis([0 500])
 title('Computed maximum DSL')
 
 subplot(212)
@@ -64,4 +64,4 @@ geoshow(lat, long,'Color','k')
 surfm(lat_Bianchi, long_Bianchi, ZBianchi','AlphaData',~isnan(ZBianchi),'EdgeColor','none')
 colorbar
 title('Observed DVM depth of ZPK deep scattering layer [m]')
-caxis([200 800])
+caxis([0 500])

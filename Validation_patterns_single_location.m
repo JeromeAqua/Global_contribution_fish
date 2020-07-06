@@ -1,8 +1,9 @@
 desired_lat = 30; % [degrees]
-desired_lon = -74; % [degrees]
+desired_lon = -30; % [degrees]
 
 [~,lat_idx] = min(abs(desired_lat-lat_coord));
 [~,lon_idx] = min(abs(desired_lon-long_coord));
+
 
 AAday = squeeze(Glob_Aday(lon_idx,lat_idx,:))/max(max(squeeze(Glob_Anight(lon_idx,lat_idx,:))),max(squeeze(Glob_Aday(lon_idx,lat_idx,:)))); % [-] Fraction of A at z during day
 AAnight = squeeze(Glob_Anight(lon_idx,lat_idx,:))/max(max(squeeze(Glob_Anight(lon_idx,lat_idx,:))),max(squeeze(Glob_Aday(lon_idx,lat_idx,:)))); % [-]

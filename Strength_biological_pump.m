@@ -13,13 +13,13 @@ long_shifted = [long_coord2(long_coord>=0),long_coord2(long_coord<0)];
 
 %  Carbon_export;
  
-  concerned = 1:6;
+  concerned = 6;
   PATHWAY = 'respiration'; %POC or respiration
   
-  add_on = linspace(P.ZMAX+1,5000,10); % [m]
+ add_on = repmat(reshape(linspace(P.ZMAX+1,10000,200),1,1,200),size(long_coord,2),size(lat_coord,2),1);% linspace(P.ZMAX+1,5000,10); % [m]
   if strcmp(PATHWAY,'respiration')
   
-            q = cat(3,sum(DIC_glob(:,:,:,concerned),4), zeros(size(long_coord,2),size(lat_coord,2),10))/P.dZ; % [gC / m^3 / day] - if we want to calculate it for respiration
+            q = cat(3,sum(DIC_glob(:,:,:,concerned),4), zeros(size(long_coord,2),size(lat_coord,2),200))/P.dZ; % [gC / m^3 / day] - if we want to calculate it for respiration
             q = permute(q,[2 1 3]);
             
             
@@ -39,7 +39,7 @@ long_shifted = [long_coord2(long_coord>=0),long_coord2(long_coord<0)];
             
   elseif strcmp(PATHWAY, 'POC')
 
-        add_on = repmat(reshape(linspace(P.ZMAX+1,5000,10),1,1,10),size(long_coord,2),size(lat_coord,2),1);% linspace(P.ZMAX+1,5000,10); % [m]
+        
 %         depth_size = [repmat(P.dZ,P.n,1); 1; diff(add_on)']; % if we want to calculate it for faecal pellet excretion
         %old one % q =  [ sum(DegPOC(1:end,concerned),2); sum(repmat(bottom(concerned),size(add_on,2),1).*P.alpha(end,concerned).*exp(-repmat(P.alpha(end,concerned)./P.SR(concerned),size(add_on,2),1).*repmat(add_on'-P.zi(end),1,length(concerned))),2)./([11 diff(add_on)]')]; % [gc / m^3 / day]    %.*exp(-repmat(P.alpha(end,concerned)./P.SR(concerned),size(add_on,2),1).*repmat(add_on'-P.zi(end),1,length(concerned)))
         q =  sum(DegPOC_glob(:,:,:,concerned),4); 
@@ -56,8 +56,8 @@ long_shifted = [long_coord2(long_coord>=0),long_coord2(long_coord<0)];
 %         q = cat(3,q, sum(D_to_use(:,:,1:end-1,:).*reshape(P.alpha(end,concerned),1,1,1,size(P.SR(concerned),2)),4),sum(D_to_use(:,:,end,:).*reshape(P.SR(concerned)/(add_on(1,1,2)-add_on(1)),1,1,1,size(P.SR(concerned),2)),4));
 
 %With new calculation
-        q = cat(3,q, sum(D_to_use(:,:,1:end-1,:),4),sum(Dmean.*factor_z(:,:,end,:) /(add_on(1,1,2)-add_on(1) ),4)); %sum(Dmean.*reshape(factor_z(end,:),1,1,1,size(P.SR(concerned),2)) /(add_on(1,1,2)-add_on(1) ),4));
-
+%         q = cat(3,q, sum(D_to_use(:,:,1:end-1,:),4),sum(Dmean.*factor_z(:,:,end,:) /(add_on(1,1,2)-add_on(1) ),4)); %sum(Dmean.*reshape(factor_z(end,:),1,1,1,size(P.SR(concerned),2)) /(add_on(1,1,2)-add_on(1) ),4));
+          q = cat(3,q, sum(D_to_use(:,:,1:end-1,:),4),sum(Dmean.*factor_z(:,:,end,:).*(alphaend+  reshape(P.SR(concerned)./squeeze(add_on(1,1,2)-add_on(1)),1,1,1,size(P.SR(concerned),2))     ),4));
         
         %     q = cat(3,q,zeros(size(long_coord,2),size(lat_coord,2),10));
          q =  permute(q,[2 1 3]);
@@ -68,22 +68,22 @@ long_shifted = [long_coord2(long_coord>=0),long_coord2(long_coord<0)];
         XQ = mod(XQ,360);
         [LLO, LLA] = meshgrid(longitude,latitude);
 
-        S = interp2(LLO,LLA,seafloor,XQ,YQ);
-        for ii=1:size(long_coord,2) %Here remove where there is no ground
-            for jj=1:size(lat_coord,2)
-                if isnan(S(jj,ii))
-                    q(jj,ii,:) = 0;
-                end
-            end
-        end
-  end
-  
+%         S = interp2(LLO,LLA,seafloor,XQ,YQ);
+%         for ii=1:size(long_coord,2) %Here remove where there is no ground
+%             for jj=1:size(lat_coord,2)
+%                 if isnan(S(jj,ii))
+%                     q(jj,ii,:) = 0;
+%                 end
+%             end
+%         end
+   end
+   
   
   q = double(q);
  
         
  
- z = [P.zi'; linspace(P.ZMAX+1,5000,10)'];
+ z = [P.zi'; linspace(P.ZMAX+1,10000,200)'];
  
  q = cat(2,q(:,long_coord>=0,:),q(:,long_coord<0,:)); % Because we need to have increasing longitudes for the interpolation
   

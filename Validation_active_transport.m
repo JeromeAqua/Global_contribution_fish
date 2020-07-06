@@ -443,3 +443,8 @@ FEC(squeeze(Glob_A(:,:,1,1))'==0) = NaN;
 
 Byfecal = sum(sum( Area.*FEC*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 Byrespi = sum(sum( Area.*Resp_eupho*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+
+% %%%%% TO CHECK SOMETHING
+% i = 23; j = 16;
+% sum(sum(DegPOC_glob(j,i,:,2:7)))*P.dZ
+% sum(sum(Source_glob(i,j,:,:)+ConsD_glob(i,j,:,:)))*P.dZ

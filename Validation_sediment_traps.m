@@ -74,17 +74,17 @@ subplot(221)
 %     hold on
 % end
 
-scatter(POC_observed,POC_computed, 20, Z_traps, 'filled' )
+scatter(log10(POC_observed),log10(POC_computed), 20, Z_traps, 'filled' )
 hold on
 
-mm = min([POC_observed; POC_computed]);
-MM = max([POC_observed; POC_computed]);
+mm = min([log10(POC_observed); log10(POC_computed)]);
+MM = max([log10(POC_observed); log10(POC_computed)]);
 plot([mm MM], [mm MM], 'k')
 xlabel('Observed POC flux [mgC/m^2/day]')
 ylabel('Modeled POC flux [mgC / m^2 /day]')
 colormap('jet')
 colorbar
-caxis([500 3300])
+% caxis([500 3300])
 st_dev = sqrt(1/size(POC_observed,1)*sum((POC_observed-POC_computed).^2))
 subplot(222)
 histogram(POC_observed-POC_computed,20)
