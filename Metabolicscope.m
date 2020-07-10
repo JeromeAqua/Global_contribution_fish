@@ -19,7 +19,7 @@ smr = @(t,o2) (o2<P.propC*pmax)*(a(t)*o2+b(t)) + (o2>=P.propC*pmax)*Smax(t);
 
 MMR = arrayfun(mmr, T, O); 
 SMR = arrayfun(smr, T, O);
-MS = MMR - SMR; % [day^-1] Metabolic scope at each possible point
+MS = MMR - SMR; % [day^-1] Aerobic scope at each possible point
 
 elseif strcmp(player,'predcop')
        
@@ -32,7 +32,7 @@ smr = @(t,o2) (o2<P.propP*pmax)*(a(t)*o2+b(t)) + (o2>=P.propP*pmax)*Smax(t);
 
 MMR = arrayfun(mmr, T, O); 
 SMR = arrayfun(smr, T, O);
-MS = MMR - SMR; % [day^-1] Metabolic scope at each possible point
+MS = MMR - SMR; % [day^-1] Aerobic scope at each possible point
 
 elseif strcmp(player,'forage')
     
@@ -42,7 +42,7 @@ elseif strcmp(player,'forage')
     
     MMR = M(T,O);
     SMR = S(T);
-    MS = MMR - SMR; % [day^-1] Metabolic scope at each possible point in the O2 - T space 
+    MS = MMR - SMR; % [day^-1] Aerobic scope at each possible point in the O2 - T space 
     
 
 elseif strcmp(player,'tactile')
@@ -53,7 +53,7 @@ elseif strcmp(player,'tactile')
 %     
 %     MMR = M(T,O);
 %     SMR = S(T,O);
-%     MS = MMR - SMR; % [day^-1] Metabolic scope at each possible point in the O2 - T space 
+%     MS = MMR - SMR; % [day^-1] Aerobic scope at each possible point in the O2 - T space 
     
 Smax = @(t) P.tJ*P.QJ.^((t-P.T0J)/10); % standard metabolic rate
 Mmax = @(t) P.factMMRJ*min(Smax(t),Smax(P.TmJ));
@@ -74,7 +74,7 @@ elseif strcmp(player,'meso')
     
     MMR = M(T,O);
     SMR = S(T);
-    MS = MMR - SMR; % [day^-1] Metabolic scope at each possible point in the O2 - T space 
+    MS = MMR - SMR; % [day^-1] Aerobic scope at each possible point in the O2 - T space 
     
     
 elseif strcmp(player,'top')
@@ -85,7 +85,7 @@ elseif strcmp(player,'top')
     
     MMR = M(T,O);
     SMR = S(T);
-    MS = MMR - SMR; % [day^-1] Metabolic scope at each possible point in the O2 - T space 
+    MS = MMR - SMR; % [day^-1] Aerobic scope at each possible point in the O2 - T space 
 
 end
 

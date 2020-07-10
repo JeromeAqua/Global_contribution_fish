@@ -1,35 +1,37 @@
-profname = 'dcc R2019a';
-clust = parcluster(profname);
-p = parpool(clust,20);
+% profname = 'dcc R2019a';
+% clust = parcluster(profname);
+% clust.AdditionalProperties.ProcsPerNode = 0;
+% clust.AdditionalProperties.MemUsage = '3GB';
+% clust.AdditionalProperties.WallTime = '48:00';
+% p = parpool(clust,60);
 
 
 %Replicator code
 
-load mesopelagic_bio.mat
+load mesopelagic_bio.mat % mesopelagic_bio.mat
 load global_env_data.mat
 load global_bio_data.mat
 
 
 Niter = 10^5; % [-] number of iterations of the replicator equation
-Iavg = Niter; %100000; % [-] How many of the last time steps do we save?
+Iavg = 1;%Niter; %100000; % [-] How many of the last time steps do we save?
 dtfact = 0.05; %Max percentage of change per time step
 sig = 0.2; % Parameter used for the Gaussian filter default = 0.3
 sigf = 0.7; % Parameter used for the Gaussian filter on the fitness matrices
 reinit = 1; %Do we start from the last simulation or do we initialize strategy matrices?
 P = Parameters_global(102,49); % dummy P to have the values P.n etc during the initialization
 
-minimort = 0.01; % [day^-1] Background mortality
+minimort = 0.05; % [day^-1] Background mortality
 minimortC = 0.1; % [day^-1] Background mortality for small copepods
-
+cont = 0;
 %For sediment trap tests
 % zlattest = [36    53    48    55    55    48    64    65  47    66    65    69    63  52    ,...
 %             49    57    42    44    46    52    55    57    44    46    47    43    45 68 46 47 49 40]; %
 % zlongtest = [ 5    43    44    45    59    68    74    78        81    83    88    88    89  111   ,...
 %             138   165   167   168   169   170   170   170   175   175   175   176   176 78 111 111 111 113];
 
-lat_coord = -45:5:45;
-long_coord = -180:5:170;
-long_coord2 = mod(long_coord,360); %same axis but from 0 to 360
+lat_coord = -45:2:45; % -45:2:45;
+long_coord = -180:2:178; % -180:2:170;
 
 [YRUN, XRUN] = meshgrid(lat_coord,long_coord);
 
@@ -79,25 +81,32 @@ Glob_FitMT = zeros(size(lat_coordTot,2),1);
 Glob_FitFT = zeros(size(lat_coordTot,2),1);
 Glob_FitJT = zeros(size(lat_coordTot,2),1);
 
+Mcr = zeros(size(YRUN));
+Mpr = Mcr; Mcd = Mpr; Mpd = Mcr; Mmc = Mpr; Mmp = Mcr; Mfm = Mcr; Mfp = Mcr;
+Mam = Mcr; Mjm = Mcr; Mjc = Mcr; Mjp = Mcr; Maj = Mjc; Maf = Mcr; Mfc = Mpr;
+
+McrT = zeros(size(YRUN,1)*size(YRUN,2));
+MprT = McrT; McdT = MprT; MpdT = McrT; MmcT = MprT; MmpT = McrT; MfmT = McrT; MfpT = McrT;
+MamT = McrT; MjmT = McrT; MjcT = McrT; MjpT = McrT; MajT = MjcT; MafT = McrT; MfcT = MprT;
+
+
 D_glob = zeros([size(YRUN),P.n,7]); % [gC / m3 / day] Concentration of detritus in the water column
 DIC_glob = zeros([size(YRUN),P.n,6]); % [gC / m2 / day] Total respiration in each water layer - ! in /m2
 DegPOC_glob = zeros([size(YRUN),P.n,7]); % [gC / m3 / day] Bacterial respiration due to fecal pellet degradation
+Glob_source = zeros([size(YRUN),P.n,6]); % [gC / m3 / day] Fecal pellet creation rate
+Glob_Dcons = Glob_source; % [gC / m3 / day] Fecal pellet consumption rate
+
 
 D_globT = zeros(size(lat_coordTot,2),P.n,7);
 DIC_globT = zeros(size(lat_coordTot,2),P.n,6);
 DegPOC_globT = zeros(size(lat_coordTot,2),P.n,7);
+Glob_sourceT = zeros(size(lat_coordTot,2),P.n,6);
+Glob_DconsT = Glob_sourceT;
 
-
-lats_fast = [-36   -30   -30   -20   -18   -14   -12    -8    -6    -6    -4    -4    -2     0     0     0     0     2     2     2     4     4     4     6     6     6     8    10    10    12    12    14    14    16    16    16    18    18    18    18    18    22    22    26    28    28    30    32    34    34    34    36    36    36    38    38    40    40    40    42    42    44    44    46    48    48    48  -14  18]; %lats of the sediment traps except the two last ones
-longs_fast = [   160    14   -74     8   154   156  -136   -28  -140   -10   -26   -12   -10   174  -140   -24   -12   160  -140   -12    86   134   136   138  -140   -86  -104    64  -140  -140   -22    84   114    60    64    68    56    58    88   116   -22   -32   -22   126   126  -112   -16   -66   176  -120   -22   146    -6    -2   154   174   132   164   -18  -128  -126   154   -18   174  -130   -22   -20  78 150]; % longs of the sediment traps except the two last ones
-
-
-
-
-parfor j=1:size(XRUN,1)*size(XRUN,2)
+for j=1%:size(XRUN,1)*size(XRUN,2)
     
-    lat = lat_coordTot(j);%zlattest(j);
-    lon = long_coordTot(j);%zlongtest(j);
+    lat = -9; %lat_coordTot(j);%zlattest(j);
+    lon = -158; %long_coordTot(j);%zlongtest(j);
     
     [~,lat_idx] = min(abs(lat-latitude));
     [~,lon_idx] = min(abs(lon-longitude));
@@ -153,8 +162,13 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
         MC = MA; MJ = MA; MM = MA; MF = MA; MP = MA;
         
         MD = zeros(P.n,7,Iavg);
+        SOURCEL = zeros(P.n,6,Iavg);
+        CONSDL = SOURCEL;
         
-        
+        mcr = zeros(Iavg,1);
+        mpr = mcr; mcd = mpr; mpd = mcr; mmc = mpr; mmp = mcr; mfm = mcr; mfp = mcr;
+        mam = mcr; mjm = mcr; mjc = mcr; mjp = mcr; maj = mjc; maf = mcr; mfc = mpr;
+            
         Cday = P.n*P.C*sum(C,2)'; % [gC m^-3] Average concentration in each layer during day for copepod
         Cnight = P.n*P.C*sum(C,1); % [gC m^-3] Average concentration in each layer during night
         Pday = P.n*P.P*sum(PC,2)'; % [gC m^-3] Average concentration in each layer during day for copepod
@@ -215,10 +229,12 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
             ICD0(isnan(ICD0)) = 0;
             
             %Make sure that they do not eat more than there actually is
-            ConsdayD = squeeze(sum(IFD1.*repmat(Fday',1,1,7)/P.wF+IPD1.*repmat(Pday',1,1,7)/P.wP+ICD1.*repmat(Cday',1,1,7)/P.wC+IMD1.*repmat(Mday',1,1,7)/P.wM,2));
-            ConsnigD = squeeze(sum(permute(IFD0,[2 1 3]).*repmat(Fnight',1,1,7)/P.wF+permute(IPD0,[2 1 3]).*repmat(Pnight',1,1,7)/P.wP+permute(ICD0,[2 1 3]).*repmat(Cnight',1,1,7)/P.wC+...
-                permute(IMD0,[2 1 3]).*repmat(Mnight',1,1,7)/P.wM,2));
-            ConsD = P.sigma*ConsdayD + (1-P.sigma)*ConsnigD;
+%             ConsdayD = squeeze(sum(IFD1.*repmat(Fday',1,1,7)/P.wF+IPD1.*repmat(Pday',1,1,7)/P.wP+ICD1.*repmat(Cday',1,1,7)/P.wC+IMD1.*repmat(Mday',1,1,7)/P.wM,2));
+%             ConsnigD = squeeze(sum(permute(IFD0,[2 1 3]).*repmat(Fnight',1,1,7)/P.wF+permute(IPD0,[2 1 3]).*repmat(Pnight',1,1,7)/P.wP+permute(ICD0,[2 1 3]).*repmat(Cnight',1,1,7)/P.wC+...
+%                 permute(IMD0,[2 1 3]).*repmat(Mnight',1,1,7)/P.wM,2));
+%             ConsD = P.sigma*ConsdayD + (1-P.sigma)*ConsnigD;
+
+            ConsD = squeeze(P.P*P.n*(P.sigma*sum(IPD1.*PC,2)+(1-P.sigma)*permute(sum(IPD0.*PC,1),[2 1 3]))/P.wP); % [gC m^-3 day^-1]
             
             resc = ones(P.n,7);
             max_ing = 0.8; %maximum percentage of detritus that we allow to be eaten in one day
@@ -239,8 +255,8 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
             end
             
             
-            ConsdayD = ConsdayD.*resc;
-            ConsnigD = ConsnigD.*resc;
+%             ConsdayD = ConsdayD.*resc;
+%             ConsnigD = ConsnigD.*resc;
             ConsD = ConsD.*resc;
             
             RESC = repmat(reshape(resc,P.n,1,7),1,P.n,1);
@@ -379,7 +395,7 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
             mPN = sum(mPnight,1); % [day^-1]
             MortNi = repmat(mPN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
             
-            MortP = minimort+ P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
+            MortP = minimort+ 1*(P.LD'+P.LN)/max(max(P.LD'+P.LN)) + P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
             
             %Forage fish
             mFday = (P.IDA.*P.EDAF*pref('top','forage')./NA1*P.n^2*P.A.*A/P.wA); % [day^-1] size n*n How much each strategy eats forage fish during daytime
@@ -422,7 +438,7 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
             mMN = sum(mMnight,1); % [day^-1]
             MortNi = repmat(mMN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
             
-            MortM = minimort+ P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
+            MortM = 1*(P.LD'+P.LN)/max(max(P.LD'+P.LN)) + 0.01+minimort+ P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
             
             
             %Fitnesses
@@ -521,19 +537,35 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
             %         end
             %     end
             
-            FecC = (P.sigma*((1-P.fCR)*ICR1+(1-P.fCd)*sum(ICD1,3))+(1-P.sigma)*((1-P.fCR)*ICR0+(1-P.fCd)*sum(ICD0,3)))/P.wC; % [day^-1]
-            FecP = (P.sigma*((1-P.fPR)*IPR1+(1-P.fPd)*sum(IPD1,3))+(1-P.sigma)*((1-P.fPR)*IPR0+(1-P.fPd)*sum(IPD0,3)))/P.wP; % [day^-1]
-            FecF = (1-P.fF)*(P.sigma*(IFP1+IFC1+sum(IFD1,3)+IFM1)+(1-P.sigma)*(sum(IFD0,3)+IFC0+IFP0+IFM0))/P.wF; % [day^-1]
-            FecA = (1-P.fA)*(P.sigma*(IAF1+IAJ1+IAM1)+(1-P.sigma)*(IAF0+IAJ0+IAM0))/P.wA; % [day^-1]
-            FecJ = (1-P.fJ)*(P.sigma*(IJC1+IJP1+IJM1)+(1-P.sigma)*(IJC0+IJP0+IJM0))/P.wJ; % [day^-1]
-            FecM = (P.sigma*((1-P.fMd)*sum(IMD1,3)+(1-P.fMC)*IMC1+(1-P.fMC)*IMP1)+(1-P.sigma)*((1-P.fMd)*sum(IMD0,3)+(1-P.fMC)*IMC0+(1-P.fMC)*IMP0))/P.wM; % [day^-1]
-            
-            sourceC = P.C*P.n*(sum(FecC.*C,2)*P.sigma+(1-P.sigma)*sum(FecC.*C,1)'); % [gC / m^3 / day]
-            sourceP = P.P*P.n*(sum(FecP.*PC,2)*P.sigma+(1-P.sigma)*sum(FecC.*PC,1)');
-            sourceM = P.M*P.n*(sum(FecM.*M,2)*P.sigma+(1-P.sigma)*sum(FecC.*M,1)');
-            sourceF = P.F*P.n*(sum(FecF.*F,2)*P.sigma+(1-P.sigma)*sum(FecC.*F,1)');
-            sourceA = P.A*P.n*(sum(FecA.*A,2)*P.sigma+(1-P.sigma)*sum(FecC.*A,1)');
-            sourceJ = P.J*P.n*(sum(FecJ.*J,2)*P.sigma+(1-P.sigma)*sum(FecC.*J,1)');
+% % %             FecC = (P.sigma*((1-P.fCR)*ICR1+(1-P.fCd)*sum(ICD1,3))+(1-P.sigma)*((1-P.fCR)*ICR0+(1-P.fCd)*sum(ICD0,3)))/P.wC; % [day^-1]
+% % %             FecP = (P.sigma*((1-P.fPR)*IPR1+(1-P.fPd)*sum(IPD1,3))+(1-P.sigma)*((1-P.fPR)*IPR0+(1-P.fPd)*sum(IPD0,3)))/P.wP; % [day^-1]
+% % %             FecF = (1-P.fF)*(P.sigma*(IFP1+IFC1+sum(IFD1,3)+IFM1)+(1-P.sigma)*(sum(IFD0,3)+IFC0+IFP0+IFM0))/P.wF; % [day^-1]
+% % %             FecA = (1-P.fA)*(P.sigma*(IAF1+IAJ1+IAM1)+(1-P.sigma)*(IAF0+IAJ0+IAM0))/P.wA; % [day^-1]
+% % %             FecJ = (1-P.fJ)*(P.sigma*(IJC1+IJP1+IJM1)+(1-P.sigma)*(IJC0+IJP0+IJM0))/P.wJ; % [day^-1]
+% % %             FecM = (P.sigma*((1-P.fMd)*sum(IMD1,3)+(1-P.fMC)*IMC1+(1-P.fMC)*IMP1)+(1-P.sigma)*((1-P.fMd)*sum(IMD0,3)+(1-P.fMC)*IMC0+(1-P.fMC)*IMP0))/P.wM; % [day^-1]
+% % %             
+% % %             sourceC = P.C*P.n*(sum(FecC.*C,2)*P.sigma+(1-P.sigma)*sum(FecC.*C,1)'); % [gC / m^3 / day]
+% % %             sourceP = P.P*P.n*(sum(FecP.*PC,2)*P.sigma+(1-P.sigma)*sum(FecC.*PC,1)');
+% % %             sourceM = P.M*P.n*(sum(FecM.*M,2)*P.sigma+(1-P.sigma)*sum(FecC.*M,1)');
+% % %             sourceF = P.F*P.n*(sum(FecF.*F,2)*P.sigma+(1-P.sigma)*sum(FecC.*F,1)');
+% % %             sourceA = P.A*P.n*(sum(FecA.*A,2)*P.sigma+(1-P.sigma)*sum(FecC.*A,1)');
+% % %             sourceJ = P.J*P.n*(sum(FecJ.*J,2)*P.sigma+(1-P.sigma)*sum(FecC.*J,1)');
+
+                  sourceC = (1-P.fCR)*P.C*P.n*(P.sigma*sum(ICR1.*C,2)+(1-P.sigma)*sum(ICR0.*C,1)')/P.wC +...
+                            (1-P.fCd)*P.C*P.n*(P.sigma*sum(sum(ICD1,3).*C,2)+(1-P.sigma)*sum(sum(ICD0,3).*C,1)')/P.wC; % [gC m^-3 day^-1]
+                  sourceP = (1-P.fPR)*P.P*P.n*(P.sigma*sum(IPR1.*PC,2)+(1-P.sigma)*sum(IPR0.*PC,1)')/P.wP +...
+                            (1-P.fPd)*P.P*P.n*(P.sigma*sum(sum(IPD1,3).*PC,2)+(1-P.sigma)*sum(sum(IPD0,3).*PC,1)')/P.wP; % [gC m^-3 day^-1]
+                  sourceM = (1-P.fMC)*P.M*P.n*(P.sigma*sum(IMC1.*M,2)+(1-P.sigma)*sum(IMC0.*M,1)')/P.wM+...
+                            (1-P.fMC)*P.M*P.n*(P.sigma*sum(IMP1.*M,2)+(1-P.sigma)*sum(IMP0.*M,1)')/P.wM; % [gC m^-3day^-1]
+                  sourceF = (1-P.fF)*P.F*P.n*(P.sigma*sum(IFP1.*F,2)+(1-P.sigma)*sum(IFP0.*F,1)')/P.wF+...
+                            (1-P.fF)*P.F*P.n*(P.sigma*sum(IFC1.*F,2)+(1-P.sigma)*sum(IFC0.*F,1)')/P.wF+...
+                            (1-P.fF)*P.F*P.n*(P.sigma*sum(IFM1.*F,2)+(1-P.sigma)*sum(IFM0.*F,1)')/P.wF; % [gC m^-3 day^-1]
+                  sourceA = (1-P.fA)*P.A*P.n*(P.sigma*sum(IAF1.*A,2)+(1-P.sigma)*sum(IAF0.*A,1)')/P.wA+...
+                            (1-P.fA)*P.A*P.n*(P.sigma*sum(IAM1.*A,2)+(1-P.sigma)*sum(IAM0.*A,1)')/P.wA+...
+                            (1-P.fA)*P.A*P.n*(P.sigma*sum(IAJ1.*A,2)+(1-P.sigma)*sum(IAJ0.*A,1)')/P.wA; % [gC m^-3 day^-1]
+                  sourceJ = (1-P.fJ)*P.J*P.n*(P.sigma*sum(IJP1.*J,2)+(1-P.sigma)*sum(IJP0.*J,1)')/P.wJ+...
+                            (1-P.fJ)*P.J*P.n*(P.sigma*sum(IJC1.*J,2)+(1-P.sigma)*sum(IJC0.*J,1)')/P.wJ+...
+                            (1-P.fJ)*P.J*P.n*(P.sigma*sum(IJM1.*J,2)+(1-P.sigma)*sum(IJM0.*J,1)')/P.wJ; % [gC m^-3 day^-1]
             
             SOURCE = [sourceC sourceP sourceM sourceF sourceA sourceJ] - ConsD(:,2:end);
             
@@ -543,7 +575,7 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
                 Dnew(1,detrindex) = SOURCE(1,detrindex)/(P.SR(detrindex+1)/P.dZ+P.alpha(1,detrindex+1));
                 for depthindex = 2:P.n
                     Dnew(depthindex,detrindex) = (SOURCE(depthindex,detrindex) + P.SR(detrindex+1)*Dnew(depthindex-1,detrindex)/P.dZ )/(P.SR(detrindex+1)/P.dZ+P.alpha(depthindex, detrindex+1));
-                end
+                end 
             end
             
             Dnew = [P.BD' Dnew];
@@ -572,6 +604,7 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
             factF = abs(dtfact/max(FFmax));%, -FFmin]);
             
             %increment, the core of the replicator equation
+            %  A = A.*(1 + factA*fitA.*P.MaskA); % [-] Proportion of all strategies, before renormalization
             C = C.*(1 + factC*fitC.*P.MaskC);
             PC = PC.*(1 + factP*fitP.*P.MaskP);
             J = J.*(1 + factJ*fitJ.*P.MaskJ);
@@ -586,27 +619,7 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
             M(M<dM0) = dM0;
             F(F<dF0) = dF0;
             
-            
-            %A =    diag([linspace(1,0,25), linspace(0,0,25)]);   %%% just a try to see the results with top predator distributed like that
-            
-            
-            
-            %     %Renormalization
-            %     A = A/sum(sum(A)); % [-] Good matrices of strategies after each replicator time step
-            %     C = C/sum(sum(C));
-            %     M = M/sum(sum(M));
-            %     J = J/sum(sum(J));
-            %     F = F/sum(sum(F));
-            %     PC = PC/sum(sum(PC));
-            %
-            % %Applying a Gaussian filter - tries
-            %     A = imgaussfilt(A,sig);
-            %     C = imgaussfilt(C,sig);
-            %     PC = imgaussfilt(PC,sig);
-            %     F = imgaussfilt(F,sig);
-            %     J = imgaussfilt(J,sig);
-            %     M = imgaussfilt(M,sig);
-            %
+  
             
             %Removing the impossible places -- just a try for now
             F(P.MaskF==0) = 0;
@@ -623,7 +636,6 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
             J = J/sum(sum(J));
             F = F/sum(sum(F));
             PC = PC/sum(sum(PC));
-            
             %Calculation of the day and night concentrations
             Cday = P.n*P.C*sum(C,2)'; % [gC m^-3] Average concentration in each layer during day for copepod
             Cnight = P.n*P.C*sum(C,1); % [gC m^-3] Average concentration in each layer during night
@@ -650,6 +662,7 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
             
             %Save historic of convergence
             if i<Iavg
+                cont = cont+1;
                 MAday(:,Iavg-i) = Aday;
                 MCday(:,Iavg-i) = Cday;
                 MPday(:,Iavg-i) = Pday;
@@ -678,6 +691,10 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
                 MP = MP + PC/Iavg;
                 
                 MD(:,:,Iavg-i) = D;
+                SOURCEL(:,:,Iavg-i) = [sourceC sourceP sourceM sourceF sourceA sourceJ];
+                CONSDL(:,:,Iavg-i) = ConsD(:,2:end);
+                
+                
             end
             
             notdone = (i>0);
@@ -695,7 +712,7 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
         toc
         
         %%% COMPUTE CARBON EXPORTS FOR ALL POPULATIONS
-        imean = Niter/2;
+        imean = Iavg;
         AAday = mean(MAday(:,end-imean:end),2);
         AAnight = mean(MAnight(:,end-imean:end),2);
         mmday = mean(MMday(:,end-imean:end),2);
@@ -709,7 +726,8 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
         FFday = mean(MFday(:,end-imean:end),2);
         FFnight = mean(MFnight(:,end-imean:end),2);
         Dmean = mean(MD(:,:,end-imean:end),3);   
-        
+        SOURCEmean = mean(SOURCEL(:,:,end-imean:end),3);
+        CONSDmean = mean(CONSDL(:,:,end-imean:end),3);
         
         DIC = zeros(P.n, 6);
         
@@ -774,6 +792,8 @@ parfor j=1:size(XRUN,1)*size(XRUN,2)
         D_globT(j,:,:) = reshape(Dmean,[1 P.n 7]);
         DIC_globT(j,:,:) = reshape(DIC,[1 P.n 6]);
         DegPOC_globT(j,:,:) = reshape(DegPOC, [1 P.n 7]);
+        Glob_sourceT(j,:,:) = reshape(SOURCEmean,[1 P.n 6]);
+        Glob_DconsT(j,:,:) = reshape(CONSDmean,[1 P.n 6]);
         
         display([num2str(j),'/',num2str(size(XRUN,1)*size(XRUN,2))])
     end
@@ -804,10 +824,12 @@ for jj=1:size(XRUN,1)*size(XRUN,2) %reput the values in ordered matrices
     Glob_FitF(xi,xj) = Glob_FitFT(jj);
     Glob_FitJ(xi,xj) = Glob_FitJT(jj);
     
+    Glob_Dcons(xi,xj,:,:) = squeeze(Glob_DconsT(jj,:,:));
+    Glob_source(xi,xj,:,:) = squeeze(Glob_sourceT(jj,:,:));
     D_glob(xi,xj,:,:) = squeeze(D_globT(jj,:,:));
     DIC_glob(xi,xj,:,:) = squeeze(DIC_globT(jj,:,:));
     DegPOC_glob(xi,xj,:,:) = squeeze(DegPOC_globT(jj,:,:));
 end
 
-save global3.mat
-    
+%  save global_102b.mat
+    save testbis.mat

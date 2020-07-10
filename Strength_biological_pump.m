@@ -13,8 +13,8 @@ long_shifted = [long_coord2(long_coord>=0),long_coord2(long_coord<0)];
 
 %  Carbon_export;
  
-  concerned = 6;
-  PATHWAY = 'respiration'; %POC or respiration
+  concerned = 3;
+  PATHWAY = 'POC'; %POC or respiration
   
  add_on = repmat(reshape(linspace(P.ZMAX+1,10000,200),1,1,200),size(long_coord,2),size(lat_coord,2),1);% linspace(P.ZMAX+1,5000,10); % [m]
   if strcmp(PATHWAY,'respiration')
