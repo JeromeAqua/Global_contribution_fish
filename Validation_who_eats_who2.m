@@ -247,6 +247,7 @@ GCR = sum(sum( Area.*Mcr'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 GCD = sum(sum( Area.*Mcd'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 GPR = sum(sum( Area.*Mpr'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 GPD = sum(sum( Area.*Mpd'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+GPC = sum(sum( Area.*Mpc'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 
 GMC = sum(sum( Area.*Mmc'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 GMP = sum(sum( Area.*Mmp'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]

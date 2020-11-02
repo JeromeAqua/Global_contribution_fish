@@ -34,13 +34,13 @@ P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
     
 %     chlasurf = phyto_obs(lat,lon); % [mg chla / m^3] Surface concentration of chlorophyll a %0.012
-    P.R  =PHI(lat,lon)*(1-tanh((P.zi-P.zo)/P.zm))/sum((1-tanh((P.zi-P.zo)/P.zm)))/P.dZ; %10^-3*chlasurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration r*exp(-(P.zi-50).^2/30^2)/P.ZMAX / sum(exp(-(P.zi-50).^2/30^2)) ; % 10 is chla to C ratio - assumed error in data, in gchla/m3 and not mg chla / m3
-    c = max(10^-15,INZ(lat,lon));%sum(P.R.*P.dZ)*0.51;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
-    p = max(10^-15,LAZ(lat,lon));%/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
-    f = max(10^-15,FOR(lat,lon));%0.01;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
-    m = max(10^-15,MESO(lat,lon)); % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7
-    a = max(10^-15,TOP(lat,lon)); % [gC m^-2] total abundance of top predators in the water column 0.1
-    j = 0.001; % [gC m^-2] total abundance of tactile predators in the water column
+    P.R = 0.5*PHI(lat,lon)*(1-tanh((P.zi-P.zo)/P.zm))/sum((1-tanh((P.zi-P.zo)/P.zm)))/P.dZ; %10^-3*chlasurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration r*exp(-(P.zi-50).^2/30^2)/P.ZMAX / sum(exp(-(P.zi-50).^2/30^2)) ; % 10 is chla to C ratio - assumed error in data, in gchla/m3 and not mg chla / m3
+    c = 0.5*max(10^-15,INZ(lat,lon));%sum(P.R.*P.dZ)*0.51;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
+    p = 0.5*max(10^-15,LAZ(lat,lon));%/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
+    f = 0.5*max(10^-15,FOR(lat,lon));%0.01;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
+    m = 0.5*max(10^-15,MESO(lat,lon)); % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7
+    a = 0.5*max(10^-15,TOP(lat,lon)); % [gC m^-2] total abundance of top predators in the water column 0.1
+    j = 0.5*0.001; % [gC m^-2] total abundance of tactile predators in the water column
     
     xq = mod(longitude(lon),360);
     P.NPP = interp2(lonc,latc,10^-3*squeeze(mean(npp_100,1)),xq, latitude(lat)); % [gC / m / day] NPP
@@ -48,7 +48,7 @@ P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
 
-P.Lmax = interp1(lat_irradiance,I,lat); % [W/m^2] Mean annual surface irradiance during daytime
+P.Lmax = interp1(lat_irradiance,I,latitude(lat)); % [W/m^2] Mean annual surface irradiance during daytime
 P.rho = 10^-5; % [-] Fraction of daytime light during nighttime
 P.LD = P.Lmax*exp(-P.klight*P.zi); % [W/m^2] Depth-dependent day light levels
 P.LN = P.rho*P.LD; % [W/m^2] Depth-dependent night light levels
@@ -79,8 +79,8 @@ P.BD =10^-7*ones(size(P.zi)); % 5*10^-7*min(50^-0.86,(P.zi-50).^-0.86)/50^(-0.86
 VisD = @(R,K,lpred) max(0.01*lpred, min(10*lpred, R*sqrt(P.LD./(K+P.LD))')); % [m] Depth-dependent visual range of fish during daytime
 VisN = @(R,K,lpred) max(0.01*lpred, min(10*lpred, R*sqrt(P.LN./(K+P.LN)))); % [m] Depth-dependent visual range of fish during nighttime
 
-
 %small Copepod
+
 P.C = c/P.ZMAX; % [gC m^-3] Mean concentration in the water column
 P.lC = 5*10^-4; % [m] Typical length for copepod
 P.wC = 10^-6;%1.4*10^-4*(100*P.lC)^2.74; % [gC] Weight of a typical copepod
@@ -331,16 +331,16 @@ P.metJ = repmat(P.SMRJ',1,P.n)*P.sigma + repmat(P.SMRJ,P.n,1)*(1-P.sigma); % [da
 Imax = @(l) 18*10^-4*(100*l).^2.55; % [gC day^-1] maximum ingestion rate for copepod and fish (no imax for tactile, functional response type I)
 miniI = 10^-10; % [gC day^-1] just something to say they can still eat - to prevent dividing by 0 in the mortality rates
 
-P.IDF = min(max(miniI, Imax(P.lF)*P.MSDF)); % [gC day^-1] Strategy-specific max ingestion rate for forage fish 1*(0.3)^1*P.NPP/(f/P.wF),
-P.INF = min(max(miniI, Imax(P.lF)*P.MSNF)); % [gC day^-1] Strategy-specific max ingestion rate for forage fish 1*(0.3)^1*P.NPP/(f/P.wF),
-P.IDA = min(max(miniI, Imax(P.lA)*P.MSDA)); % [gC day^-1] Strategy-specific max ingestion rate for top predator 1*(0.3)^2*P.NPP/(a/P.wA),
-P.INA = min(max(miniI, Imax(P.lA)*P.MSNA)); % [gC day^-1] Strategy-specific max ingestion rate for top predator 1*(0.3)^2*P.NPP/(a/P.wA),
-P.IDM = min(max(miniI, Imax(P.lM)*P.MSDM)); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish 1*(0.3)^1*P.NPP/(m/P.wM),
-P.INM = min(max(miniI, Imax(P.lM)*P.MSNM)); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish 1*(0.3)^1*P.NPP/(m/P.wM),
-P.IDC = min(max(miniI, Imax(P.lC)*P.MSDC)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 1*(0.3)^0*P.NPP/(c/P.wC),
-P.INC = min(max(miniI, Imax(P.lC)*P.MSNC)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 1*(0.3)^0*P.NPP/(c/P.wC),
-P.IDP = min(max(miniI, Imax(P.lP)*P.MSDP)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 1*(0.3)^0*P.NPP/(p/P.wP),
-P.INP = min(max(miniI, Imax(P.lP)*P.MSNP)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 1*(0.3)^0*P.NPP/(p/P.wP),
+P.IDF = min(1*(0.3)^1*P.NPP/(f/P.wF),max(miniI, Imax(P.lF)*P.MSDF)); % [gC day^-1] Strategy-specific max ingestion rate for forage fish 
+P.INF = min(1*(0.3)^1*P.NPP/(f/P.wF),max(miniI, Imax(P.lF)*P.MSNF)); % [gC day^-1] Strategy-specific max ingestion rate for forage fish 
+P.IDA = min(1*(0.3)^2*P.NPP/(a/P.wA),max(miniI, Imax(P.lA)*P.MSDA)); % [gC day^-1] Strategy-specific max ingestion rate for top predator 
+P.INA = min(1*(0.3)^2*P.NPP/(a/P.wA),max(miniI, Imax(P.lA)*P.MSNA)); % [gC day^-1] Strategy-specific max ingestion rate for top predator 
+P.IDM = min(1*(0.3)^1*P.NPP/(m/P.wM),max(miniI, Imax(P.lM)*P.MSDM)); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish 
+P.INM = min(1*(0.3)^1*P.NPP/(m/P.wM),max(miniI, Imax(P.lM)*P.MSNM)); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish 
+P.IDC = min(1*(0.3)^1*P.NPP/(c/P.wC),max(miniI, Imax(P.lC)*P.MSDC)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 
+P.INC = min(1*(0.3)^1*P.NPP/(c/P.wC),max(miniI, Imax(P.lC)*P.MSNC)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 
+P.IDP = min(1*(0.3)^0*P.NPP/(p/P.wP),max(miniI, Imax(P.lP)*P.MSDP)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 
+P.INP = min(1*(0.3)^0*P.NPP/(p/P.wP),max(miniI, Imax(P.lP)*P.MSNP)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 
 
 %% MIGRATION COST 
 % (adapted from Pinti et al. 2019, but figures are the same -at least for now)

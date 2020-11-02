@@ -16,12 +16,9 @@ load Mask_geo.mat
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%  CHOICES TO MAKE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 GEO = 'tot'; % choice is 'tot' = all globe, 'ST' subtropical gyres, 'T' tropics and upwelling zones, 'NA' North Atlantic, 'SO' Southern Ocean, 'NP North Pacific'
-concerned = 2:7; % what functional groups we want
+concerned = 6 ; % what functional groups we want
 PATHWAY = 'respiration'; %pathway - poc or respiration POC or respiration
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
 
 if strcmp(GEO,'tot')
     Mask_geo = 1;
@@ -82,7 +79,7 @@ end
         
         %     q = cat(3,q,zeros(size(long_coord,2),size(lat_coord,2),10));
          q =  permute(q,[2 1 3]);
-        
+         q = Mask_geo.*q;
         
         %Interpolate seafloor to long-lat
         [XQ, YQ] = meshgrid(long_coord,lat_coord);
@@ -124,7 +121,7 @@ for i=1:size(lat_coord,2)
     end
 end
         TOT_fecal = TOT_fecala + TOT_fecalb;
-latc = lat; lonc = lon;
+% latc = lat; lonc = lon;
 [xq,yq] = meshgrid(long_coord,lat_coord);
 xq = mod(xq,360);
 DLON = 0*xq+1;
