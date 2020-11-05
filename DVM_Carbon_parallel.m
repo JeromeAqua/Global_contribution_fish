@@ -1,9 +1,9 @@
-% profname = 'dcc R2019a';
-% clust = parcluster(profname);
-% clust.AdditionalProperties.ProcsPerNode = 0;
-% clust.AdditionalProperties.MemUsage = '3GB';
-% clust.AdditionalProperties.WallTime = '48:00';
-% p = parpool(clust,60);
+profname = 'dcc R2019a';
+clust = parcluster(profname);
+clust.AdditionalProperties.ProcsPerNode = 0;
+clust.AdditionalProperties.MemUsage = '3GB';
+clust.AdditionalProperties.WallTime = '60:00';
+p = parpool(clust,100);
 
 
 %Replicator code
@@ -14,15 +14,16 @@ load global_bio_data.mat
 
 
 Niter = 10^5; % [-] number of iterations of the replicator equation
-Iavg = 1;%Niter; %100000; % [-] How many of the last time steps do we save?
+Iavg = 10^3;%Niter; %100000; % [-] How many of the last time steps do we save?
 dtfact = 0.05; %Max percentage of change per time step
 sig = 0.2; % Parameter used for the Gaussian filter default = 0.3
 sigf = 0.7; % Parameter used for the Gaussian filter on the fitness matrices
 reinit = 1; %Do we start from the last simulation or do we initialize strategy matrices?
 P = Parameters_global(102,49); % dummy P to have the values P.n etc during the initialization
 
-minimort = 0.05; % [day^-1] Background mortality
-minimortC = 0.1; % [day^-1] Background mortality for small copepods
+minimort = 0.01; % [day^-1] Background mortality
+minimortC = 0.02; % [day^-1] Background mortality for small copepods
+minimortA = 0.0005; % [day^-1] Background mortality for large pelagic
 cont = 0;
 %For sediment trap tests
 % zlattest = [36    53    48    55    55    48    64    65  47    66    65    69    63  52    ,...
@@ -82,11 +83,11 @@ Glob_FitFT = zeros(size(lat_coordTot,2),1);
 Glob_FitJT = zeros(size(lat_coordTot,2),1);
 
 Mcr = zeros(size(YRUN));
-Mpr = Mcr; Mcd = Mpr; Mpd = Mcr; Mmc = Mpr; Mmp = Mcr; Mfm = Mcr; Mfp = Mcr;
+Mpr = Mcr; Mpc = Mpr; Mcd = Mpr; Mpd = Mcr; Mmc = Mpr; Mmp = Mcr; Mfm = Mcr; Mfp = Mcr;
 Mam = Mcr; Mjm = Mcr; Mjc = Mcr; Mjp = Mcr; Maj = Mjc; Maf = Mcr; Mfc = Mpr;
 
 McrT = zeros(size(YRUN,1)*size(YRUN,2));
-MprT = McrT; McdT = MprT; MpdT = McrT; MmcT = MprT; MmpT = McrT; MfmT = McrT; MfpT = McrT;
+MprT = McrT; MpcT = McrT; McdT = MprT; MpdT = McrT; MmcT = MprT; MmpT = McrT; MfmT = McrT; MfpT = McrT;
 MamT = McrT; MjmT = McrT; MjcT = McrT; MjpT = McrT; MajT = MjcT; MafT = McrT; MfcT = MprT;
 
 
@@ -103,10 +104,10 @@ DegPOC_globT = zeros(size(lat_coordTot,2),P.n,7);
 Glob_sourceT = zeros(size(lat_coordTot,2),P.n,6);
 Glob_DconsT = Glob_sourceT;
 
-for j=1%:size(XRUN,1)*size(XRUN,2)
+parfor j=1:size(XRUN,1)*size(XRUN,2)
     
-    lat = -9; %lat_coordTot(j);%zlattest(j);
-    lon = -158; %long_coordTot(j);%zlongtest(j);
+    lat = lat_coordTot(j);%zlattest(j);
+    lon = long_coordTot(j);%zlongtest(j);
     
     [~,lat_idx] = min(abs(lat-latitude));
     [~,lon_idx] = min(abs(lon-longitude));
@@ -130,7 +131,8 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
             PC = ones(P.n).*P.MaskP + dP0; PC = PC/sum(sum(PC));
             F = ones(P.n).*P.MaskF + dF0; F = F/sum(sum(F));
             M = ones(P.n).*P.MaskM + dM0; M = M/sum(sum(M));
-            A = ones(P.n).*P.MaskA + dA0; A = A/sum(sum(A));
+%             A = ones(P.n).*P.MaskA + dA0; A = A/sum(sum(A));
+            A = diag(linspace(1,1,P.n))+dA0; A = A/sum(sum(A));
             J = ones(P.n).*P.MaskJ + dJ0; J = J/sum(sum(J));
             D = zeros(P.n,7); % first time step will be without detritus, but that's ok as they come later
             
@@ -166,7 +168,7 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
         CONSDL = SOURCEL;
         
         mcr = zeros(Iavg,1);
-        mpr = mcr; mcd = mpr; mpd = mcr; mmc = mpr; mmp = mcr; mfm = mcr; mfp = mcr;
+        mpr = mcr; mpc = mcr; mcd = mpr; mpd = mcr; mmc = mpr; mmp = mcr; mfm = mcr; mfp = mcr;
         mam = mcr; mjm = mcr; mjc = mcr; mjp = mcr; maj = mjc; maf = mcr; mfc = mpr;
             
         Cday = P.n*P.C*sum(C,2)'; % [gC m^-3] Average concentration in each layer during day for copepod
@@ -201,8 +203,8 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
                 P.ENAM.*pref('top','meso').*repmat(Mnight,P.n,1); % [gC day^-1] Denominator for the ingestion function
             NC1 = P.IDC + P.EDCp.*pref('copepod','phyto').*repmat(P.R',1,P.n)+sum(P.EDCd.*repmat(pref('copepod','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n),3); % [gC day^-1] Denominator for ingestion function of copepods during day
             NC0 = P.INC + P.ENCp.*pref('copepod','phyto').*repmat(P.R,P.n,1)+sum(P.ENCd.*repmat(pref('copepod','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]),3); % [gC day^-1] Denominator for the ingestion function
-            NP1 = P.IDP + P.EDPp.*pref('predcop','phyto').*repmat(P.R',1,P.n)+sum(P.EDPd.*repmat(pref('predcop','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n),3); % [gC day^-1] Denominator for ingestion function of copepods during day
-            NP0 = P.INP + P.ENPp.*pref('predcop','phyto').*repmat(P.R,P.n,1)+sum(P.ENPd.*repmat(pref('predcop','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]),3); % [gC day^-1] Denominator for the ingestion function
+            NP1 = P.IDP + P.EDPp.*pref('predcop','phyto').*repmat(P.R',1,P.n)+ P.EDPC.*pref('predcop','copepod').*repmat(Cday',1,P.n)+sum(P.EDPd.*repmat(pref('predcop','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n),3); % [gC day^-1] Denominator for ingestion function of copepods during day
+            NP0 = P.INP + P.ENPp.*pref('predcop','phyto').*repmat(P.R,P.n,1)+ P.ENPC.*pref('predcop','copepod').*repmat(Cnight,P.n,1)+sum(P.ENPd.*repmat(pref('predcop','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]),3); % [gC day^-1] Denominator for the ingestion function
             %J: No denominator because functional response type I
             NM1 = P.IDM + sum(P.EDMd.*repmat(pref('meso','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n),3)+P.EDMC.*pref('meso','copepod').*repmat(Cday',1,P.n)+P.EDMP.*pref('meso','predcop').*repmat(Pday',1,P.n); % [gC day^-1] Denominator for ingestion function of mesopelagic during day
             NM0 = P.INM + sum(P.ENMd.*repmat(pref('meso','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]),3)+P.ENMC.*pref('meso','copepod').*repmat(Cnight,P.n,1)+P.ENMP.*pref('meso','predcop').*repmat(Pnight,P.n,1); % [gC day^-1] Denominator for the ingestion function
@@ -268,8 +270,8 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
                 P.ENFM.*pref('forage','meso').*repmat(Mnight,P.n,1); % [gC day^-1] Denominator for the ingestion function
             NC1 = P.IDC + P.EDCp.*pref('copepod','phyto').*repmat(P.R',1,P.n)+sum(P.EDCd.*repmat(pref('copepod','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n).*RESC,3); % [gC day^-1] Denominator for ingestion function of copepods during day
             NC0 = P.INC + P.ENCp.*pref('copepod','phyto').*repmat(P.R,P.n,1)+sum(P.ENCd.*repmat(pref('copepod','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]).*RESC,3); % [gC day^-1] Denominator for the ingestion function
-            NP1 = P.IDP + P.EDPp.*pref('predcop','phyto').*repmat(P.R',1,P.n)+sum(P.EDPd.*repmat(pref('predcop','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n).*RESC,3); % [gC day^-1] Denominator for ingestion function of copepods during day
-            NP0 = P.INP + P.ENPp.*pref('predcop','phyto').*repmat(P.R,P.n,1)+sum(P.ENPd.*repmat(pref('predcop','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]).*RESC,3); % [gC day^-1] Denominator for the ingestion function
+            NP1 = P.IDP + P.EDPp.*pref('predcop','phyto').*repmat(P.R',1,P.n)+ P.EDPC.*pref('predcop','copepod').*repmat(Cday',1,P.n)+sum(P.EDPd.*repmat(pref('predcop','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n).*RESC,3); % [gC day^-1] Denominator for ingestion function of copepods during day
+            NP0 = P.INP + P.ENPp.*pref('predcop','phyto').*repmat(P.R,P.n,1)+ P.ENPC.*pref('predcop','copepod').*repmat(Cnight,P.n,1)+sum(P.ENPd.*repmat(pref('predcop','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n),[2,1,3]).*RESC,3); % [gC day^-1] Denominator for the ingestion function
             NM1 = P.IDM + sum(P.EDMd.*repmat(pref('meso','detritus'),1,P.n).*repmat(reshape(D,P.n,1,7),1,P.n).*RESC,3)+P.EDMC.*pref('meso','copepod').*repmat(Cday',1,P.n)+P.EDMP.*pref('meso','predcop').*repmat(Pday',1,P.n); % [gC day^-1] Denominator for ingestion function of mesopelagic during day
             NM0 = P.INM + sum(P.ENMd.*repmat(pref('meso','detritus')',P.n,1).*permute(repmat(reshape(D,P.n,1,7),1,P.n).*RESC,[2,1,3]),3)+P.ENMC.*pref('meso','copepod').*repmat(Cnight,P.n,1)+P.ENMP.*pref('meso','predcop').*repmat(Pnight,P.n,1); % [gC day^-1] Denominator for the ingestion function
             
@@ -294,6 +296,8 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
             
             IPR1 = P.IDP.*P.EDPp*pref('predcop','phyto') .*repmat(P.R',1,P.n)./NP1; % [gC day^-1] Ingestion rate of phytoplankton during daytime by copepods
             IPR0 = P.INP.*P.ENPp*pref('predcop','phyto') .*repmat(P.R, P.n,1)./NP0;
+            IPC1 = P.IDP.*P.EDPC.*pref('predcop','copepod').*repmat(Cday',1,P.n)./NP1;
+            IPC0 = P.INP.*P.ENPC.*pref('predcop','copepod').*repmat(Cnight,P.n,1)./NP0;
             
             IJC1 = P.EDJC*pref('tactile','copepod').*repmat(Cday',1,P.n); % [gC day^-1] Ingestion rate of copepods during daytime by tactile predators - note the Type I functional response
             IJC0 = P.ENJC*pref('tactile','copepod').*repmat(Cnight,P.n,1);
@@ -343,12 +347,14 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
             IMP0(isnan(IMP0)) = 0;
             IMD1(isnan(IMD1)) = 0;
             IMD0(isnan(IMD0)) = 0;
+            IPC1(isnan(IPC1)) = 0;
+            IPC0(isnan(IPC0)) = 0;
             
             
             
             %Assimilation rates
             IC = (P.sigma*(P.fCR*ICR1+P.fCd*sum(ICD1,3))+(1-P.sigma)*(P.fCR*ICR0+P.fCd*sum(ICD0,3)))/P.wC; % [day^-1] Total assimilation rate per individual per strategy for copepods
-            IP = (P.sigma*(P.fPR*IPR1+P.fPd*sum(IPD1,3))+(1-P.sigma)*(P.fPR*IPR0+P.fPd*sum(IPD0,3)))/P.wP; % [day^-1] Total assimilation rate per individual per strategy for copepods
+            IP = (P.sigma*(P.fPR*(IPR1+IPC1)+P.fPd*sum(IPD1,3))+(1-P.sigma)*(P.fPR*(IPR0+IPC0)+P.fPd*sum(IPD0,3)))/P.wP; % [day^-1] Total assimilation rate per individual per strategy for copepods
             IF = P.fF*(P.sigma*(IFP1+IFC1+sum(IFD1,3)+IFM1)+(1-P.sigma)*(sum(IFD0,3)+IFC0+IFP0+IFM0))/P.wF; % [day^-1] Total assimilation rate per individual per strategy for forage fish
             IA = P.fA*(P.sigma*(IAF1+IAJ1+IAM1)+(1-P.sigma)*(IAF0+IAJ0+IAM0))/P.wA; % [day^-1] Total assimilation rate per individual per strategy for top predator
             IJ = P.fJ*(P.sigma*(IJC1+IJP1+IJM1)+(1-P.sigma)*(IJC0+IJP0+IJM0))/P.wJ; % [day^-1] Total assimilation rate per individual per strategy for tactile predator
@@ -357,6 +363,7 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
             %Mortality rates due to predation - we calculate the mortality rate imposed by all strategies (predators) at each depth before redistributing it equally among prey
             %Copepod
             mCday = (P.IDF.*P.EDFC*pref('forage','copepod')./NF1*P.n^2*P.F.*F/P.wF +...
+                    P.IDP.*P.EDPC*pref('predcop','copepod')./NP1*P.n^2*P.P.*PC/P.wP +...
                 P.EDJC*pref('tactile','copepod')*P.n^2*P.J.*J/P.wJ + ...
                 P.IDM.*P.EDMC*pref('meso','copepod')  ./NM1*P.n^2*P.M.*M/P.wM); % [day^-1] size n*n How much each strategy eats copepods during daytime
             
@@ -366,6 +373,7 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
             MortDa = repmat(mCD',1,P.n); % [day^-1] Mortality rate experienced by the different copepod strategies during daytime
             
             mCnight = (P.INF.*P.ENFC*pref('forage','copepod')./NF0*P.n^2*P.F.*F/P.wF +...
+                P.INP.*P.ENPC*pref('predcop','copepod')./NP0*P.n^2*P.P.*PC/P.wP +...
                 P.ENJC*pref('tactile','copepod')*P.n^2*P.J.*J/P.wJ + ...
                 P.INM.*P.ENMC*pref('meso','copepod') ./NM0*P.n^2*P.M.*M/P.wM); % [day^-1]
             
@@ -395,7 +403,7 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
             mPN = sum(mPnight,1); % [day^-1]
             MortNi = repmat(mPN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
             
-            MortP = minimort+ 1*(P.LD'+P.LN)/max(max(P.LD'+P.LN)) + P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
+            MortP = minimort+ 0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN)) + P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
             
             %Forage fish
             mFday = (P.IDA.*P.EDAF*pref('top','forage')./NA1*P.n^2*P.A.*A/P.wA); % [day^-1] size n*n How much each strategy eats forage fish during daytime
@@ -438,11 +446,11 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
             mMN = sum(mMnight,1); % [day^-1]
             MortNi = repmat(mMN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
             
-            MortM = 1*(P.LD'+P.LN)/max(max(P.LD'+P.LN)) + 0.01+minimort+ P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
+            MortM = 0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN)) + minimort/2 + P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
             
             
             %Fitnesses
-            fitA = (IA  - P.CA/P.wA - P.metA) ./(0.01*((P.sigma*Aday'+(1-P.sigma)*Anight)/(P.n*P.A)).^2+10^-4); %  Fitness of top predator - Frequency-dependent mortality rate
+            fitA = (IA  - P.CA/P.wA - P.metA) ./(0.0002); %(0.01*((P.sigma*Aday'+(1-P.sigma)*Anight)/(P.n*P.A)).^2+10^-4); %  Fitness of top predator - Frequency-dependent mortality rate
             fitC = (IC  - P.CC/P.wC - P.metC)./MortC; %-(0.001*((P.sigma*Cday'+(1-P.sigma)*Cnight)/(P.n*P.C)).^2);%- 0.2 ; %
             fitP = (IP  - P.CP/P.wP - P.metP)./MortP; %-(0.001*((P.sigma*Pday'+(1-P.sigma)*Pnight)/(P.n*P.P)).^2);%- 0.2 ; %
             fitJ = (IJ  - P.CJ/P.wJ - P.metJ)./MortJ; %-(0.001*((P.sigma*Jday'+(1-P.sigma)*Jnight)/(P.n*P.J)).^2);%-0.1 ; %
@@ -550,22 +558,44 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
 % % %             sourceF = P.F*P.n*(sum(FecF.*F,2)*P.sigma+(1-P.sigma)*sum(FecC.*F,1)');
 % % %             sourceA = P.A*P.n*(sum(FecA.*A,2)*P.sigma+(1-P.sigma)*sum(FecC.*A,1)');
 % % %             sourceJ = P.J*P.n*(sum(FecJ.*J,2)*P.sigma+(1-P.sigma)*sum(FecC.*J,1)');
+  
+%BEFoRE - with thesis hand-in
+%                   sourceC = (1-P.fCR)*P.C*P.n*(P.sigma*sum(ICR1.*C,2)+(1-P.sigma)*sum(ICR0.*C,1)')/P.wC +...
+%                             (1-P.fCd)*P.C*P.n*(P.sigma*sum(sum(ICD1,3).*C,2)+(1-P.sigma)*sum(sum(ICD0,3).*C,1)')/P.wC; % [gC m^-3 day^-1]
+%                   sourceP = (1-P.fPR)*P.P*P.n*(P.sigma*sum(IPR1.*PC,2)+(1-P.sigma)*sum(IPR0.*PC,1)')/P.wP +...
+%                             (1-P.fPR)*P.P*P.n*(P.sigma*sum(IPC1.*PC,2)+(1-P.sigma)*sum(IPC0.*PC,1)')/P.wP +...
+%                             (1-P.fPd)*P.P*P.n*(P.sigma*sum(sum(IPD1,3).*PC,2)+(1-P.sigma)*sum(sum(IPD0,3).*PC,1)')/P.wP; % [gC m^-3 day^-1]
+%                   sourceM = (1-P.fMC)*P.M*P.n*(P.sigma*sum(IMC1.*M,2)+(1-P.sigma)*sum(IMC0.*M,1)')/P.wM+...
+%                              (1-P.fMC)*P.M*P.n*(P.sigma*sum(IMP1.*M,2)+(1-P.sigma)*sum(IMP0.*M,1)')/P.wM; % [gC m^-3day^-1]
+% %                   sourceM = %%%HERE TO TAKE DIGESTION TIME INTO ACCOUNT
+% %                   (1-P.fMC)*P.M*P.n*(P.sigma*0.5*(sum(IMC1.*M,2)+sum(IMC1.*M,1)')+(1-P.sigma)*0.5*(sum(IMC0.*M,1)'+sum(IMC0.*M,2)))/P.wM+...                  
+% %                             (1-P.fMC)*P.M*P.n*(P.sigma*0.5*(sum(IMP1.*M,2)+sum(IMP1.*M,1)')+(1-P.sigma)*0.5*(sum(IMP0.*M,2)+sum(IMP0.*M,1)'))/P.wM; % [gC m^-3day^-1]     
+%                   sourceF = (1-P.fF)*P.F*P.n*(P.sigma*sum(IFP1.*F,2)+(1-P.sigma)*sum(IFP0.*F,1)')/P.wF+...
+%                             (1-P.fF)*P.F*P.n*(P.sigma*sum(IFC1.*F,2)+(1-P.sigma)*sum(IFC0.*F,1)')/P.wF+...
+%                             (1-P.fF)*P.F*P.n*(P.sigma*sum(IFM1.*F,2)+(1-P.sigma)*sum(IFM0.*F,1)')/P.wF; % [gC m^-3 day^-1]
+%                   sourceA = (1-P.fA)*P.A*P.n*(P.sigma*sum(IAF1.*A,2)+(1-P.sigma)*sum(IAF0.*A,1)')/P.wA+...
+%                             (1-P.fA)*P.A*P.n*(P.sigma*sum(IAM1.*A,2)+(1-P.sigma)*sum(IAM0.*A,1)')/P.wA+...
+%                             (1-P.fA)*P.A*P.n*(P.sigma*sum(IAJ1.*A,2)+(1-P.sigma)*sum(IAJ0.*A,1)')/P.wA; % [gC m^-3 day^-1]
+%                   sourceJ = (1-P.fJ)*P.J*P.n*(P.sigma*sum(IJP1.*J,2)+(1-P.sigma)*sum(IJP0.*J,1)')/P.wJ+...
+%                             (1-P.fJ)*P.J*P.n*(P.sigma*sum(IJC1.*J,2)+(1-P.sigma)*sum(IJC0.*J,1)')/P.wJ+...
+%                             (1-P.fJ)*P.J*P.n*(P.sigma*sum(IJM1.*J,2)+(1-P.sigma)*sum(IJM0.*J,1)')/P.wJ; % [gC m^-3 day^-1]
 
-                  sourceC = (1-P.fCR)*P.C*P.n*(P.sigma*sum(ICR1.*C,2)+(1-P.sigma)*sum(ICR0.*C,1)')/P.wC +...
-                            (1-P.fCd)*P.C*P.n*(P.sigma*sum(sum(ICD1,3).*C,2)+(1-P.sigma)*sum(sum(ICD0,3).*C,1)')/P.wC; % [gC m^-3 day^-1]
-                  sourceP = (1-P.fPR)*P.P*P.n*(P.sigma*sum(IPR1.*PC,2)+(1-P.sigma)*sum(IPR0.*PC,1)')/P.wP +...
-                            (1-P.fPd)*P.P*P.n*(P.sigma*sum(sum(IPD1,3).*PC,2)+(1-P.sigma)*sum(sum(IPD0,3).*PC,1)')/P.wP; % [gC m^-3 day^-1]
-                  sourceM = (1-P.fMC)*P.M*P.n*(P.sigma*sum(IMC1.*M,2)+(1-P.sigma)*sum(IMC0.*M,1)')/P.wM+...
-                            (1-P.fMC)*P.M*P.n*(P.sigma*sum(IMP1.*M,2)+(1-P.sigma)*sum(IMP0.*M,1)')/P.wM; % [gC m^-3day^-1]
-                  sourceF = (1-P.fF)*P.F*P.n*(P.sigma*sum(IFP1.*F,2)+(1-P.sigma)*sum(IFP0.*F,1)')/P.wF+...
-                            (1-P.fF)*P.F*P.n*(P.sigma*sum(IFC1.*F,2)+(1-P.sigma)*sum(IFC0.*F,1)')/P.wF+...
-                            (1-P.fF)*P.F*P.n*(P.sigma*sum(IFM1.*F,2)+(1-P.sigma)*sum(IFM0.*F,1)')/P.wF; % [gC m^-3 day^-1]
-                  sourceA = (1-P.fA)*P.A*P.n*(P.sigma*sum(IAF1.*A,2)+(1-P.sigma)*sum(IAF0.*A,1)')/P.wA+...
-                            (1-P.fA)*P.A*P.n*(P.sigma*sum(IAM1.*A,2)+(1-P.sigma)*sum(IAM0.*A,1)')/P.wA+...
-                            (1-P.fA)*P.A*P.n*(P.sigma*sum(IAJ1.*A,2)+(1-P.sigma)*sum(IAJ0.*A,1)')/P.wA; % [gC m^-3 day^-1]
-                  sourceJ = (1-P.fJ)*P.J*P.n*(P.sigma*sum(IJP1.*J,2)+(1-P.sigma)*sum(IJP0.*J,1)')/P.wJ+...
-                            (1-P.fJ)*P.J*P.n*(P.sigma*sum(IJC1.*J,2)+(1-P.sigma)*sum(IJC0.*J,1)')/P.wJ+...
-                            (1-P.fJ)*P.J*P.n*(P.sigma*sum(IJM1.*J,2)+(1-P.sigma)*sum(IJM0.*J,1)')/P.wJ; % [gC m^-3 day^-1]
+                  sourceC = (1-P.fCR)*P.C*P.n*(P.sigma*0.5*(sum(ICR1.*C,2)+sum(ICR1.*C,1)')              +(1-P.sigma)*0.5*(sum(ICR0.*C,1)'+sum(ICR0.*C,2)))/P.wC +...
+                            (1-P.fCd)*P.C*P.n*(P.sigma*0.5*(sum(sum(ICD1,3).*C,2)+sum(sum(ICD1,3).*C,1)')+(1-P.sigma)*0.5*(sum(sum(ICD0,3).*C,1)'+sum(sum(ICD0,3).*C,2)))/P.wC; % [gC m^-3 day^-1]
+                  sourceP = (1-P.fPR)*P.P*P.n*(P.sigma*0.5*(sum(IPR1.*PC,2)+sum(IPR1.*PC,1)')+(1-P.sigma)*0.5*(sum(IPR0.*PC,1)'+sum(IPR0.*PC,2)))/P.wP +...
+                            (1-P.fPR)*P.P*P.n*(P.sigma*0.5*(sum(IPC1.*PC,2)+sum(IPC1.*PC,1)')+(1-P.sigma)*0.5*(sum(IPC0.*PC,1)'+sum(IPC1.*PC,2)))/P.wP +...
+                            (1-P.fPd)*P.P*P.n*(P.sigma*0.5*(sum(sum(IPD1,3).*PC,2)+sum(sum(IPD1,3).*PC,1)')+(1-P.sigma)*0.5*(sum(sum(IPD0,3).*PC,1)'+sum(sum(IPD0,3).*PC,2)))/P.wP; % [gC m^-3 day^-1]
+                  sourceM = (1-P.fMC)*P.M*P.n*(P.sigma*0.5*(sum(IMC1.*M,2)+sum(IMC1.*M,1)')+(1-P.sigma)*0.5*(sum(IMC0.*M,1)'+sum(IMC0.*M,2)))/P.wM+...                  
+                            (1-P.fMC)*P.M*P.n*(P.sigma*0.5*(sum(IMP1.*M,2)+sum(IMP1.*M,1)')+(1-P.sigma)*0.5*(sum(IMP0.*M,2)+sum(IMP0.*M,1)'))/P.wM; % [gC m^-3day^-1]     
+                  sourceF = (1-P.fF)*P.F*P.n*(P.sigma*0.5*(sum(IFP1.*F,2)+sum(IFP1.*F,1)')+(1-P.sigma)*0.5*(sum(IFP0.*F,1)'+sum(IFP0.*F,2)))/P.wF+...
+                            (1-P.fF)*P.F*P.n*(P.sigma*0.5*(sum(IFC1.*F,2)+sum(IFC1.*F,1)')+(1-P.sigma)*0.5*(sum(IFC0.*F,1)'+sum(IFC0.*F,2)))/P.wF+...
+                            (1-P.fF)*P.F*P.n*(P.sigma*0.5*(sum(IFM1.*F,2)+sum(IFM1.*F,1)')+(1-P.sigma)*0.5*(sum(IFM0.*F,1)'+sum(IFM0.*F,2)))/P.wF; % [gC m^-3 day^-1]
+                  sourceA = (1-P.fA)*P.A*P.n*(P.sigma*0.5*(sum(IAF1.*A,2)+sum(IAF1.*A,1)')+(1-P.sigma)*0.5*(sum(IAF0.*A,1)'+sum(IAF0.*A,2)))/P.wA+...
+                            (1-P.fA)*P.A*P.n*(P.sigma*0.5*(sum(IAM1.*A,2)+sum(IAM1.*A,1)')+(1-P.sigma)*0.5*(sum(IAM0.*A,1)'+sum(IAM0.*A,2)))/P.wA+...
+                            (1-P.fA)*P.A*P.n*(P.sigma*0.5*(sum(IAJ1.*A,2)+sum(IAJ1.*A,1)')+(1-P.sigma)*0.5*(sum(IAJ0.*A,1)'+sum(IAJ0.*A,2)))/P.wA; % [gC m^-3 day^-1]
+                  sourceJ = (1-P.fJ)*P.J*P.n*(P.sigma*0.5*(sum(IJP1.*J,2)+sum(IJP1.*J,1)')+(1-P.sigma)*0.5*(sum(IJP0.*J,1)'+sum(IJP0.*J,2)))/P.wJ+...
+                            (1-P.fJ)*P.J*P.n*(P.sigma*0.5*(sum(IJC1.*J,2)+sum(IJC1.*J,1)')+(1-P.sigma)*0.5*(sum(IJC0.*J,1)'+sum(IJC0.*J,2)))/P.wJ+...
+                            (1-P.fJ)*P.J*P.n*(P.sigma*0.5*(sum(IJM1.*J,2)+sum(IJM1.*J,1)')+(1-P.sigma)*0.5*(sum(IJM0.*J,1)'+sum(IJM0.*J,2)))/P.wJ; % [gC m^-3 day^-1]
             
             SOURCE = [sourceC sourceP sourceM sourceF sourceA sourceJ] - ConsD(:,2:end);
             
@@ -694,6 +724,28 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
                 SOURCEL(:,:,Iavg-i) = [sourceC sourceP sourceM sourceF sourceA sourceJ];
                 CONSDL(:,:,Iavg-i) = ConsD(:,2:end);
                 
+                mcd(Iavg-i) = sum(P.C*P.n*(P.sigma*sum(sum(ICD1,3).*C,2)+(1-P.sigma)*sum(sum(ICD0,3).*C,1)')*P.dZ/P.wC); % [gC / m2 / day]
+                mpd(Iavg-i) = sum(P.P*P.n*(P.sigma*sum(sum(IPD1,3).*PC,2)+(1-P.sigma)*sum(sum(IPD0,3).*PC,1)')*P.dZ/P.wP); % [gC / m2 / day]
+
+                mcr(Iavg-i) = sum(P.C*P.n*(P.sigma*sum(ICR1.*C,2)+(1-P.sigma)*sum(ICR0.*C,1)')*P.dZ/P.wC); % [gC / m2 / day]
+                mpr(Iavg-i) = sum(P.P*P.n*(P.sigma*sum(IPR1.*PC,2)+(1-P.sigma)*sum(IPR0.*PC,1)')*P.dZ/P.wP); % [gC / m2 / day]
+                mpc(Iavg-i) = sum(P.P*P.n*(P.sigma*sum(IPC1.*PC,2)+(1-P.sigma)*sum(IPC0.*PC,1)')*P.dZ/P.wP); % [gC / m2 / day]
+
+                mmc(Iavg-i) = sum(P.M*P.n*(P.sigma*sum(IMC1.*M,2)+(1-P.sigma)*sum(IMC0.*M,1)')*P.dZ/P.wM); % [gC / m2 / day]
+                mmp(Iavg-i) = sum(P.M*P.n*(P.sigma*sum(IMP1.*M,2)+(1-P.sigma)*sum(IMP0.*M,1)')*P.dZ/P.wM); % [gC / m2 / day]
+
+                mjp(Iavg-i) = sum(P.J*P.n*(P.sigma*sum(IJP1.*J,2)+(1-P.sigma)*sum(IJP0.*J,1)')*P.dZ/P.wJ); % [gC / m2 / day]
+                mjc(Iavg-i) = sum(P.J*P.n*(P.sigma*sum(IJC1.*J,2)+(1-P.sigma)*sum(IJC0.*J,1)')*P.dZ/P.wJ); % [gC / m2 / day]
+                mjm(Iavg-i) = sum(P.J*P.n*(P.sigma*sum(IJM1.*J,2)+(1-P.sigma)*sum(IJM0.*J,1)')*P.dZ/P.wJ); % [gC / m2 / day]
+
+                mfp(Iavg-i) = sum(P.F*P.n*(P.sigma*sum(IFP1.*F,2)+(1-P.sigma)*sum(IFP0.*F,1)')*P.dZ/P.wF); % [gC / m2 / day]
+                mfc(Iavg-i) = sum(P.F*P.n*(P.sigma*sum(IFC1.*F,2)+(1-P.sigma)*sum(IFC0.*F,1)')*P.dZ/P.wF); % [gC / m2 / day]
+                mfm(Iavg-i) = sum(P.F*P.n*(P.sigma*sum(IFM1.*F,2)+(1-P.sigma)*sum(IFM0.*F,1)')*P.dZ/P.wF); % [gC / m2 / day]
+
+                maf(Iavg-i) = sum(P.A*P.n*(P.sigma*sum(IAF1.*A,2)+(1-P.sigma)*sum(IAF0.*A,1)')*P.dZ/P.wA); % [gC / m2 / day]            
+                mam(Iavg-i) = sum(P.A*P.n*(P.sigma*sum(IAM1.*A,2)+(1-P.sigma)*sum(IAM0.*A,1)')*P.dZ/P.wA); % [gC / m2 / day]
+                maj(Iavg-i) = sum(P.A*P.n*(P.sigma*sum(IAJ1.*A,2)+(1-P.sigma)*sum(IAJ0.*A,1)')*P.dZ/P.wA); % [gC / m2 / day]  
+                
                 
             end
             
@@ -712,7 +764,7 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
         toc
         
         %%% COMPUTE CARBON EXPORTS FOR ALL POPULATIONS
-        imean = Iavg;
+        imean = Iavg-1;
         AAday = mean(MAday(:,end-imean:end),2);
         AAnight = mean(MAnight(:,end-imean:end),2);
         mmday = mean(MMday(:,end-imean:end),2);
@@ -729,14 +781,32 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
         SOURCEmean = mean(SOURCEL(:,:,end-imean:end),3);
         CONSDmean = mean(CONSDL(:,:,end-imean:end),3);
         
+        mcdmean = mean(mcd);
+        mpdmean = mean(mpd);
+        mcrmean = mean(mcr);
+        mprmean = mean(mpr);
+        mmcmean = mean(mmc);
+        mmpmean = mean(mmp);
+        mjpmean = mean(mjp);
+        mjcmean = mean(mjc);
+        mjmmean = mean(mjm);
+        mfpmean = mean(mfp);
+        mfcmean = mean(mfc);
+        mfmmean = mean(mfm);
+        mafmean = mean(maf);
+        mammean = mean(mam);
+        majmean = mean(maj);
+        mpcmean = mean(mpc);
+        
         DIC = zeros(P.n, 6);
         
-        DIC(:,1) = P.SMRC'.*((1-P.sigma)*CCnight + P.sigma*CCday)*P.dZ; % [gC m^-2 day^-1] Respiration by small copepods at each depth
-        DIC(:,2) = P.SMRP'.*((1-P.sigma)*PPnight + P.sigma*PPday)*P.dZ; % [gC m^-2 day^-1] Respiration by big copepods at each depth
-        DIC(:,3) = P.SMRM'.*((1-P.sigma)*mmnight + P.sigma*mmday)*P.dZ; % [gC m^-2 day^-1] Respiration by mesopelagic at each depth
-        DIC(:,4) = P.SMRF'.*((1-P.sigma)*FFnight + P.sigma*FFday)*P.dZ; % [gC m^-2 day^-1] Respiration by forage fish at each depth
-        DIC(:,5) = P.SMRA'.*((1-P.sigma)*AAnight + P.sigma*AAday)*P.dZ; % [gC m^-2 day^-1] Respiration by top predators at each depth
-        DIC(:,6) = P.SMRJ'.*((1-P.sigma)*JJnight + P.sigma*JJday)*P.dZ; % [gC m^-2 day^-1] Respiration by jellyfish at each depth
+        DIC(:,1) = P.SMRC'.*((1-P.sigma)*CCnight + P.sigma*CCday)*P.dZ + P.dZ*P.n*P.C/P.wC*(P.sigma*sum(P.CC.*C,2)+(1-P.sigma)*sum((P.CC.*C)',2)); % [gC m^-2 day^-1] Respiration by small copepods at each depth
+        DIC(:,2) = P.SMRP'.*((1-P.sigma)*PPnight + P.sigma*PPday)*P.dZ + P.dZ*P.n*P.P/P.wP*(P.sigma*sum(P.CP.*PC,2)+(1-P.sigma)*sum((P.CP.*PC)',2)); % [gC m^-2 day^-1] Respiration by big copepods at each depth
+        DIC(:,3) = P.SMRM'.*((1-P.sigma)*mmnight + P.sigma*mmday)*P.dZ + P.dZ*P.n*P.M/P.wM*(P.sigma*sum(P.CM.*M,2)+(1-P.sigma)*sum((P.CM.*M)',2)); % [gC m^-2 day^-1] Respiration by mesopelagic at each depth
+        DIC(:,4) = P.SMRF'.*((1-P.sigma)*FFnight + P.sigma*FFday)*P.dZ + P.dZ*P.n*P.F/P.wF*(P.sigma*sum(P.CF.*F,2)+(1-P.sigma)*sum((P.CF.*F)',2)); % [gC m^-2 day^-1] Respiration by forage fish at each depth
+        DIC(:,5) = P.SMRA'.*((1-P.sigma)*AAnight + P.sigma*AAday)*P.dZ + P.dZ*P.n*P.A/P.wA*(P.sigma*sum(P.CA.*A,2)+(1-P.sigma)*sum((P.CA.*A)',2)); % [gC m^-2 day^-1] Respiration by top predators at each depth
+        DIC(:,6) = P.SMRJ'.*((1-P.sigma)*JJnight + P.sigma*JJday)*P.dZ + P.dZ*P.n*P.J/P.wJ*(P.sigma*sum(P.CJ.*J,2)+(1-P.sigma)*sum((P.CJ.*J)',2)); % [gC m^-2 day^-1] Respiration by jellyfish at each depth
+        
         
         % DIC_depth = cumsum(DIC,1,'reverse'); % [gC m^-2 day^-1] Respiration of organisms below each depth
         % DIC_depth = [zeros(P.n,1), DIC_depth]; % background flux does not respire, it is only dead stuff
@@ -795,6 +865,13 @@ for j=1%:size(XRUN,1)*size(XRUN,2)
         Glob_sourceT(j,:,:) = reshape(SOURCEmean,[1 P.n 6]);
         Glob_DconsT(j,:,:) = reshape(CONSDmean,[1 P.n 6]);
         
+        McdT(j) = mcdmean; MpdT(j) = mpdmean; McrT(j) = mcrmean;
+        MprT(j) = mprmean; MmcT(j) = mmcmean; MmpT(j) = mmpmean;
+        MjpT(j) = mjpmean; MjcT(j) = mjcmean; MjmT(j) = mjmmean;
+        MfpT(j) = mfpmean; MfmT(j) = mfmmean; MfcT(j) = mfcmean;
+        MafT(j) = mafmean; MamT(j) = mammean; MajT(j) = majmean;
+        MpcT(j) = mpcmean;
+        
         display([num2str(j),'/',num2str(size(XRUN,1)*size(XRUN,2))])
     end
 end
@@ -829,7 +906,14 @@ for jj=1:size(XRUN,1)*size(XRUN,2) %reput the values in ordered matrices
     D_glob(xi,xj,:,:) = squeeze(D_globT(jj,:,:));
     DIC_glob(xi,xj,:,:) = squeeze(DIC_globT(jj,:,:));
     DegPOC_glob(xi,xj,:,:) = squeeze(DegPOC_globT(jj,:,:));
+    
+    Mcd(xi,xj) = McdT(jj); Mpd(xi,xj) = MpdT(jj); Mcr(xi,xj) = McrT(jj);
+    Mpr(xi,xj) = MprT(jj); Mmc(xi,xj) = MmcT(jj); Mmp(xi,xj) = MmpT(jj);
+    Mjp(xi,xj) = MjpT(jj); Mjc(xi,xj) = MjcT(jj); Mjm(xi,xj) = MjmT(jj);
+    Mfp(xi,xj) = MfpT(jj); Mfc(xi,xj) = MfcT(jj); Mfm(xi,xj) = MfmT(jj);
+    Maf(xi,xj) = MafT(jj); Mam(xi,xj) = MamT(jj); Maj(xi,xj) = MajT(jj);
+    Mpc(xi,xj) = MpcT(jj);
 end
 
-%  save global_102b.mat
-    save testbis.mat
+save global220.mat
+%     save testbis.mat

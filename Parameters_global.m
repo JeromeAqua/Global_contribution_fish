@@ -4,6 +4,7 @@ load npp_100_1deg_ESM26_5yr_clim_191_195.mat % Remember that lat and lon names a
 % latc = lat; lonc = lon;
 load mesopelagic_bio.mat % mesopelagic_bio.matmesopelagic_bio.mat
 load plankton.mat
+% load jelly_bio.mat
 load fishb.mat % fish.mat
 load global_env_data.mat
 load global_bio_data.mat
@@ -20,9 +21,9 @@ P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
 % idxlon = interp1(longitude,longitude,lon, 'nearest');
 
     P.T = interp1(depth, squeeze(T(lat,lon,:)), P.zi); % [degree C] Temperature
-    P.pO2 = interp1(depth, squeeze(pO2(lat,lon,:)), P.zi); % [kPa] oxygen partial pressure
+    P.pO2 = interp1(depth, squeeze(pO2(lat,lon,:)), P.zi); % [kPa] oxygen partial pressure single(linspace(21,21,size(P.T,2)));%
     P.zo = mldbar(lat,lon); % [m] MLD
-    P.zm = P.zo/2; % [m] Sharpness of the transition to from the mixed layer to depleted layers
+    P.zm = P.zo/4; % [m] Sharpness of the transition to from the mixed layer to depleted layers
     [~,zoind] = min(abs(P.zi-P.zo));
     
     P.klight = KLIGHT(lat,lon); %0.0423; % [m^-1] Light attenuation coefficient in the water column
@@ -34,13 +35,13 @@ P.dZ = P.zi(2)-P.zi(1); % [m] Size of a water layer
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
     
 %     chlasurf = phyto_obs(lat,lon); % [mg chla / m^3] Surface concentration of chlorophyll a %0.012
-    P.R = 0.5*PHI(lat,lon)*(1-tanh((P.zi-P.zo)/P.zm))/sum((1-tanh((P.zi-P.zo)/P.zm)))/P.dZ; %10^-3*chlasurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration r*exp(-(P.zi-50).^2/30^2)/P.ZMAX / sum(exp(-(P.zi-50).^2/30^2)) ; % 10 is chla to C ratio - assumed error in data, in gchla/m3 and not mg chla / m3
-    c = 0.5*max(10^-15,INZ(lat,lon));%sum(P.R.*P.dZ)*0.51;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
-    p = 0.5*max(10^-15,LAZ(lat,lon));%/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
-    f = 0.5*max(10^-15,FOR(lat,lon));%0.01;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
-    m = 0.5*max(10^-15,MESO(lat,lon)); % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7
-    a = 0.5*max(10^-15,TOP(lat,lon)); % [gC m^-2] total abundance of top predators in the water column 0.1
-    j = 0.5*0.001; % [gC m^-2] total abundance of tactile predators in the water column
+    P.R = PHI(lat,lon)*(1-tanh((P.zi-P.zo)/P.zm))/sum((1-tanh((P.zi-P.zo)/P.zm)))/P.dZ; %10^-3*chlasurf*(1-tanh((P.zi-P.zo)/P.zm))/2; % [gC / m3] Resource concentration r*exp(-(P.zi-50).^2/30^2)/P.ZMAX / sum(exp(-(P.zi-50).^2/30^2)) ; % 10 is chla to C ratio - assumed error in data, in gchla/m3 and not mg chla / m3
+    c =  max(10^-15,INZ(lat,lon));%sum(P.R.*P.dZ)*0.51;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of small copepods in the water column 4
+    p =  max(10^-15,LAZ(lat,lon));%/2;%10^-3*Big_Z(lat,lon); %0.5*6*10^-3*P.zo; %10; % [gC m^-2] total abundance of predatory copepods in the water column
+    f =  max(10^-15,FOR(lat,lon));%0.01;%0.5; % [gC m^-2] total abundance of forage fish in the water column 0.5
+    m =  max(10^-15,MESO(lat,lon)); % [gC m^-2] total abundance of mesopelagic fish in the water column 1.7
+    a =  max(10^-15,TOP(lat,lon)); % [gC m^-2] total abundance of top predators in the water column 0.1
+    j =  0.10; %max(10^-15,BIOJ(lat,lon)); % [gC m^-2] total abundance of tactile predators in the water column
     
     xq = mod(longitude(lon),360);
     P.NPP = interp2(lonc,latc,10^-3*squeeze(mean(npp_100,1)),xq, latitude(lat)); % [gC / m / day] NPP
@@ -78,42 +79,44 @@ P.BD =10^-7*ones(size(P.zi)); % 5*10^-7*min(50^-0.86,(P.zi-50).^-0.86)/50^(-0.86
 
 VisD = @(R,K,lpred) max(0.01*lpred, min(10*lpred, R*sqrt(P.LD./(K+P.LD))')); % [m] Depth-dependent visual range of fish during daytime
 VisN = @(R,K,lpred) max(0.01*lpred, min(10*lpred, R*sqrt(P.LN./(K+P.LN)))); % [m] Depth-dependent visual range of fish during nighttime
+VisDf = @(R,K,lpred) max(0.005*lpred, min(10*lpred, R*sqrt(P.LD./(K+P.LD))')); % [m] Depth-dependent visual range of fish during daytime
+VisNf = @(R,K,lpred) max(0.005*lpred, min(10*lpred, R*sqrt(P.LN./(K+P.LN)))); % [m] Depth-dependent visual range of fish during nighttime
+
 
 %small Copepod
-
 P.C = c/P.ZMAX; % [gC m^-3] Mean concentration in the water column
-P.lC = 5*10^-4; % [m] Typical length for copepod
-P.wC = 10^-6;%1.4*10^-4*(100*P.lC)^2.74; % [gC] Weight of a typical copepod
+P.lC = 5*10^-4; %6*10^-4; %5*10^-4; % [m] Typical length for copepod
+P.wC = 1.5*10^-5; %10^-4; %10^-4; %10^-6;%1.4*10^-4*(100*P.lC)^2.74; % [gC] Weight of a typical copepod
 P.uC = speed(P.lC); % [m/day] Max copepod speed
-P.RC = 0.5*P.lC; % [m] Sensing range for copepods
-P.fCR = 0.7; % [-] Assimilation efficiency for copepods eating the resource
-P.fCd = 0.07; % [-] Assimilation efficiency for copepods eating detritus
+P.RC = 3*P.lC; % [m] Sensing range for copepods
+P.fCR = 0.6 ; % [-] Assimilation efficiency for copepods eating the resource
+P.fCd = 0.01; % [-] Assimilation efficiency for copepods eating detritus
 
 P.T0C = mean(P.T(P.zi<100)); %mean(P.T(1:zoind));% [?C] Reference temperature for copepods - 15 for 1-4
 P.TmC = max(P.T(P.zi<20)); %max(P.T(1:zoind));% [?C] Maximum temperature for zooplankton before decline - 18 for 1-4
 P.QC = 2; % [-] Q10 for copepods
 P.pcritC = @(t) 3.5; % [kPa] Pcrit, where MMR = SMR
-P.tC = 0.0052*P.wC^-0.25; % [day^-1] SMR at P.TC 
+P.tC = 0.0014*P.wC^-0.25; % [day^-1] SMR at P.TC 
 P.factMMRC = 3; % Factor of increase between SMRmax and MMRmax: MMRmax = factM*SMRmax 
 P.propC = 0.6; % %of oxygen saturation above which zooplankton are oxyregulators
 [P.SMRC, P.MSNC, P.MSDC, P.MaskC] = Metabolicscope('copepod',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
 % P.MSDC = min(1,max(0,P.MSDC));%max(max(P.MSDC)); % [-] de-unitized so that the max is 1 and can be multiplied easily with the other rates
 % P.MSNC = min(1,max(0,P.MSNC));%/max(max(P.MSNC)); % [-] same de-unitization
 
-%predatory Copepod
+%Macro zooplankton
 P.P = p/P.ZMAX; % [gC m^-3] Mean concentration in the water column
-P.lP = 5*10^-3; % [m] Typical length for copepod
-P.wP = 10^-3.8;%1.4*10^-4*(100*P.lP)^2.74; % [gC] Weight of a typical copepod
+P.lP =5*10^-3; %4*10^-3; % 5*10^-3; % [m] Typical length for krill
+P.wP = 1.5*10^-4; %10^-1.8; %5*10^-4; %10^-3.8;%1.4*10^-4*(100*P.lP)^2.74; % [gC] Weight of a typical copepod
 P.uP = speed(P.lP); % [m/day] Max copepod speed
-P.RP = 0.5*P.lP; % [m] Sensing range for copepods
+P.RP = 3*P.lP; % [m] Sensing range for copepods
 P.fPR = 0.7; % [-] Assimilation efficiency for copepods eating the resource
-P.fPd = 0.7; % [-] Assimilation efficiency for copepods eating detritus
+P.fPd = 0.1; % [-] Assimilation efficiency for copepods eating detritus
 
 P.T0P =  15; % [?C] Reference temperature for copepods
 P.TmP = 20; % [?C] Maximum temperature for zooplankton before decline
 P.QP = 2; % [-] Q10 for copepods
 P.pcritP = @(t) 0.5; % [kPa] Pcrit, where MMR = SMR
-P.tP = 0.0052*P.wP^-0.25; % [day^-1] SMR at P.TC  
+P.tP = 0.0014*P.wP^-0.25; % [day^-1] SMR at P.TC  
 P.factMMRP = 3; % Factor of increase between SMRmax and MMRmax: MMRmax = factM*SMRmax 
 P.propP = 0.6;% 0.3; % %of oxygen saturation above which zooplankton are oxyregulators
 [P.SMRP, P.MSNP, P.MSDP, P.MaskP] = Metabolicscope('predcop',P); % [day^-1, day^-1, day^-1, -] Depth-dependent standard metabolic rate, Metabolic scope during day, during night, and mask of available strategies
@@ -128,7 +131,7 @@ P.wF = 0.0019*(100*P.lF)^3; % [gC] Weight of a typical forage fish
 P.uF = speed(P.lF); % [m/day] Max forage fish speed
 % P.RF = 0.5; % [m] Maximum visual range for forage fish
 % P.KF = 0.1; % [W/m^2] Half-saturation constant for light for forage fish
-P.fF = 0.65; % [-] Assimilation efficiency for forage fish
+P.fF = 0.65 ; % [-] Assimilation efficiency for forage fish
 
 P.T0F =  mean(P.T(P.zi<200)); % [?C] Reference temperature for forage fish - 15 for 1-4
 P.TmF = max(P.T); % [?C] Maximum temperature for forage fish before decline - 20 for 1-4
@@ -149,7 +152,7 @@ P.uA = speed(P.lA); % [m/day] Max top predator speed
 % P.KA = 10^-1; % [W/m^2] Half-saturation constant for light for top predator
 % VisDA = @(l) min(10*P.lA, P.RA*sqrt(P.LD./(P.KA+P.LD))'*(10*l/P.lA)); % [m] Depth-dependent visual range of top predator during daytime
 % VisNA = @(l) min(10*P.lA, P.RA*sqrt(P.LN./(P.KA+P.LN))*(10*l/P.lA)); % [m] Depth-dependent visual range of top predator during nighttime
-P.fA = 0.65; % [-] Assimilation efficiency for top predator
+P.fA = 0.65 ; % [-] Assimilation efficiency for top predator
 
 P.T0A = P.T(10);% 18; % [?C] Reference temperature for top predator
 P.TmA = max(P.T); % [?C] Maximum temperature for top predator before decline
@@ -175,8 +178,8 @@ P.fJ = 0.39; % [-] Assimilation efficiency for tactile predator
 % P.factMMRC = 3; % Factor of increase between SMRmax and MMRmax: MMRmax = factM*SMRmax 
 % P.propC = 0.6; % %of oxygen saturation above which zooplankton are oxyregulators
 
-P.T0J = 10; % [?C] Reference temperature for tactile predator
-P.TmJ = 18; % [?C] Maximum temperature for tactile predator
+P.T0J = mean(P.T(P.zi<200)); %10; % [?C] Reference temperature for tactile predator
+P.TmJ = max(P.T); %18; % [?C] Maximum temperature for tactile predator
 P.QJ = 3; % [-] Q10 for jellyfish
 P.pcritJ = @(t) 1; % [kPa] Pcrit, where MMR = SMRP.tJ = 0.011*P.wJ^-0.25; % [day^-1] SMR at P.TJ 
 P.factMMRJ = 2; % Factor of increase between SMRmax and MMRmax: MMRmax = factM*SMRmax 
@@ -188,15 +191,15 @@ P.tJ = 0.011*P.wJ^-0.25; % [day^-1] SMR at P.TJ
 
 %Mesopelagic fish
 P.M = m/P.ZMAX; % [gC m^-3] Mean concentration in the water column
-P.lM = 0.04; % [m] Typical length for mesopelagic fish
-P.wM = 0.12; % [gC] Weight of a typical mesopelagic fish
+P.lM = 0.03; %0.04; % [m] Typical length for mesopelagic fish
+P.wM = 0.18; % [gC] Weight of a typical mesopelagic fish
 P.uM = speed(P.lM); % [m/day] Max mesopelagic fish speed
 % P.RM = 0.05; % [m] Maximum visual range for mesopelagic fish
 % P.KM = 10^-6; % [W/m^2] Half-saturation constant for light for mesopelagic fish
 % VisDM = @(l) min(10*P.lM, P.RM*sqrt(P.LD./(P.KM+P.LD))'*(10*l/P.lM)); % [m] Depth-dependent visual range of mesopelagic fish during daytime
 % VisNM = @(l) min(10*P.lM, P.RM*sqrt(P.LN./(P.KM+P.LN))*(10*l/P.lM)); % [m] Depth-dependent visual range of forage mesopelagic during daytime
 P.fMC = 0.85; % [-] Assimilation efficiency for mesopelagic fish feeding on copepods - 0.65 before
-P.fMd = 0.065; % [-] Assimilation efficiency for mesopelagic fish feeding on detritus
+P.fMd =0.065; % [-] Assimilation efficiency for mesopelagic fish feeding on detritus
 
 P.T0M = 6; % [?C] Reference temperature for mesopelagic fish
 P.TmM = 15; % [?C] Maximum temperature for mesopelagic fish before decline
@@ -209,7 +212,7 @@ P.mM = 6*P.tM; % [day^-1] MMR at P.T0M
 % P.MSNM = min(1,max(0,P.MSNM));%/max(max(P.MSNM)); % [-] same de-unitization
 
 %Detritus terms
-P.SR = [1 80 150 200 400 1000 500]; %[5 50 150 200 800 1000 500]; %[P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 10 10 10 10];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
+P.SR = [1 120 180 300 500 1000 500]; %[5 50 150 200 800 1000 500]; %[P.lR^0.83*49.88 P.lC^0.83*49.88 P.lP^0.83*49.88 10 10 10 10];% 600 800 1000 10]; % [m day^-1] Seeking rates of particles created by background - cop - pred cop - mesopelagic - forage - apex pred - jellyfish
 K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant
 qrem = 1.1;%1.5; % [-] Q10 for remineralization rate of POC
 Tref = mean(P.T(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
@@ -259,19 +262,19 @@ P.ENFM = correc*repmat(PNFM',P.n,1)*P.gamma*pi*P.uF.*P.MSNF.*(repmat(VisN(0.2,10
 
 %Top predator
 
-P.EDAF = correc*repmat(PDAF,1,P.n)*P.gamma*pi*P.uA.*P.MSDA.*(repmat(VisD(3,10^-2,P.lA),1,P.n).^2);%-repmat(VisDF(P.lA),1,P.n).^2); % [m^3 day^-1] clearance rate of top predator during daytime with visual feeding
+P.EDAF = correc*repmat(PDAF,1,P.n)*P.gamma*pi*P.uA.*P.MSDA.*(repmat(VisD(10,10^-1,P.lA),1,P.n).^2);%-repmat(VisDF(P.lA),1,P.n).^2); % [m^3 day^-1] clearance rate of top predator during daytime with visual feeding
 % P.EDAF = max(P.EDAF, 0.5*pi*P.uA*P.MSDA*(0.1*P.lA/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.EDAJ = correc*repmat(PDAJ,1,P.n)*P.gamma*pi*P.uA.*P.MSDA.*(repmat(VisD(5,10^-2,P.lA),1,P.n).^2);%-P.RJ.^2/0.089); % [m^3 day^-1] clearance rate of top predator during daytime with visual feeding
+P.EDAJ = correc*repmat(PDAJ,1,P.n)*P.gamma*pi*P.uA.*P.MSDA.*(repmat(VisD(5,10^-1,P.lA),1,P.n).^2);%-P.RJ.^2/0.089); % [m^3 day^-1] clearance rate of top predator during daytime with visual feeding
 % P.EDAJ = max(P.EDAJ, 0.5*pi*P.uA*P.MSDA*(0.1*P.lA/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 P.EDAM = correc*repmat(PDAM,1,P.n)*P.gamma*pi*P.uA.*P.MSDA.*(repmat(VisD(10,1,P.lA),1,P.n).^2);%-repmat(VisDM(P.lA),1,P.n).^2); % [m^3 day^-1] clearance rate of top predator during daytime with visual feeding  ------  CHANGED HERE
 % P.EDAM = max(P.EDAM, 0.5*pi*P.uA*P.MSDA*(0.1*P.lA/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.ENAF = correc*repmat(PNAF',P.n,1)*P.gamma*pi*P.uA.*P.MSNA.*(repmat(VisN(3,10^-2,P.lA),P.n,1).^2);%-repmat(VisNF(P.lA),P.n,1).^2); % [m^3 day^-1] clearance rate of top predator during nighttime with visual feeding
+P.ENAF = correc*repmat(PNAF',P.n,1)*P.gamma*pi*P.uA.*P.MSNA.*(repmat(VisN(10,10^-1,P.lA),P.n,1).^2);%-repmat(VisNF(P.lA),P.n,1).^2); % [m^3 day^-1] clearance rate of top predator during nighttime with visual feeding
 % P.ENAF = max(P.ENAF, 0.5*pi*P.uA*P.MSNA*(0.1*P.lA/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.ENAJ = correc*repmat(PNAJ',P.n,1)*P.gamma*pi*P.uA.*P.MSNA.*(repmat(VisN(5,10^-2,P.lA),P.n,1).^2);%-P.RJ.^2/0.089); % [m^3 day^-1] clearance rate of top predator during nighttime with visual feeding
+P.ENAJ = correc*repmat(PNAJ',P.n,1)*P.gamma*pi*P.uA.*P.MSNA.*(repmat(VisN(5,10^-1,P.lA),P.n,1).^2);%-P.RJ.^2/0.089); % [m^3 day^-1] clearance rate of top predator during nighttime with visual feeding
 % P.ENAJ = max(P.ENAJ, 0.5*pi*P.uA*P.MSNA*(0.1*P.lA/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 P.ENAM = correc*repmat(PNAM',P.n,1)*P.gamma*pi*P.uA.*P.MSNA.*(repmat(VisN(10,1,P.lA),P.n,1).^2);%-repmat(VisNM(P.lA),P.n,1).^2); % [m^3 day^-1] clearance rate of top predator during nighttime with visual feeding  ----- CHANGED HERE
@@ -281,19 +284,19 @@ P.ENAM = correc*repmat(PNAM',P.n,1)*P.gamma*pi*P.uA.*P.MSNA.*(repmat(VisN(10,1,P
 P.EDMd = correc*repmat(repmat(PDMd,P.n,P.n)*P.gamma*pi*P.uM.*P.MSDM.*(repmat(VisD(0.2,10^-4,P.lM),1,P.n).^2-0),1,1,7); % [m^3 day^-1] clearance rate of mesopelagic fish during daytime with visual feeding
 % P.EDMd = max(P.EDMd, 0.5*pi*P.uM*P.MSDM*(P.lM/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.EDMC = correc*repmat(PDMC,1,P.n)*P.gamma*pi*P.uM.*P.MSDM.*(repmat(VisD(0.1,10^-4,P.lM),1,P.n).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during daytime with visual feeding
+P.EDMC = correc*repmat(PDMC,1,P.n)*P.gamma*pi*P.uM.*P.MSDM.*(repmat(VisD(0.05,10^-4,P.lM),1,P.n).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during daytime with visual feeding
 % P.EDMC = max(P.EDMC, 0.5*pi*P.uM*P.MSDM*(P.lM/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.EDMP = correc*repmat(PDMP,1,P.n)*P.gamma*pi*P.uM.*P.MSDM.*(repmat(VisD(0.5,10^-4,P.lM),1,P.n).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during daytime with visual feeding
+P.EDMP = correc*repmat(PDMP,1,P.n)*P.gamma*pi*P.uM.*P.MSDM.*(repmat(VisD(0.2,10^-4,P.lM),1,P.n).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during daytime with visual feeding
 % P.EDMC = max(P.EDMC, 0.5*pi*P.uM*P.MSDM*(P.lM/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 P.ENMd = correc*repmat(repmat(PNMd',P.n,P.n)*P.gamma*pi*P.uM.*P.MSNM.*(repmat(VisN(0.2,10^-4,P.lM),P.n,1).^2-0),1,1,7); % [m^3 day^-1] clearance rate of mesopelagic fish during nighttime with visual feeding
 % P.ENMd = max(P.ENMd, 0.5*pi*P.uM*P.MSNM*(P.lM/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.ENMC = correc*repmat(PNMC',P.n,1)*P.gamma*pi*P.uM.*P.MSNM.*(repmat(VisN(0.1,10^-4,P.lM),P.n,1).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during nighttime with visual feeding
+P.ENMC = correc*repmat(PNMC',P.n,1)*P.gamma*pi*P.uM.*P.MSNM.*(repmat(VisN(0.05,10^-4,P.lM),P.n,1).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during nighttime with visual feeding
 % P.ENMC = max(P.ENMC, 0.5*pi*P.uM*P.MSNM*(P.lM/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
-P.ENMP = correc*repmat(PNMP',P.n,1)*P.gamma*pi*P.uM.*P.MSNM.*(repmat(VisN(0.5,10^-4,P.lM),P.n,1).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during nighttime with visual feeding
+P.ENMP = correc*repmat(PNMP',P.n,1)*P.gamma*pi*P.uM.*P.MSNM.*(repmat(VisN(0.2,10^-4,P.lM),P.n,1).^2);%-P.RC.^2); % [m^3 day^-1] clearance rate of mesopelagic fish during nighttime with visual feeding
 % P.ENMC = max(P.ENMC, 0.5*pi*P.uM*P.MSNM*(P.lM/2)^2); % [m^3 day^-1] Clearance rate is the max of visual and filtering potentials
 
 %Copepod
@@ -310,14 +313,17 @@ P.ENPp = correc*repmat(PNPp',P.n,P.n)*pi*(P.RP)^2*P.uP.*P.MSNP; % [m^3 day^-1] C
 P.EDPd = correc*repmat(repmat(PDPd,P.n,P.n)*pi*(P.RP)^2*P.uP.*P.MSDP,1,1,7); % [m^3 day^-1] - no need to change anything here because we assume that both phytoplankton and detritus do not actively avoid prey
 P.ENPd = correc*repmat(repmat(PNPd',P.n,P.n)*pi*(P.RP)^2*P.uP.*P.MSNP,1,1,7); % [m^3 day^-1]
 
-%Tactile predator
-P.EDJM = repmat(PDJM,1,P.n)*pi*P.uJ.*P.MSDJ*(0.089*(P.RJ)^2);%-repmat(VisDM(P.lJ),1,P.n).^2); % [m^3 day^-1] Clearance rate of tactile predator during day - 0.089 is the filtering efficiency for jellyfish
-P.EDJC = repmat(PDJC,1,P.n)*pi*P.uJ.*P.MSDJ*(0.089*(P.RJ)^2);%-P.RC.^2); % [m^3 day^-1] Clearance rate of tactile predator during day - 0.089 is the filtering efficiency for jellyfish
-P.EDJP = repmat(PDJP,1,P.n)*pi*P.uJ.*P.MSDJ*(0.089*(P.RJ)^2);%-P.RC.^2); % [m^3 day^-1] Clearance rate of tactile predator during day - 0.089 is the filtering efficiency for jellyfish
+P.EDPC = correc*repmat(PDPC,1,P.n)*pi*(P.RP)^2*P.uP.*P.MSDP; % [m^3 day^-1] - no need to change anything here because we assume that both phytoplankton and detritus do not actively avoid prey
+P.ENPC = correc*repmat(PNPC',P.n,1)*pi*(P.RP)^2*P.uP.*P.MSNP; % [m^3 day^-1]
 
-P.ENJM = repmat(PNJM',P.n,1)*pi*P.uJ.*P.MSNJ*(0.089*(P.RJ)^2);%-repmat(VisNM(P.lJ),P.n,1).^2); % [m^3 day^-1] Clearance rate of tactile predator during nighttime - 0.089 is the filtering efficiency for jellyfish
-P.ENJC = repmat(PNJC',P.n,1)*pi*P.uJ.*P.MSNJ*(0.089*(P.RJ)^2);%-P.RC.^2); % [m^3 day^-1] Clearance rate of tactile predator during nighttime - 0.089 is the filtering efficiency for jellyfish
-P.ENJP = repmat(PNJP',P.n,1)*pi*P.uJ.*P.MSNJ*(0.089*(P.RJ)^2);%-P.RC.^2); % [m^3 day^-1] Clearance rate of tactile predator during nighttime - 0.089 is the filtering efficiency for jellyfish
+%Tactile predator
+P.EDJM = pi*P.uJ.*P.MSDJ*(0.089*(P.RJ)^2);%repmat(PDJM,1,P.n)*  -repmat(VisDM(P.lJ),1,P.n).^2); % [m^3 day^-1] Clearance rate of tactile predator during day - 0.089 is the filtering efficiency for jellyfish
+P.EDJC = pi*P.uJ.*P.MSDJ*(0.089*(P.RJ)^2);%repmat(PDJC,1,P.n)*  -P.RC.^2); % [m^3 day^-1] Clearance rate of tactile predator during day - 0.089 is the filtering efficiency for jellyfish
+P.EDJP = pi*P.uJ.*P.MSDJ*(0.089*(P.RJ)^2);%repmat(PDJP,1,P.n)*  -P.RC.^2); % [m^3 day^-1] Clearance rate of tactile predator during day - 0.089 is the filtering efficiency for jellyfish
+
+P.ENJM = pi*P.uJ.*P.MSNJ*(0.089*(P.RJ)^2);%repmat(PNJM',P.n,1)*  -repmat(VisNM(P.lJ),P.n,1).^2); % [m^3 day^-1] Clearance rate of tactile predator during nighttime - 0.089 is the filtering efficiency for jellyfish
+P.ENJC = pi*P.uJ.*P.MSNJ*(0.089*(P.RJ)^2);%repmat(PNJC',P.n,1)*  -P.RC.^2); % [m^3 day^-1] Clearance rate of tactile predator during nighttime - 0.089 is the filtering efficiency for jellyfish
+P.ENJP = pi*P.uJ.*P.MSNJ*(0.089*(P.RJ)^2);%repmat(PNJP',P.n,1)*  -P.RC.^2); % [m^3 day^-1] Clearance rate of tactile predator during nighttime - 0.089 is the filtering efficiency for jellyfish
              
 %% STRATEGY-DEPENDENT STANDARD METABOLIC COST
 P.metC = repmat(P.SMRC',1,P.n)*P.sigma + repmat(P.SMRC,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for copepod
@@ -328,19 +334,20 @@ P.metF = repmat(P.SMRF',1,P.n)*P.sigma + repmat(P.SMRF,P.n,1)*(1-P.sigma); % [da
 P.metJ = repmat(P.SMRJ',1,P.n)*P.sigma + repmat(P.SMRJ,P.n,1)*(1-P.sigma); % [day^-1] Standard metabolic cost associated with each strategy for tactile predator
 
 %% STRATEGY-DEPENDENT MAXIMUM INGESTION RATES
-Imax = @(l) 18*10^-4*(100*l).^2.55; % [gC day^-1] maximum ingestion rate for copepod and fish (no imax for tactile, functional response type I)
+Imaxz = @(w) 0.0542*w^0.75; % @(l) 18*10^-4*(100*l).^2.55; % [gC day^-1] maximum ingestion rate for copepod and fish (no imax for tactile, functional response type I)
+Imaxf = @(l) 18*10^-4*(100*l).^2.55; % [gC day^-1]
 miniI = 10^-10; % [gC day^-1] just something to say they can still eat - to prevent dividing by 0 in the mortality rates
 
-P.IDF = min(1*(0.3)^1*P.NPP/(f/P.wF),max(miniI, Imax(P.lF)*P.MSDF)); % [gC day^-1] Strategy-specific max ingestion rate for forage fish 
-P.INF = min(1*(0.3)^1*P.NPP/(f/P.wF),max(miniI, Imax(P.lF)*P.MSNF)); % [gC day^-1] Strategy-specific max ingestion rate for forage fish 
-P.IDA = min(1*(0.3)^2*P.NPP/(a/P.wA),max(miniI, Imax(P.lA)*P.MSDA)); % [gC day^-1] Strategy-specific max ingestion rate for top predator 
-P.INA = min(1*(0.3)^2*P.NPP/(a/P.wA),max(miniI, Imax(P.lA)*P.MSNA)); % [gC day^-1] Strategy-specific max ingestion rate for top predator 
-P.IDM = min(1*(0.3)^1*P.NPP/(m/P.wM),max(miniI, Imax(P.lM)*P.MSDM)); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish 
-P.INM = min(1*(0.3)^1*P.NPP/(m/P.wM),max(miniI, Imax(P.lM)*P.MSNM)); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish 
-P.IDC = min(1*(0.3)^1*P.NPP/(c/P.wC),max(miniI, Imax(P.lC)*P.MSDC)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 
-P.INC = min(1*(0.3)^1*P.NPP/(c/P.wC),max(miniI, Imax(P.lC)*P.MSNC)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 
-P.IDP = min(1*(0.3)^0*P.NPP/(p/P.wP),max(miniI, Imax(P.lP)*P.MSDP)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 
-P.INP = min(1*(0.3)^0*P.NPP/(p/P.wP),max(miniI, Imax(P.lP)*P.MSNP)); % [gC day^-1] Strategy-specific max ingestion rate for copepod 
+P.IDF = max(miniI, Imaxf(P.lF)*P.MSDF); % [gC day^-1] Strategy-specific max ingestion rate for forage fish min(0.8*(0.3)^1*P.NPP/(f/P.wF),
+P.INF = max(miniI, Imaxf(P.lF)*P.MSNF); % [gC day^-1] Strategy-specific max ingestion rate for forage fish min(0.8*(0.3)^1*P.NPP/(f/P.wF),
+P.IDA = max(miniI, Imaxf(P.lA)*P.MSDA); % [gC day^-1] Strategy-specific max ingestion rate for top predator min(0.8*(0.3)^2*P.NPP/(a/P.wA),
+P.INA = max(miniI, Imaxf(P.lA)*P.MSNA); % [gC day^-1] Strategy-specific max ingestion rate for top predator min(0.8*(0.3)^2*P.NPP/(a/P.wA),
+P.IDM = max(miniI, Imaxf(P.lM)*P.MSDM); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish min(0.8*(0.3)^1*P.NPP/(m/P.wM),
+P.INM = max(miniI, Imaxf(P.lM)*P.MSNM); % [gC day^-1] Strategy-specific max ingestion rate for mesopelagic fish min(0.8*(0.3)^1*P.NPP/(m/P.wM),
+P.IDC = max(miniI, Imaxz(P.wC)*P.MSDC); % [gC day^-1] Strategy-specific max ingestion rate for copepod min(0.8*(0.3)^0*P.NPP/(c/P.wC),
+P.INC = max(miniI, Imaxz(P.wC)*P.MSNC); % [gC day^-1] Strategy-specific max ingestion rate for copepod min(0.8*(0.3)^0*P.NPP/(c/P.wC),
+P.IDP = max(miniI, Imaxz(P.wP)*P.MSDP); % [gC day^-1] Strategy-specific max ingestion rate for copepod min(0.8*(0.3)^0*P.NPP/(p/P.wP),
+P.INP = max(miniI, Imaxz(P.wP)*P.MSNP); % [gC day^-1] Strategy-specific max ingestion rate for copepod min(0.8*(0.3)^0*P.NPP/(p/P.wP),
 
 %% MIGRATION COST 
 % (adapted from Pinti et al. 2019, but figures are the same -at least for now)

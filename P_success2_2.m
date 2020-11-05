@@ -112,7 +112,7 @@ end
 
 PDAM = nan(P.n,1);
 
-VisZ = DetectD(0.1,10^-3,P.lM);
+VisZ = DetectD(1,10^-3,P.lM);
 for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
 
         PDAM(zz) = captureproba2(VisZ(zz),vmax(P.wA)*P.MSDA(zz,1),vmax(P.wM)*P.MSDM(zz,1),P.uM*P.MSDM(zz,1)/24/3600,P.lA,P.lM);
@@ -123,10 +123,10 @@ end
 
 PDAF = nan(P.n,1);
 
-VisZ = DetectD(3,10^-1,P.lF);
+VisZ = DetectD(3,10^-1,0.15);%P.lF);%3,10^-1,P.lF);
 for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
 
-    PDAF(zz) = captureproba2(VisZ(zz),vmax(P.wA)*P.MSDA(zz,1),vmax(P.wF)*P.MSDF(zz,1),P.uF*P.MSDF(zz,1)/24/3600,P.lA,P.lF);
+    PDAF(zz) = captureproba2(VisZ(zz),vmax(P.wA)*P.MSDA(zz,1),vmax(P.wF)*P.MSDF(zz,1),P.uF*P.MSDF(zz,1)/24/3600,P.lA,0.15);%P.lF);
     
 end
 
@@ -141,6 +141,17 @@ PDCd = 1; % copepods feed on non moving stuff - they catch what they find
 
 PDPp = 1;
 PDPd = 1; % copepods feed on non moving stuff - they catch what they find
+
+% Prey = copepods
+
+PDPC = nan(P.n,1);
+
+VisZ = P.RC;
+
+for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
+
+    PDPC(zz) = captureproba2(VisZ,vmax(P.wP)*P.MSDP(zz,1),vmax(P.wC)*P.MSDC(zz,1),P.uC*P.MSDC(zz,1)/24/3600,P.lP,P.lC);
+end
 
 %%%%%%% Predator is jellyfish %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -297,6 +308,15 @@ PNCd = 1; % copepods feed on non moving stuff - they catch what they find
 
 PNPp = 1;
 PNPd = 1; % copepods feed on non moving stuff - they catch what they find
+
+PNPC = nan(P.n,1);
+
+VisZ = P.lC;
+
+for zz=1:P.n %ie at each depth - need to modulate the speeds by the metabolic scope
+
+    PNPC(zz) = captureproba2(VisZ,vmax(P.wP)*P.MSNP(1,zz),vmax(P.wC)*P.MSNC(1,zz),P.uC*P.MSNC(1,zz)/24/3600,P.lP,P.lC);
+end
 
 %%%%%%% Predator is jellyfish %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

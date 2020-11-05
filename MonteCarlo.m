@@ -9,7 +9,7 @@ p = parpool(clust,50);
 
 
 % CHOOSE HERE THE LOCATION WHERE WE WANT TO DO THE ANALYSIS
-lat = 23;%zlattest(j);
+lat = 24;%zlattest(j);
 lon = -158;%zlongtest(j);
 
 std = 0.5;
@@ -468,7 +468,7 @@ parfor j=1:nrun
             mMN = sum(mMnight,1); % [day^-1]
             MortNi = repmat(mMN,P.n,1); % [day^-1] Mortality rate experienced by the different bathypelagic fish strategies during nighttime
             
-            MortM = 0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN)) + minimort+ P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
+            MortM = 0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN)) + minimort/2+ P.sigma*MortDa + (1-P.sigma)*MortNi; % [day^-1] Total mortality rate experienced by the different copepod strategies
             
             
             %Fitnesses
@@ -894,7 +894,7 @@ parfor j=1:nrun
         MafT(j) = mafmean; MamT(j) = mammean; MajT(j) = majmean;
         MpcT(j) = mpcmean;
         
-        display([num2str(j),'/',num2str(size(XRUN,1)*size(XRUN,2))])
+        display([num2str(j),'/',num2str(nrun)])
 
 end
 
