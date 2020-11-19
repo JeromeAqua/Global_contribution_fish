@@ -9,6 +9,8 @@ load plankton.mat
 load fishb.mat % fish.mat
 load Latitudinal_irradiance.mat
 
+P.scarc = [300 500 2000 2000 3000 800]; % [m/day] sinking rate of carcasses for C P M F A J
+ 
 long_coord2 = mod(long_coord,360);
 
 Dead_C = nan([size(Glob_FitC),P.n]);
@@ -17,6 +19,8 @@ Dead_M = Dead_C;
 Dead_F = Dead_C;
 Dead_A = Dead_C;
 Dead_J = Dead_C;
+
+Dead_z = nan([size(Glob_FitC),P.n,6]); % creation rate of DIC thanks to carcasse degradation
 
 
 for i=1:size(lat_coord,2) %10
@@ -54,6 +58,28 @@ for i=1:size(lat_coord,2) %10
             Dead_A(j,i,:) = reshape(P.n*P.A*(P.sigma*sum(P.minimortA.*squeeze(Glob_A(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortA.*squeeze(Glob_A(j,i,:,:)),1)'),1,1,P.n);
                       
             Dead_J(j,i,:) = reshape(P.n*P.J*(P.sigma*sum(P.minimortJ.*squeeze(Glob_J(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortJ.*squeeze(Glob_J(j,i,:,:)),1)'),1,1,P.n); 
+            
+            
+            % Now using it to compute the creation rate of DIC thanks to
+            % carcasse degradation
+            
+            Dead_z(j,i,1,1) = (Dead_C(j,i,1)) /(P.scarc(1)/P.dZ+P.alpha(1, 2)); %For now unit is [gC / m3]
+            Dead_z(j,i,1,2) = (Dead_P(j,i,1)) /(P.scarc(2)/P.dZ+P.alpha(1, 3));
+            Dead_z(j,i,1,3) = (Dead_M(j,i,1)) /(P.scarc(3)/P.dZ+P.alpha(1, 4));
+            Dead_z(j,i,1,4) = (Dead_F(j,i,1)) /(P.scarc(4)/P.dZ+P.alpha(1, 5));
+            Dead_z(j,i,1,5) = (Dead_A(j,i,1)) /(P.scarc(5)/P.dZ+P.alpha(1, 6));
+            Dead_z(j,i,1,6) = (Dead_J(j,i,1)) /(P.scarc(6)/P.dZ+P.alpha(1, 7));
+            
+                for depthindex = 2:P.n
+                    Dead_z(j,i,depthindex,1) = (Dead_C(j,i,depthindex) + P.scarc(1)*Dead_z(j,i,depthindex-1,1)/P.dZ )/(P.scarc(1)/P.dZ+P.alpha(depthindex, 2));
+                    Dead_z(j,i,depthindex,2) = (Dead_P(j,i,depthindex) + P.scarc(2)*Dead_z(j,i,depthindex-1,1)/P.dZ )/(P.scarc(1)/P.dZ+P.alpha(depthindex, 3));
+                    Dead_z(j,i,depthindex,3) = (Dead_M(j,i,depthindex) + P.scarc(3)*Dead_z(j,i,depthindex-1,1)/P.dZ )/(P.scarc(1)/P.dZ+P.alpha(depthindex, 4));
+                    Dead_z(j,i,depthindex,4) = (Dead_F(j,i,depthindex) + P.scarc(4)*Dead_z(j,i,depthindex-1,1)/P.dZ )/(P.scarc(1)/P.dZ+P.alpha(depthindex, 5));
+                    Dead_z(j,i,depthindex,5) = (Dead_A(j,i,depthindex) + P.scarc(5)*Dead_z(j,i,depthindex-1,1)/P.dZ )/(P.scarc(1)/P.dZ+P.alpha(depthindex, 6));
+                    Dead_z(j,i,depthindex,6) = (Dead_J(j,i,depthindex) + P.scarc(6)*Dead_z(j,i,depthindex-1,1)/P.dZ )/(P.scarc(1)/P.dZ+P.alpha(depthindex, 7));                
+                end 
+            
+            Dead_z(j,i,:,:) = Dead_z(j,i,:,:).*reshape(P.alpha(:,2:end),1,1,P.n,6); % [gC / m3 / day] Now is the rate of degradation of carcasses at each depth
         end
     end
 end
@@ -68,3 +94,7 @@ DeadM_tot = sum(sum( Area.*sum(Dead_M*P.dZ,3)'*365,'omitnan' ),'omitnan')*10^-15
 DeadF_tot = sum(sum( Area.*sum(Dead_F*P.dZ,3)'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 DeadA_tot = sum(sum( Area.*sum(Dead_A*P.dZ,3)'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 DeadJ_tot = sum(sum( Area.*sum(Dead_J*P.dZ,3)'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+
+
+
+
