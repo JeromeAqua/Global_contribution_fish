@@ -18,9 +18,6 @@ SDA_Fz = SDA_Cz;
 SDA_Az = SDA_Cz;
 SDA_Jz = SDA_Cz;
 
-minimortC = 0.05; 
-minimortA = 0.0002;
-minimort = 0.01;
 
 for i=1:size(lat_coord,2) %10
     for j=1:size(long_coord2,2) %30
@@ -50,7 +47,7 @@ for i=1:size(lat_coord,2) %10
             %%% For C %%%
             sdac = Mcd(j,i)*P.fCd + Mcr(j,i)*P.fCR - sum(squeeze(DIC_glob(j,i,:,1))) -...
                    Mpc(j,i) - Mfc(j,i) - Mmc(j,i) - Mjc(j,i) -...
-                   sum(P.dZ*P.n*P.C*(P.sigma*sum(minimortC.*squeeze(Glob_C(j,i,:,:)),2)+(1-P.sigma)*sum(minimortC.*squeeze(Glob_C(j,i,:,:)),1)')); % [gC / m2 / day]
+                   sum(P.dZ*P.n*P.C*(P.sigma*sum(P.minimortC.*squeeze(Glob_C(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortC.*squeeze(Glob_C(j,i,:,:)),1)')); % [gC / m2 / day]
                      
             CCday = squeeze(Glob_Cday(j,i,:))/max(max(squeeze(Glob_Cnight(j,i,:))),max(squeeze(Glob_Cday(j,i,:)))); % [-] Fraction of C at z during day
             CCnight = squeeze(Glob_Cnight(j,i,:))/max(max(squeeze(Glob_Cnight(j,i,:))),max(squeeze(Glob_Cday(j,i,:)))); % [-]
@@ -66,7 +63,7 @@ for i=1:size(lat_coord,2) %10
             %%% For P %%%        
             sdap = Mpd(j,i)*P.fPd + Mpr(j,i)*P.fPR + Mpc(j,i)*P.fPR - sum(squeeze(DIC_glob(j,i,:,2))) -...
                    Mmp(j,i) - Mfp(j,i) - Mjp(j,i) -...
-                   sum(P.dZ*P.n*P.P*(P.sigma*sum((minimort+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),2)+(1-P.sigma)*sum((minimort+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),1)'));
+                   sum(P.dZ*P.n*P.P*(P.sigma*sum((P.minimortP+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortP+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),1)'));
               
             PPday = squeeze(Glob_Pday(j,i,:))/max(max(squeeze(Glob_Pnight(j,i,:))),max(squeeze(Glob_Pday(j,i,:)))); % [-] Fraction of P at z during day
             PPnight = squeeze(Glob_Pnight(j,i,:))/max(max(squeeze(Glob_Pnight(j,i,:))),max(squeeze(Glob_Pday(j,i,:)))); % [-]
@@ -81,7 +78,7 @@ for i=1:size(lat_coord,2) %10
             %%% For M %%%      
             sdam = Mmc(j,i)*P.fMC + Mmp(j,i)*P.fMC - sum(squeeze(DIC_glob(j,i,:,3))) -...
                    Mfm(j,i) - Mam(j,i) -...
-                   sum(P.dZ*P.n*P.M*(P.sigma*sum((minimort/2+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),2)+(1-P.sigma)*sum((minimort/2+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),1)'));
+                   sum(P.dZ*P.n*P.M*(P.sigma*sum((P.minimortM+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortM+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),1)'));
 
             MMday = squeeze(Glob_Mday(j,i,:))/max(max(squeeze(Glob_Mnight(j,i,:))),max(squeeze(Glob_Mday(j,i,:)))); % [-] Fraction of M at z during day
             MMnight = squeeze(Glob_Mnight(j,i,:))/max(max(squeeze(Glob_Mnight(j,i,:))),max(squeeze(Glob_Mday(j,i,:)))); % [-]
@@ -96,7 +93,7 @@ for i=1:size(lat_coord,2) %10
             %%% For F %%%         
             sdaf = Mfc(j,i)*P.fF + Mfp(j,i)*P.fF + Mfm(j,i)*P.fF - sum(squeeze(DIC_glob(j,i,:,4))) -...
                    Maf(j,i) -...
-                   sum(P.dZ*P.n*P.F*(P.sigma*sum(minimort.*squeeze(Glob_F(j,i,:,:)),2)+(1-P.sigma)*sum(minimort.*squeeze(Glob_F(j,i,:,:)),1)')); 
+                   sum(P.dZ*P.n*P.F*(P.sigma*sum(P.minimortF.*squeeze(Glob_F(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortF.*squeeze(Glob_F(j,i,:,:)),1)')); 
                      
             FFday = squeeze(Glob_Fday(j,i,:))/max(max(squeeze(Glob_Fnight(j,i,:))),max(squeeze(Glob_Fday(j,i,:)))); % [-] Fraction of F at z during day
             FFnight = squeeze(Glob_Fnight(j,i,:))/max(max(squeeze(Glob_Fnight(j,i,:))),max(squeeze(Glob_Fday(j,i,:)))); % [-]
@@ -110,7 +107,7 @@ for i=1:size(lat_coord,2) %10
             
             %%% For A %%%
             sdaa = Maf(j,i)*P.fA + Mam(j,i)*P.fA + Maj(j,i)*P.fA - sum(squeeze(DIC_glob(j,i,:,5))) -...
-                   sum(P.dZ*P.n*P.A*(P.sigma*sum(minimortA.*squeeze(Glob_A(j,i,:,:)),2)+(1-P.sigma)*sum(minimortA.*squeeze(Glob_A(j,i,:,:)),1)'));
+                   sum(P.dZ*P.n*P.A*(P.sigma*sum(P.minimortA.*squeeze(Glob_A(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortA.*squeeze(Glob_A(j,i,:,:)),1)'));
                      
                      
             AAday = squeeze(Glob_Aday(j,i,:))/max(max(squeeze(Glob_Anight(j,i,:))),max(squeeze(Glob_Aday(j,i,:)))); % [-] Fraction of A at z during day
@@ -126,7 +123,7 @@ for i=1:size(lat_coord,2) %10
             %%% For J %%%
             sdaj = Mjc(j,i)*P.fJ + Mjp(j,i)*P.fJ - sum(squeeze(DIC_glob(j,i,:,6))) -...
                    Maj(j,i) -...
-                   sum(P.dZ*P.n*P.J*(P.sigma*sum(minimort.*squeeze(Glob_J(j,i,:,:)),2)+(1-P.sigma)*sum(minimort.*squeeze(Glob_J(j,i,:,:)),1)')); 
+                   sum(P.dZ*P.n*P.J*(P.sigma*sum(P.minimortJ.*squeeze(Glob_J(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortJ.*squeeze(Glob_J(j,i,:,:)),1)')); 
             
             JJday = squeeze(Glob_Jday(j,i,:))/max(max(squeeze(Glob_Jnight(j,i,:))),max(squeeze(Glob_Jday(j,i,:)))); % [-] Fraction of J at z during day
             JJnight = squeeze(Glob_Jnight(j,i,:))/max(max(squeeze(Glob_Jnight(j,i,:))),max(squeeze(Glob_Jday(j,i,:)))); % [-]

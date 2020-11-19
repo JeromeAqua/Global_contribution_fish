@@ -18,9 +18,6 @@ SDA_F = SDA_C;
 SDA_A = SDA_C;
 SDA_J = SDA_C;
 
-minimortC = 0.05; 
-minimortA = 0.0002;
-minimort = 0.01;
 
 for i=1:size(lat_coord,2) %10
     for j=1:size(long_coord2,2) %30
@@ -48,26 +45,26 @@ for i=1:size(lat_coord,2) %10
             
             SDA_C(j,i) = Mcd(j,i)*P.fCd + Mcr(j,i)*P.fCR - sum(squeeze(DIC_glob(j,i,:,1))) -...
                          Mpc(j,i) - Mfc(j,i) - Mmc(j,i) - Mjc(j,i) -...
-                         sum(P.dZ*P.n*P.C*(P.sigma*sum(minimortC.*squeeze(Glob_C(j,i,:,:)),2)+(1-P.sigma)*sum(minimortC.*squeeze(Glob_C(j,i,:,:)),1)'));
+                         sum(P.dZ*P.n*P.C*(P.sigma*sum(P.minimortC.*squeeze(Glob_C(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortC.*squeeze(Glob_C(j,i,:,:)),1)'));
                      
             SDA_P(j,i) = Mpd(j,i)*P.fPd + Mpr(j,i)*P.fPR + Mpc(j,i)*P.fPR - sum(squeeze(DIC_glob(j,i,:,2))) -...
                          Mmp(j,i) - Mfp(j,i) - Mjp(j,i) -...
-                         sum(P.dZ*P.n*P.P*(P.sigma*sum((minimort+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),2)+(1-P.sigma)*sum((minimort+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),1)'));
+                         sum(P.dZ*P.n*P.P*(P.sigma*sum((P.minimortP+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortP+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),1)'));
               
             SDA_M(j,i) = Mmc(j,i)*P.fMC + Mmp(j,i)*P.fMC - sum(squeeze(DIC_glob(j,i,:,3))) -...
                          Mfm(j,i) - Mam(j,i) -...
-                         sum(P.dZ*P.n*P.M*(P.sigma*sum((minimort/2+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),2)+(1-P.sigma)*sum((minimort/2+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),1)'));
+                         sum(P.dZ*P.n*P.M*(P.sigma*sum((P.minimortM+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortM+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),1)'));
 
             SDA_F(j,i) = Mfc(j,i)*P.fF + Mfp(j,i)*P.fF + Mfm(j,i)*P.fF - sum(squeeze(DIC_glob(j,i,:,4))) -...
                          Maf(j,i) -...
-                         sum(P.dZ*P.n*P.F*(P.sigma*sum(minimort.*squeeze(Glob_F(j,i,:,:)),2)+(1-P.sigma)*sum(minimort.*squeeze(Glob_F(j,i,:,:)),1)')); 
+                         sum(P.dZ*P.n*P.F*(P.sigma*sum(P.minimortF.*squeeze(Glob_F(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortF.*squeeze(Glob_F(j,i,:,:)),1)')); 
                      
             SDA_A(j,i) = Maf(j,i)*P.fA + Mam(j,i)*P.fA + Maj(j,i)*P.fA - sum(squeeze(DIC_glob(j,i,:,5))) -...
-                         sum(P.dZ*P.n*P.A*(P.sigma*sum(minimortA.*squeeze(Glob_A(j,i,:,:)),2)+(1-P.sigma)*sum(minimortA.*squeeze(Glob_A(j,i,:,:)),1)'));
+                         sum(P.dZ*P.n*P.A*(P.sigma*sum(P.minimortA.*squeeze(Glob_A(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortA.*squeeze(Glob_A(j,i,:,:)),1)'));
                       
             SDA_J(j,i) = Mjc(j,i)*P.fJ + Mjp(j,i)*P.fJ - sum(squeeze(DIC_glob(j,i,:,6))) -...
                          Maj(j,i) -...
-                         sum(P.dZ*P.n*P.J*(P.sigma*sum(minimort.*squeeze(Glob_J(j,i,:,:)),2)+(1-P.sigma)*sum(minimort.*squeeze(Glob_J(j,i,:,:)),1)')); 
+                         sum(P.dZ*P.n*P.J*(P.sigma*sum(P.minimortJ.*squeeze(Glob_J(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortJ.*squeeze(Glob_J(j,i,:,:)),1)')); 
         end
     end
 end
@@ -254,3 +251,12 @@ surfm(lat_coord, long_plot, ff','AlphaData',~isnan(SDAJ_plot'),'EdgeColor','none
 colorbar
 % caxis([0 55])
 title('SDA for jellyfish [mgC / m^2/day]')
+
+%% Global numbers
+
+SDAC_tot = sum(sum( Area.*SDA_C'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+SDAP_tot = sum(sum( Area.*SDA_P'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+SDAM_tot = sum(sum( Area.*SDA_M'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+SDAF_tot = sum(sum( Area.*SDA_F'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+SDAA_tot = sum(sum( Area.*SDA_A'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+SDAJ_tot = sum(sum( Area.*SDA_J'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
