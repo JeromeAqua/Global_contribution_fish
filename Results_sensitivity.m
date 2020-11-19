@@ -1,7 +1,17 @@
 Validation_Zeupho;
 Validation_active_transport2;
+Validation_otherlosses_depth; % to have the other losses by depth for the other losses
 
-TABLE = zeros(7,6); % Table of results
+OL = zeros(size(long_coord,2),size(lat_coord,2),P.n,6);
+OL(:,:,:,1) = SDA_Cz;
+OL(:,:,:,2) = SDA_Pz;
+OL(:,:,:,3) = SDA_Mz;
+OL(:,:,:,4) = SDA_Fz;
+OL(:,:,:,5) = SDA_Az;
+OL(:,:,:,6) = SDA_Jz;
+glob_OL = [SDAC_tot SDAP_tot SDAM_tot SDAF_tot SDAA_tot SDAJ_tot];
+
+TABLE = zeros(7,9); % Table of results RESPI - POC - OL (and creation / sequestration / time scale as "subsections")
 
 load Bottomalpha.mat %another one below
 longitude = 0:2:358; %[0:2:178, -180:2:-2]; %What we will use for our runs
@@ -18,7 +28,7 @@ load Mask_geo.mat
 %%%%%%%%%%%%%%%%%%%%%  CHOICES TO MAKE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 GEO = 'tot'; % choice is 'tot' = all globe, 'ST' subtropical gyres, 'T' tropics and upwelling zones, 'NA' North Atlantic, 'SO' Southern Ocean, 'NP North Pacific'
 CONCERNED = {2,3,4,5,6,7,2:7}; % what functional groups we want
-PATHWAY = {'respiration','POC'}; %pathway - poc or respiration POC or respiration
+PATHWAY = {'respiration','POC','OL'}; %pathway - poc or respiration POC or respiration or other losses
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if strcmp(GEO,'tot')
@@ -35,11 +45,11 @@ elseif strcmp(GEO,'SO')
     Mask_geo = mask_SO;
 end
   
-for C = 1:7
+for C = 1:size(CONCERNED,2)
     
     concerned = CONCERNED{C};
     
-    for pp = 1:2
+    for pp = 1:size(PATHWAY,2)
     
         pathway = PATHWAY(pp);
     
@@ -48,6 +58,27 @@ for C = 1:7
   if strcmp(pathway,'respiration')
   
             q = cat(3,sum(DIC_glob(:,:,:,concerned-1),4,'omitnan'), zeros(size(long_coord,2),size(lat_coord,2),200))/P.dZ; % [gC / m^3 / day] - if we want to calculate it for respiration
+            q = permute(q,[2 1 3]);
+            
+            q = Mask_geo.*q;
+            %Interpolate seafloor to long-lat
+            [XQ, YQ] = meshgrid(long_coord,lat_coord);
+            XQ = mod(XQ,360);
+            [LLO, LLA] = meshgrid(longitude,latitude);
+
+            S = interp2(LLO,LLA,seafloor,XQ,YQ);
+            for ii=1:size(long_coord,2)
+                for jj=1:size(lat_coord,2)
+                    if isnan(S(jj,ii))
+                        q(jj,ii,:) = 0;
+                    end
+                end
+            end
+            
+            
+  elseif strcmp(pathway,'OL')
+  
+            q = cat(3,sum(OL(:,:,:,concerned-1),4,'omitnan'), zeros(size(long_coord,2),size(lat_coord,2),200)); % [gC / m^3 / day] - if we want to calculate it for respiration
             q = permute(q,[2 1 3]);
             
             q = Mask_geo.*q;
@@ -142,6 +173,7 @@ Area = DX.*DY; % m^2
 
 glob_prod_fecal = sum(sum( Area.*TOT_fecal.*Mask_geo*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 glob_prod_respi = sum(sum( Area.*TOT_respi.*Mask_geo*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+glob_prod_OL = sum(glob_OL(concerned-1)); % [PgC / yr]
 
 q = cat(2,q(:,long_coord>=0,:),q(:,long_coord<0,:)); % Because we need to have increasing longitudes for the interpolation
 
@@ -215,8 +247,10 @@ A = TR-SSINK; % transport + sink in surface
 %Modify q_source to correct for interpolation
 if strcmp('POC',pathway)
     q_source_OCIM = q_source_OCIM / totexp * glob_prod_fecal;
-else
+elseif strcmp('respiration', pathway)
     q_source_OCIM = q_source_OCIM / totexp * glob_prod_respi;
+elseif strcmp('OL', pathway)
+    q_source_OCIM = q_source_OCIM / totexp * glob_prod_OL;
 end
 
 % calculate carbon sequestration
@@ -227,6 +261,7 @@ totCseq = V'*cseq/1e15; % [PgC] everything was in gC before
 
 TABLE(C,1) = glob_prod_respi;
 TABLE(C,4) = glob_prod_fecal;
+TABLE(C,7) = glob_prod_OL;
 TABLE(C,3*pp-1) = totCseq;
     end
 end
@@ -234,6 +269,7 @@ end
 
 TABLE(:,3) = TABLE(:,2)./TABLE(:,1);
 TABLE(:,6) = TABLE(:,5)./TABLE(:,4);
+TABLE(:,9) = TABLE(:,8)./TABLE(:,7);
 
 X = [{'Export below the euphotic zone is ', num2str(EZ), ' PgC/yr'};
     {'Respiration below the euphotic zone is ', num2str(Byrespi), ' PgC/yr'};
