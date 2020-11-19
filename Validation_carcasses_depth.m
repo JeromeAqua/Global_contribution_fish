@@ -20,8 +20,11 @@ Dead_F = Dead_C;
 Dead_A = Dead_C;
 Dead_J = Dead_C;
 
-Dead_z = nan([size(Glob_FitC),P.n,6]); % creation rate of DIC thanks to carcasse degradation
+Dead_z = nan([size(Glob_FitC),P.n,6]); % DIC concentration thanks to carcasse degradation % [gC / m3]
+Deg_carcasse = nan([size(Glob_FitC),P.n,6]); % creation rate of DIC thanks to carcasse degradation [gC / m3 / day]
 
+K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant  - just for alpha's calculation
+qrem = 1.1;%1.5; % [-] Q10 for remineralization rate of POC
 
 for i=1:size(lat_coord,2) %10
     for j=1:size(long_coord2,2) %30
@@ -45,8 +48,16 @@ for i=1:size(lat_coord,2) %10
             P.Lmax = interp1(lat_irradiance,I,lat); % [W/m^2] Mean annual surface irradiance during daytime
             P.LD = P.Lmax*exp(-P.klight*P.zi); % [W/m^2] Depth-dependent day light levels
             P.LN = P.rho*P.LD; % [W/m^2] Depth-dependent night light levels
-                
             
+            P.T = interp1(depth, squeeze(T(lat_idx,lon_idx,:)), P.zi); % [degree C] Temperature
+            P.pO2 = interp1(depth, squeeze(pO2(lat_idx,lon_idx,:)), P.zi); % [kPa] oxygen partial pressure single(linspace(21,21,size(P.T,2)));%
+                        
+            Tref = mean(P.T(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
+            Ko2 = 10*0.0224./K(P.T); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
+
+            P.alpha =0.5*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
+            P.alpha = repmat(P.alpha',1,7); % transformation so that it has the same size as D - easier if we want to have specific degradation rates later
+                
             Dead_C(j,i,:) = reshape(P.n*P.C*(P.sigma*sum(P.minimortC.*squeeze(Glob_C(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortC.*squeeze(Glob_C(j,i,:,:)),1)'),1,1,P.n); % [gC / m3 / day] How much carcasses are created per day
                      
             Dead_P(j,i,:) = reshape(P.n*P.P*(P.sigma*sum((P.minimortP+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortP+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),1)'),1,1,P.n);
@@ -79,7 +90,7 @@ for i=1:size(lat_coord,2) %10
                     Dead_z(j,i,depthindex,6) = (Dead_J(j,i,depthindex) + P.scarc(6)*Dead_z(j,i,depthindex-1,1)/P.dZ )/(P.scarc(1)/P.dZ+P.alpha(depthindex, 7));                
                 end 
             
-            Dead_z(j,i,:,:) = Dead_z(j,i,:,:).*reshape(P.alpha(:,2:end),1,1,P.n,6); % [gC / m3 / day] Now is the rate of degradation of carcasses at each depth
+            Deg_carcasse(j,i,:,:) = Dead_z(j,i,:,:).*reshape(P.alpha(:,2:end),1,1,P.n,6); % [gC / m3 / day] Now is the rate of degradation of carcasses at each depth
         end
     end
 end

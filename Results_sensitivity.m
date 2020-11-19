@@ -1,6 +1,7 @@
 Validation_Zeupho;
 Validation_active_transport2;
 Validation_otherlosses_depth; % to have the other losses by depth for the other losses
+Validation_carcasses_depth; % to have the creation terms for the degradation from carcasses
 
 OL = zeros(size(long_coord,2),size(lat_coord,2),P.n,6);
 OL(:,:,:,1) = SDA_Cz;
@@ -11,7 +12,9 @@ OL(:,:,:,5) = SDA_Az;
 OL(:,:,:,6) = SDA_Jz;
 glob_OL = [SDAC_tot SDAP_tot SDAM_tot SDAF_tot SDAA_tot SDAJ_tot];
 
-TABLE = zeros(7,9); % Table of results RESPI - POC - OL (and creation / sequestration / time scale as "subsections")
+glob_carcasse = [DeadC_tot DeadP_tot DeadM_tot DeadF_tot DeadA_tot DeadJ_tot];
+
+TABLE = zeros(7,12); % Table of results RESPI - POC - OL (and creation / sequestration / time scale as "subsections")
 
 load Bottomalpha.mat %another one below
 longitude = 0:2:358; %[0:2:178, -180:2:-2]; %What we will use for our runs
@@ -20,15 +23,12 @@ long_coord2 = mod(long_coord,360);
 long_shifted = [long_coord2(long_coord>=0),long_coord2(long_coord<0)];
 load Mask_geo.mat
 
-%  Niter= a; Iavg= b;  P= c; MAday= d; MAnight= e; MCday=f; MCnight=g; MPday=h; MPnight=i; MFday=j; MFnight=k; MJday=l; MJnight=m;
-%  MMday=n; MMnight=o; DegPOC_depth=p; DIC_dept=q; Dmean=r; MA=s; MC=t; MF=u; MJ=v; MM=w; MP=x; MD=y; FitA=z; FitC=aa; FitF=bb; FitJ=cc; FitM=dd; FitP=ee;
-
 %  Carbon_export;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%  CHOICES TO MAKE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 GEO = 'tot'; % choice is 'tot' = all globe, 'ST' subtropical gyres, 'T' tropics and upwelling zones, 'NA' North Atlantic, 'SO' Southern Ocean, 'NP North Pacific'
 CONCERNED = {2,3,4,5,6,7,2:7}; % what functional groups we want
-PATHWAY = {'respiration','POC','OL'}; %pathway - poc or respiration POC or respiration or other losses
+PATHWAY = {'respiration','POC','OL','carcasse'}; %pathway - poc or respiration POC or respiration or other losses
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if strcmp(GEO,'tot')
@@ -98,27 +98,32 @@ for C = 1:size(CONCERNED,2)
             
   elseif strcmp(pathway, 'POC')
 
-        
-%         depth_size = [repmat(P.dZ,P.n,1); 1; diff(add_on)']; % if we want to calculate it for faecal pellet excretion
-        %old one % q =  [ sum(DegPOC(1:end,concerned),2); sum(repmat(bottom(concerned),size(add_on,2),1).*P.alpha(end,concerned).*exp(-repmat(P.alpha(end,concerned)./P.SR(concerned),size(add_on,2),1).*repmat(add_on'-P.zi(end),1,length(concerned))),2)./([11 diff(add_on)]')]; % [gc / m^3 / day]    %.*exp(-repmat(P.alpha(end,concerned)./P.SR(concerned),size(add_on,2),1).*repmat(add_on'-P.zi(end),1,length(concerned)))
         q =  sum(DegPOC_glob(:,:,:,concerned),4,'omitnan'); 
         Dmean = D_glob(:,:,end,concerned); % [gC / m3]
         
         factor_z = exp(-alphaend./reshape(P.SR(concerned)./squeeze(add_on(1,1,:)-P.ZMAX),1,1,size(add_on,3),size(P.SR(concerned),2))); % [-]
         D_to_use = Dmean.*alphaend.*factor_z;%reshape(factor_z,1,1,size(add_on,3),size(P.SR(concerned),2)); % [gC m^-3 day^-1]
  
-% Old version        
-%         D_to_use = [                      Dmean.*reshape(P.SR(concerned),1,1,1,size(P.SR(concerned),2))/(add_on(1)-P.zi(end))./reshape(P.alpha(end,concerned)+P.SR(concerned),1,1,1,size(P.SR(concerned),2))/(add_on(1)-P.zi(end))];   % [gC / m^3]  
-%         for ddepth=2:size(add_on,3)
-%             D_to_use = cat(3,D_to_use, D_to_use(:,:,end,:).*reshape(P.SR(concerned),1,1,1,size(P.SR(concerned),2))/(add_on(1,1,2)-add_on(1))./reshape(P.alpha(end,concerned)+P.SR(concerned),1,1,1,size(P.SR(concerned),2))/(add_on(1,1,2)-add_on(1))); % add one depth layer at each time
-%         end    
-%         q = cat(3,q, sum(D_to_use(:,:,1:end-1,:).*reshape(P.alpha(end,concerned),1,1,1,size(P.SR(concerned),2)),4),sum(D_to_use(:,:,end,:).*reshape(P.SR(concerned)/(add_on(1,1,2)-add_on(1)),1,1,1,size(P.SR(concerned),2)),4));
-
-%With new calculation
-%         q = cat(3,q, sum(D_to_use(:,:,1:end-1,:),4),sum(Dmean.*factor_z(:,:,end,:) /(add_on(1,1,2)-add_on(1) ),4)); %sum(Dmean.*reshape(factor_z(end,:),1,1,1,size(P.SR(concerned),2)) /(add_on(1,1,2)-add_on(1) ),4));
-          q = cat(3,q, sum(D_to_use(:,:,1:end-1,:),4),sum(Dmean.*factor_z(:,:,end,:).*(alphaend+  reshape(P.SR(concerned)./squeeze(add_on(1,1,2)-add_on(1)),1,1,1,size(P.SR(concerned),2))     ),4,'omitnan'));
+        q = cat(3,q, sum(D_to_use(:,:,1:end-1,:),4),sum(Dmean.*factor_z(:,:,end,:).*(alphaend+  reshape(P.SR(concerned)./squeeze(add_on(1,1,2)-add_on(1)),1,1,1,size(P.SR(concerned),2))     ),4,'omitnan'));
         
-        %     q = cat(3,q,zeros(size(long_coord,2),size(lat_coord,2),10));
+        q =  permute(q,[2 1 3]);
+        q = Mask_geo.*q;
+        
+        %Interpolate seafloor to long-lat
+        [XQ, YQ] = meshgrid(long_coord,lat_coord);
+        XQ = mod(XQ,360);
+        [LLO, LLA] = meshgrid(longitude,latitude);
+        
+  elseif strcmp(pathway, 'carcasse')
+
+        q =  sum(Deg_carcasse(:,:,:,concerned-1),4,'omitnan'); 
+        Deadmean = Dead_z(:,:,end,concerned-1); % [gC / m3]
+        
+        factor_z = exp(-alphaend./reshape(P.SR(concerned)./squeeze(add_on(1,1,:)-P.ZMAX),1,1,size(add_on,3),size(P.SR(concerned),2))); % [-]
+        D_to_use = Deadmean.*alphaend.*factor_z;%reshape(factor_z,1,1,size(add_on,3),size(P.SR(concerned),2)); % [gC m^-3 day^-1]
+ 
+          q = cat(3,q, sum(D_to_use(:,:,1:end-1,:),4),sum(Deadmean.*factor_z(:,:,end,:).*(alphaend+  reshape(P.SR(concerned)./squeeze(add_on(1,1,2)-add_on(1)),1,1,1,size(P.SR(concerned),2))     ),4,'omitnan'));
+        
          q =  permute(q,[2 1 3]);
          q = Mask_geo.*q;
         
@@ -127,18 +132,10 @@ for C = 1:size(CONCERNED,2)
         XQ = mod(XQ,360);
         [LLO, LLA] = meshgrid(longitude,latitude);
 
-%         S = interp2(LLO,LLA,seafloor,XQ,YQ);
-%         for ii=1:size(long_coord,2) %Here remove where there is no ground
-%             for jj=1:size(lat_coord,2)
-%                 if isnan(S(jj,ii))
-%                     q(jj,ii,:) = 0;
-%                 end
-%             end
-%         end
    end
    
   
-  q = double(q);
+q = double(q);
  
         
  
@@ -174,6 +171,7 @@ Area = DX.*DY; % m^2
 glob_prod_fecal = sum(sum( Area.*TOT_fecal.*Mask_geo*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 glob_prod_respi = sum(sum( Area.*TOT_respi.*Mask_geo*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 glob_prod_OL = sum(glob_OL(concerned-1)); % [PgC / yr]
+glob_prod_carcasse = sum(glob_carcasse(concerned-1)); % [PgC / yr]
 
 q = cat(2,q(:,long_coord>=0,:),q(:,long_coord<0,:)); % Because we need to have increasing longitudes for the interpolation
 
@@ -251,6 +249,8 @@ elseif strcmp('respiration', pathway)
     q_source_OCIM = q_source_OCIM / totexp * glob_prod_respi;
 elseif strcmp('OL', pathway)
     q_source_OCIM = q_source_OCIM / totexp * glob_prod_OL;
+elseif strcmp('carcasse', pathway)
+    q_source_OCIM = q_source_OCIM / totexp * glob_prod_carcasse;
 end
 
 % calculate carbon sequestration
@@ -262,6 +262,7 @@ totCseq = V'*cseq/1e15; % [PgC] everything was in gC before
 TABLE(C,1) = glob_prod_respi;
 TABLE(C,4) = glob_prod_fecal;
 TABLE(C,7) = glob_prod_OL;
+TABLE(C,10) = glob_prod_carcasse;
 TABLE(C,3*pp-1) = totCseq;
     end
 end
@@ -270,6 +271,7 @@ end
 TABLE(:,3) = TABLE(:,2)./TABLE(:,1);
 TABLE(:,6) = TABLE(:,5)./TABLE(:,4);
 TABLE(:,9) = TABLE(:,8)./TABLE(:,7);
+TABLE(:,12) = TABLE(:,11)./TABLE(:,10);
 
 X = [{'Export below the euphotic zone is ', num2str(EZ), ' PgC/yr'};
     {'Respiration below the euphotic zone is ', num2str(Byrespi), ' PgC/yr'};
@@ -279,8 +281,6 @@ disp(X)
 
 disp(TABLE)
 
-
-subplot(211)
 DSL_depth = zeros(size(lat_coord,2),size(long_coord,2));
 
 for i=1:size(lat_coord,2)
