@@ -19,7 +19,7 @@ for lat_run=27:70%1:size(obs,1) %latitudes only between -38 and +48
     for long_run = 1:size(obs,2)
         for z_run = 9:20 %1:size(obs,3) - for now only between 500 and 3300 m
             if obs(lat_run,long_run,z_run) > 0     
-                
+        
                 
             [~,lat_idx] = min(abs(latitude(lat_run)-latitude));
             [~,lon_idx] = min(abs(longitude(long_run)-longitude));    
@@ -27,12 +27,13 @@ for lat_run=27:70%1:size(obs,1) %latitudes only between -38 and +48
             P.T = interp1(depth, squeeze(T(lat_idx,lon_idx,:)), P.zi); % [degree C] Temperature
             P.pO2 = interp1(depth, squeeze(pO2(lat_idx,lon_idx,:)), P.zi); % [kPa] oxygen partial pressure single(linspace(21,21,size(P.T,2)));%
                         
-            Tref = mean(P.T(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
+            Tref = mean(P.T);%(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
             Ko2 = 10*0.0224./K(P.T); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
 
             P.alpha =0.5*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
             P.alpha = repmat(P.alpha',1,7); % transformation so that it has the same size as D - easier if we want to have specific degradation rates later
-        
+                
+                
                 poc = 12.01*exp(obs(lat_run,long_run,z_run)) * 10^-3 /365.25; % [gC / m^2 / day] Observed particle flux from sediment trap - from Lutz et al. 2007
                 POC_observed = [POC_observed; poc];
                 Z_traps = [Z_traps, zt(z_run)]; % [m] Depth at which the sediment traps are
@@ -43,20 +44,23 @@ for lat_run=27:70%1:size(obs,1) %latitudes only between -38 and +48
                 [~,lon_run_model] = min(abs(longitude(long_run)-long_coord));
                               
                 D_tempo = squeeze(D_glob(lon_run_model,lat_run_model,:,:)); % [gC / m3] Detritus concentration at the considered location
+                Carc_tempo = squeeze(Dead_z(lon_run_model,lat_run_model,:,:)); % [gC / m3] Carcasses concentration at the considered location
     
                 add_on_D =  repmat(D_tempo(end,:),size(add_on,2),1).*exp(-repmat(P.alpha(end,:)./P.SR,size(add_on,2),1).*repmat(add_on'-P.zi(end),1,7)); % to add more depths if the sediment trap is deeper than our vertical resolution
+                add_on_carc =  repmat(Carc_tempo(end,:),size(add_on,2),1).*exp(-repmat(P.alpha(end,2:7)./P.scarc,size(add_on,2),1).*repmat(add_on'-P.zi(end),1,6)); % to add more depths if the sediment trap is deeper than our vertical resolution
     
 %                 DegPOC = P.alpha.*D_tempo; % [gC m^-3 / day]
 %                 bottom = D_tempo(end,:).*P.SR; % [gC m^-2 day^-1] Faecal pellets going below ZMAX, they wont be remineralized so we count them as export
 %                 DegPOC_depth = bottom + cumsum(DegPOC,1,'reverse')*P.dZ; % [gC m^-2 day^-1] Degradation of faecal pellets below each depth - i.e. the export flux                
                 
-                flux = [D_tempo;add_on_D].*P.SR; % [gC / m2 / day] Modeled flux at the querry location and at each depth
-    
-                f = 0;
-                for j=1:7
-                    ftemp = interp1(Zdeep, flux(:,j)', zt(z_run)); % [gC /m^2 /day]
-                    f = f + ftemp;
-                end
+                fluxdetr = [D_tempo;add_on_D].*P.SR; % [gC / m2 / day] Modeled flux at the querry location and at each depth
+                fluxcarc = [Carc_tempo;add_on_carc].*P.scarc; % [gC / m2 / day] Modeled flux of carcasses at the querry location and at each depth
+                  
+%                 fluxcarc = 0;
+                flux = sum(fluxdetr,2) + sum(fluxcarc,2);
+
+                      f = interp1(Zdeep, flux', zt(z_run)); % [gC /m^2 /day]
+
                 POC_computed = [POC_computed; f];
             end
         end   
@@ -147,6 +151,3 @@ colorbar
 caxis([-20 20])
 title('Difference between computed and observed particle flux [mgC / m^2 / day]')
 colormap(ax3,cmocean('balance'))
-
-
-
