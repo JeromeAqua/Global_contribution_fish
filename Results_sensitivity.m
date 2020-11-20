@@ -14,7 +14,7 @@ glob_OL = [SDAC_tot SDAP_tot SDAM_tot SDAF_tot SDAA_tot SDAJ_tot];
 
 glob_carcasse = [DeadC_tot DeadP_tot DeadM_tot DeadF_tot DeadA_tot DeadJ_tot];
 
-TABLE = zeros(7,12); % Table of results RESPI - POC - OL (and creation / sequestration / time scale as "subsections")
+
 
 load Bottomalpha.mat %another one below
 longitude = 0:2:358; %[0:2:178, -180:2:-2]; %What we will use for our runs
@@ -27,9 +27,11 @@ load Mask_geo.mat
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%  CHOICES TO MAKE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 GEO = 'tot'; % choice is 'tot' = all globe, 'ST' subtropical gyres, 'T' tropics and upwelling zones, 'NA' North Atlantic, 'SO' Southern Ocean, 'NP North Pacific'
-CONCERNED = {2,3,4,5,6,7,2:7}; % what functional groups we want
+CONCERNED = {2,3,4,5,6,7}; % what functional groups we want
 PATHWAY = {'respiration','POC','OL','carcasse'}; %pathway - poc or respiration POC or respiration or other losses
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+TABLE = zeros(7,12); % Table of results RESPI - POC - OL (and creation / sequestration / time scale as "subsections")
 
 if strcmp(GEO,'tot')
     Mask_geo = 1;
@@ -119,10 +121,10 @@ for C = 1:size(CONCERNED,2)
         q =  sum(Deg_carcasse(:,:,:,concerned-1),4,'omitnan'); 
         Deadmean = Dead_z(:,:,end,concerned-1); % [gC / m3]
         
-        factor_z = exp(-alphaend./reshape(P.SR(concerned)./squeeze(add_on(1,1,:)-P.ZMAX),1,1,size(add_on,3),size(P.SR(concerned),2))); % [-]
+        factor_z = exp(-alphaend./reshape(P.scarc(concerned-1)./squeeze(add_on(1,1,:)-P.ZMAX),1,1,size(add_on,3),size(P.scarc(concerned-1),2))); % [-]
         D_to_use = Deadmean.*alphaend.*factor_z;%reshape(factor_z,1,1,size(add_on,3),size(P.SR(concerned),2)); % [gC m^-3 day^-1]
  
-          q = cat(3,q, sum(D_to_use(:,:,1:end-1,:),4),sum(Deadmean.*factor_z(:,:,end,:).*(alphaend+  reshape(P.SR(concerned)./squeeze(add_on(1,1,2)-add_on(1)),1,1,1,size(P.SR(concerned),2))     ),4,'omitnan'));
+        q = cat(3,q, sum(D_to_use(:,:,1:end-1,:),4),sum(Deadmean.*factor_z(:,:,end,:).*(alphaend +  reshape(P.scarc(concerned-1)./squeeze(add_on(1,1,2)-add_on(1)),1,1,1,size(P.scarc(concerned-1),2))     ),4,'omitnan'));
         
          q =  permute(q,[2 1 3]);
          q = Mask_geo.*q;
@@ -267,6 +269,7 @@ TABLE(C,3*pp-1) = totCseq;
     end
 end
 
+TABLE(7,:) = sum(TABLE(1:6,:));
 
 TABLE(:,3) = TABLE(:,2)./TABLE(:,1);
 TABLE(:,6) = TABLE(:,5)./TABLE(:,4);
@@ -281,62 +284,62 @@ disp(X)
 
 disp(TABLE)
 
-DSL_depth = zeros(size(lat_coord,2),size(long_coord,2));
-
-for i=1:size(lat_coord,2)
-    for j=1:size(long_coord,2)
-        
-        a = squeeze(Glob_Mday(j,i,:));
-        
-        [~,zm] = max(a);
-        
-        DSL_depth(i,j) = P.zi(zm);
-    end
-end
-
-DSL_depth(DSL_depth==10) = NaN;
-
-idxlon = find(long_coord==20);
-long_plot = long_coord([idxlon:end,1:idxlon-1]);
-DSL_plot = [DSL_depth(:,idxlon:end), DSL_depth(:,1:idxlon-1)];
-
-figure
- subplot(211)
-ax = axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
-ax.XTick = [-120 -60 0 60 120 180];
-ax.YTick = [-40 -20 0 20 40];
-% objects = [handlem('grid'); handlem('mlabel'); handlem('plabel')];
-% set(objects,'Clipping','on');
-geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
-box off
-axis off
-load coast
-geoshow(lat, long,'Color','k')
-surfm(lat_coord, long_plot, DSL_plot,'AlphaData',~isnan(DSL_plot));%,'EdgeColor','none')
-hold on
-A = xlsread('C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\Klevjer2016.xls');
- LongKlevjer = A(:,5);
-LatKlevjer = A(:,6);
-WMDKlevjer = A(:,11);
-scatterm(LatKlevjer, LongKlevjer, 30, WMDKlevjer,'filled')
-hold on 
-% scatterm(LatKlevjer, LongKlevjer, 30, 'k')
-colormap('jet')
-w = colorbar;
-w.Location = 'southoutside';
-caxis([200 800])
-title('Computed maximum DSL')
-
-
-subplot(212)
-axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
-geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
-box off
-axis off
-load coast
-geoshow(lat, long,'Color','k')
-surfm(lat_coord, long_plot, 10^3*EXPORT_POC_euphoplot,'AlphaData',~isnan(EXPORT_POC_euphoplot),'EdgeColor','none')
-w = colorbar;
-w.Location = 'southoutside';
-caxis([0 120])
-title('Sinking flux of POC below the euphotic zone [mgC / m^2/day]')
+% DSL_depth = zeros(size(lat_coord,2),size(long_coord,2));
+% 
+% for i=1:size(lat_coord,2)
+%     for j=1:size(long_coord,2)
+%         
+%         a = squeeze(Glob_Mday(j,i,:));
+%         
+%         [~,zm] = max(a);
+%         
+%         DSL_depth(i,j) = P.zi(zm);
+%     end
+% end
+% 
+% DSL_depth(DSL_depth==10) = NaN;
+% 
+% idxlon = find(long_coord==20);
+% long_plot = long_coord([idxlon:end,1:idxlon-1]);
+% DSL_plot = [DSL_depth(:,idxlon:end), DSL_depth(:,1:idxlon-1)];
+% 
+% figure
+%  subplot(211)
+% ax = axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+% ax.XTick = [-120 -60 0 60 120 180];
+% ax.YTick = [-40 -20 0 20 40];
+% % objects = [handlem('grid'); handlem('mlabel'); handlem('plabel')];
+% % set(objects,'Clipping','on');
+% geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+% box off
+% axis off
+% load coast
+% geoshow(lat, long,'Color','k')
+% surfm(lat_coord, long_plot, DSL_plot,'AlphaData',~isnan(DSL_plot));%,'EdgeColor','none')
+% hold on
+% A = xlsread('C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\Klevjer2016.xls');
+%  LongKlevjer = A(:,5);
+% LatKlevjer = A(:,6);
+% WMDKlevjer = A(:,11);
+% scatterm(LatKlevjer, LongKlevjer, 30, WMDKlevjer,'filled')
+% hold on 
+% % scatterm(LatKlevjer, LongKlevjer, 30, 'k')
+% colormap('jet')
+% w = colorbar;
+% w.Location = 'southoutside';
+% caxis([200 800])
+% title('Computed maximum DSL')
+% 
+% 
+% subplot(212)
+% axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+% geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+% box off
+% axis off
+% load coast
+% geoshow(lat, long,'Color','k')
+% surfm(lat_coord, long_plot, 10^3*EXPORT_POC_euphoplot,'AlphaData',~isnan(EXPORT_POC_euphoplot),'EdgeColor','none')
+% w = colorbar;
+% w.Location = 'southoutside';
+% caxis([0 120])
+% title('Sinking flux of POC below the euphotic zone [mgC / m^2/day]')
