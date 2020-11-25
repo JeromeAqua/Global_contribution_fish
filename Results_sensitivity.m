@@ -31,7 +31,7 @@ CONCERNED = {2,3,4,5,6,7}; % what functional groups we want
 PATHWAY = {'respiration','POC','OL','carcasse'}; %pathway - poc or respiration POC or respiration or other losses
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-TABLE = zeros(7,12); % Table of results RESPI - POC - OL (and creation / sequestration / time scale as "subsections")
+TABLE = zeros(7,12); % Table of results RESPI - POC - OL - carcasse (and creation / sequestration / time scale as "subsections")
 
 if strcmp(GEO,'tot')
     Mask_geo = 1;

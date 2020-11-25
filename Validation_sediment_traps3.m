@@ -4,7 +4,7 @@ load C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\data_jerome2.mat
 obs = FPOC_obs; obs(isnan(obs)) = 0;
 n_obs = obs./obs; n_obs(isnan(n_obs)) = 0; n_obs = sum(sum(sum(n_obs)));
 
-carc_considered= 1:2;
+carc_considered= 1;
 
 longitude = [0:2:178,-180:2:-2];
 

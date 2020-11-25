@@ -12,6 +12,8 @@ longitude2 = mod(longitude,360);
 long_coord2 = mod(long_coord,360); %same axis but from 0 to 360
 [X,Y] = meshgrid(latitude,longitude2);
 
+SOURCE = cat(4,Dead_C, Dead_P, Dead_M, Dead_F, Dead_A, Dead_J); % [gC / m3 / day] Carcasse creation rate
+
 carc_considered = 6;
 tic
 for i=1:size(lat_coord,2) %10
@@ -25,9 +27,9 @@ for i=1:size(lat_coord,2) %10
              %%%%%%%%%%%%%%%%%%%%%%%%% SINKING FLUX %%%%%%%%%%%%%%%%%%%%%%%%%%%
              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
              s = P.SR.*squeeze(D_glob(j,i,:,:)); % [gC / m^2 / day] sinking flux of fecal pellets
-             s2 = P.scarc(carc_considered).*squeeze(Dead_z(j,i,:,carc_considered)); % [gC / m2 / day] % sinking flux of carcasses
-             
-             sinking_flux = interp1(P.zi, sum(s(:,2:end),2), zeupho);
+             s2 = P.scarc(carc_considered).*squeeze(Dead_z(j,i,:,carc_considered)); % [gC / m2 / day] % sinking flux of carcasses P.dZ*squeeze(SOURCE(j,i,:,carc_considered)-Deg_carcasse(j,i,:,carc_considered)); %
+                       
+             sinking_flux =0; %interp1(P.zi, sum(s(:,2:end),2), zeupho);
              sinking_flux2 = interp1(P.zi, sum(s2,2), zeupho);
              EXPORT_POC_eupho(i,j) = sinking_flux+sinking_flux2;
            
