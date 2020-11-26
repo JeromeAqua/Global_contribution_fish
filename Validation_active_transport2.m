@@ -2,7 +2,10 @@
 Resp_eupho = zeros(size(lat_coord,2),size(long_coord,2));
 Resp_tot = Resp_eupho;
 Fecal_eupho = zeros(size(lat_coord,2),size(long_coord,2));
-Fecal_tot = Fecal_eupho;
+Fecal_tot = Fecal_eupho; OL_tot = Fecal_tot; OL_eupho = OL_tot;
+Carc_tot = OL_tot; Carc_eupho = Carc_tot;
+
+Source_carc = cat(4, Dead_C, Dead_P, Dead_M, Dead_F, Dead_A, Dead_J); % [gC / m3 / day] How much carcasse is created per day
 
 % load Latitudinal_irradiance.mat
 load C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\global_env_data.mat
@@ -35,7 +38,7 @@ for i=1:size(lat_coord,2) %10
 
              %%%%%%%%%%%%%%%%%%%%%%%%% RESPIRATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-             R = squeeze(DIC_glob(j,i,:,:));
+             R = squeeze(DIC_glob(j,i,:,:)); %Here last number to choose if we want to compute how much was created by each group
              
              Resp_eupho(i,j) = sum(sum(R(P.zi'>zeupho,:))); % [gC m^-2 day^-1]
                           
@@ -43,73 +46,108 @@ for i=1:size(lat_coord,2) %10
              
              %%%%%%%%%%%%%%%%%%%%%%%% FECAL PELLETS %%%%%%%%%%%%%%%%%%%%%%%%%%%
            
-             S = squeeze(Glob_source(j,i,:,:));
+             S = squeeze(Glob_source(j,i,:,:)); %Here last number to choose if we want to compute how much was created by each group
              DDD = squeeze(Glob_Dcons(j,i,:,:));
              
-             int = sum(S-DDD,2); % [gC / m^3 / day] total source term at each depth
+             int = sum(S-DDD,2); % [gC / m^3 / day] total source term at each depth -DDD
              Fecal_eupho(i,j) = sum(int(P.zi'>zeupho)*P.dZ); % [gC / m^2 / day]
              Fecal_tot(i,j) = sum(int*P.dZ); % [gC / m2 / day]
+             
+             %%%%%%%%%%%%%%%%%%%%%%%  CARCASSES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+             S2 = squeeze(Source_carc(j,i,:,:)); %Here last number to choose if we want to compute how much was created by each group
+%              DDD = squeeze(Glob_Dcons(j,i,:,:));
+             
+             int = sum(S2,2); % [gC / m^3 / day] total source term at each depth -DDD
+             Carc_eupho(i,j) = sum(int(P.zi'>zeupho)*P.dZ); % [gC / m^2 / day]
+             Carc_tot(i,j) = sum(int*P.dZ); % [gC / m2 / day]
+             
+             
+             %%%%%%%%%%%%%%%%%%%%%%%  OTHER LOSSES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+             R2 = squeeze(OL(j,i,:,:)); %Here last number to choose if we want to compute how much was created by each group
+             
+             OL_eupho(i,j) = sum(sum(R2(P.zi'>zeupho,:))); % [gC m^-2 day^-1]
+                          
+             OL_tot(i,j) = sum(sum(R2)); % [gC m^-2 day^-1]
              
         end       
     end
 end
 toc
+Fecal_tot = sum(sum( Area.*Fecal_tot*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+Byfecal = sum(sum( Area.*Fecal_eupho*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+
+Resp_tot = sum(sum( Area.*Resp_tot*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr
+Byrespi = sum(sum( Area.*Resp_eupho*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+
+Carc_tot = sum(sum( Area.*Carc_tot*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr
+Bycarc = sum(sum( Area.*Carc_eupho*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+
+OL_tot = sum(sum( Area.*OL_tot*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr
+ByOL = sum(sum( Area.*OL_eupho*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 
 %%
 Resp_eupho(Resp_eupho==0) = NaN;
 Fecal_eupho(Fecal_eupho==0) = NaN;
 Fecal_tot(Fecal_tot==0) = NaN;
 
-figure
-% subplot(221)
-% axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
-% geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
-% box off
-% axis off
-% load coast
-% geoshow(lat, long,'Color','k')
-% surfm(latitude, longitude, ZEUPHO,'AlphaData',~isnan(ZEUPHO),'EdgeColor','none')
-% colorbar
-% % caxis([200 700])
-% title('Limit of the euphotic zone [m]')
-
-
-% subplot(222)
-% axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
-% geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
-% box off
-% axis off
-% load coast
-% geoshow(lat, long,'Color','k')
-% surfm(lat_coord, long_coord, 10^3*EXPORT_POC_eupho,'AlphaData',~isnan(EXPORT_POC_eupho),'EdgeColor','none')
-% colorbar
-% caxis([0 200])
-% title('Sinking flux of POC below the euphotic zone [mgC / m^2/day]')
-
-
-subplot(211)
-axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
-geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
-box off
-axis off
-load coast
-geoshow(lat, long,'Color','k')
-surfm(lat_coord, long_coord, 10^3*Resp_eupho,'AlphaData',~isnan(Resp_eupho),'EdgeColor','none')
-colorbar
-% caxis([0 200])
-title('Respiration of migrants below the euphotic zone [mgC / m^2/day]')
-
-subplot(212)
-axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
-geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
-box off
-axis off
-load coast
-geoshow(lat, long,'Color','k')
-surfm(lat_coord, long_coord, 10^3*Fecal_eupho,'AlphaData',~isnan(Fecal_eupho),'EdgeColor','none')
-colorbar
-caxis([0 55])
-title('Excretion below the euphotic zone due to excretion below the euphotic zone [mgC / m^2/day]')
+% % % % figure
+% % % % % subplot(221)
+% % % % % axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+% % % % % geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+% % % % % box off
+% % % % % axis off
+% % % % % load coast
+% % % % % geoshow(lat, long,'Color','k')
+% % % % % surfm(latitude, longitude, ZEUPHO,'AlphaData',~isnan(ZEUPHO),'EdgeColor','none')
+% % % % % colorbar
+% % % % % % caxis([200 700])
+% % % % % title('Limit of the euphotic zone [m]')
+% % % % 
+% % % % 
+% % % % % subplot(222)
+% % % % % axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+% % % % % geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+% % % % % box off
+% % % % % axis off
+% % % % % load coast
+% % % % % geoshow(lat, long,'Color','k')
+% % % % % surfm(lat_coord, long_coord, 10^3*EXPORT_POC_eupho,'AlphaData',~isnan(EXPORT_POC_eupho),'EdgeColor','none')
+% % % % % colorbar
+% % % % % caxis([0 200])
+% % % % % title('Sinking flux of POC below the euphotic zone [mgC / m^2/day]')
+% % % % 
+% % % % idxlon = find(long_coord==20);
+% % % % long_plot = long_coord([idxlon:end,1:idxlon-1]);
+% % % % Resp_plot = [Resp_eupho(:,idxlon:end), Resp_eupho(:,1:idxlon-1)];
+% % % % Fecal_plot = [Fecal_eupho(:,idxlon:end), Fecal_eupho(:,1:idxlon-1)];
+% % % % fitMplot = [Glob_FitM(idxlon:end,:); Glob_FitM(1:idxlon-1,:)]';
+% % % % %Glob_Fitm = Glob_FitM; Glob_Fitm(:,1) = 1;
+% % % % Resp_plot(:,340) = Resp_plot(:,339);
+% % % % Fecal_plot(:,340) = Fecal_plot(:,339);
+% % % % 
+% % % % subplot(211)
+% % % % axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+% % % % geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+% % % % box off
+% % % % axis off
+% % % % load coast
+% % % % geoshow(lat, long,'Color','k')
+% % % % surfm(lat_coord, long_plot, 10^3*Resp_plot,'AlphaData',~isnan(Resp_plot),'EdgeColor','none')
+% % % % colorbar
+% % % % % caxis([0 200])
+% % % % title('Respiration of migrants below the euphotic zone [mgC / m^2/day]')
+% % % % 
+% % % % subplot(212)
+% % % % axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+% % % % geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+% % % % box off
+% % % % axis off
+% % % % load coast
+% % % % geoshow(lat, long,'Color','k')
+% % % % surfm(lat_coord, long_plot, 10^3*Fecal_plot,'AlphaData',~isnan(fitMplot),'EdgeColor','none')
+% % % % colorbar
+% % % % caxis([0 55])
+% % % % title('Excretion below the euphotic zone due to feeding above the euphotic zone [mgC / m^2/day]')
 
 
 % %% Total carbon exported actively below euphotic zone
@@ -140,8 +178,7 @@ title('Excretion below the euphotic zone due to excretion below the euphotic zon
 %             
 % FEC(squeeze(Glob_A(:,:,1,1))'==0) = NaN;
 % 
-Byfecal = sum(sum( Area.*Fecal_eupho*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
-Byrespi = sum(sum( Area.*Resp_eupho*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+
 
 % %%%%% TO CHECK SOMETHING
 % i = 23; j = 16;

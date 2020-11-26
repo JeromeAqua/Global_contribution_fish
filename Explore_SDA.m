@@ -100,7 +100,7 @@ PredaA = zeros(size(BcgA)); PredaA(isnan(RespiA)) = NaN;
 
 %% Plot the exploration
  
-Choice = 'A';
+Choice = 'F';
 
 Eat = eval(strcat('Eat',Choice));
 Respi = eval(strcat('Respi',Choice));
@@ -124,7 +124,7 @@ load coast
 geoshow(lat, long,'Color','k')
 surfm(lat_coord, long_plot, 10^3*Eat','AlphaData',~isnan(Eat'),'EdgeColor','none')
 colorbar
-caxis([0 4])
+caxis([0 .1])
 title('Ingestion [mgC / m^2/day]')
 
 subplot(222)
@@ -136,7 +136,7 @@ load coast
 geoshow(lat, long,'Color','k')
 surfm(lat_coord, long_plot, 10^3*Respi','AlphaData',~isnan(Respi'),'EdgeColor','none')
 colorbar
-caxis([0 4])
+caxis([0 0.1])
 title('Respiration [mgC / m^2/day]')
 
 subplot(223)
@@ -148,7 +148,7 @@ load coast
 geoshow(lat, long,'Color','k')
 surfm(lat_coord, long_plot, 10^3*Preda','AlphaData',~isnan(Preda'),'EdgeColor','none')
 colorbar
- caxis([0 4])
+caxis([0 .1])
 title('Predation [mgC / m^2/day]')
 
 subplot(224)
@@ -160,5 +160,5 @@ load coast
 geoshow(lat, long,'Color','k')
 surfm(lat_coord, long_plot, 10^3*Bcg','AlphaData',~isnan(Bcg'),'EdgeColor','none')
 colorbar
- caxis([0 4])
+ caxis([0 .1])
 title('Background mort [mgC / m^2/day]')

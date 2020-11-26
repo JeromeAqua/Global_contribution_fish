@@ -11,10 +11,10 @@ load Latitudinal_irradiance.mat
 
 long_coord2 = mod(long_coord,360);
 
-Dead_C = nan(size(Glob_FitC));
+Dead_C = nan(size(Glob_FitC)); Dead_C2 = Dead_C; Test = Dead_C;
 Dead_P = Dead_C;
 Dead_M = Dead_C; Dead_M1 = Dead_M; Dead_M2= Dead_M;
-Dead_F = Dead_C;
+Dead_F = Dead_C; Dead_P1 = Dead_M; Dead_P2= Dead_M;
 Dead_A = Dead_C;
 Dead_J = Dead_C;
 
@@ -44,12 +44,20 @@ for i=1:size(lat_coord,2) %10
                 
             
             Dead_C(j,i) = sum(P.dZ*P.n*P.C*(P.sigma*sum(P.minimortC.*squeeze(Glob_C(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortC.*squeeze(Glob_C(j,i,:,:)),1)')); % [gC / m2 / day] How much carcasses are created per day
-                     
+              
+            
+            Dead_C2(j,i) = P.sigma*sum(P.minimortC.*squeeze(Glob_Cday(j,i,:))*P.dZ)+(1-P.sigma)*sum(P.minimortC.*squeeze(Glob_Cnight(j,i,:))*P.dZ); % [gC / m2 / day] How much carcasses are created per day
+           
+                                   
             Dead_P(j,i) = sum(P.dZ*P.n*P.P*(P.sigma*sum((P.minimortP+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortP+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),1)'));
+            
+            Dead_P1(j,i) = sum(P.dZ*P.n*P.P*(P.sigma*sum((0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),2)+(1-P.sigma)*sum((0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),1)'));
+            
+            Dead_P2(j,i) = sum(P.dZ*P.n*P.P*(P.sigma*sum((P.minimortP).*squeeze(Glob_P(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortP).*squeeze(Glob_P(j,i,:,:)),1)'));
               
             Dead_M(j,i) = sum(P.dZ*P.n*P.M*(P.sigma*sum((P.minimortM+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortM+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),1)'));
 
-            Dead_M1(j,i) = sum(P.dZ*P.n*P.M*(P.sigma*sum((0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),2)+(1-P.sigma)*sum((0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),1)'));
+            Dead_M1(j,i) = sum(P.dZ*P.n*P.M*(P.sigma*sum(min(.01,(0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN)))).*squeeze(Glob_M(j,i,:,:)),2)+(1-P.sigma)*sum(min(.01,(0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN)))).*squeeze(Glob_M(j,i,:,:)),1)'));
 
             Dead_M2(j,i) = sum(P.dZ*P.n*P.M*(P.sigma*sum((P.minimortM).*squeeze(Glob_M(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortM).*squeeze(Glob_M(j,i,:,:)),1)'));
 
@@ -70,6 +78,7 @@ DeadC_plot = [Dead_C(idxlon:end,:); Dead_C(1:idxlon-1,:)];
 DeadP_plot = [Dead_P(idxlon:end,:); Dead_P(1:idxlon-1,:)];
 DeadM_plot = [Dead_M(idxlon:end,:); Dead_M(1:idxlon-1,:)];
 DeadM1_plot = [Dead_M1(idxlon:end,:); Dead_M1(1:idxlon-1,:)]; DeadM2_plot = [Dead_M2(idxlon:end,:); Dead_M2(1:idxlon-1,:)];
+DeadP1_plot = [Dead_P1(idxlon:end,:); Dead_P1(1:idxlon-1,:)]; DeadP2_plot = [Dead_P2(idxlon:end,:); Dead_P2(1:idxlon-1,:)];
 DeadF_plot = [Dead_F(idxlon:end,:); Dead_F(1:idxlon-1,:)];
 DeadA_plot = [Dead_A(idxlon:end,:); Dead_A(1:idxlon-1,:)];
 DeadJ_plot = [Dead_J(idxlon:end,:); Dead_J(1:idxlon-1,:)];
@@ -173,10 +182,36 @@ colorbar
 % caxis([0 55])
 title('light independent Background mortality for mesopelagic [mgC / m^2/day]')
 
+figure
+subplot(121)
+axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+box off
+axis off
+load coast
+geoshow(lat, long,'Color','k')
+surfm(lat_coord, long_plot, 10^3*DeadP1_plot','AlphaData',~isnan(DeadP1_plot'),'EdgeColor','none')
+colorbar
+% caxis([0 55])
+title('light dependent Background mortality for P [mgC / m^2/day]')
+
+subplot(122)
+axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+box off
+axis off
+load coast
+geoshow(lat, long,'Color','k')
+surfm(lat_coord, long_plot, 10^3*DeadP2_plot','AlphaData',~isnan(DeadP2_plot'),'EdgeColor','none')
+colorbar
+% caxis([0 55])
+title('light independent Background mortality for P [mgC / m^2/day]')
+
 
 %% Global numbers
 
 DeadC_tot = sum(sum( Area.*Dead_C'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+DeadC_tot2 = sum(sum( Area.*Dead_C2'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 DeadP_tot = sum(sum( Area.*Dead_P'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 DeadM_tot = sum(sum( Area.*Dead_M'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 DeadF_tot = sum(sum( Area.*Dead_F'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]

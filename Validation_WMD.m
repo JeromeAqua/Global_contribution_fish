@@ -7,14 +7,14 @@ for i=1:size(lat_coord,2)
         
         a = squeeze(Glob_Mday(j,i,:));
 %         b = squeeze(Glob_Cday(j,i,:));
-        c = squeeze(Glob_Pday(j,i,:));
-% %         d = squeeze(Glob_Fday(j,i,:));
-% %         e = squeeze(Glob_Aday(j,i,:));
+%         c = squeeze(Glob_Pday(j,i,:));
+         d = squeeze(Glob_Fday(j,i,:));
+         e = squeeze(Glob_Aday(j,i,:));
 %         f = squeeze(Glob_Jday(j,i,:));
 %         a(1:5) = 0; % To remove possible surface maxima
         
               
-        WMD_depth(i,j) = sum((a+c).*P.zi')/sum((a+c));
+        WMD_depth(i,j) = sum((a+d+e).*P.zi')/sum((a+d+e));
     end
 end
 
@@ -49,7 +49,7 @@ colormap('jet')
 w = colorbar;
 w.Location = 'southoutside';
 caxis([200 800])
-title('Computed maximum DSL')
+title('Computed WMD [m]')
 
 % subplot(212)
 % addpath C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data
@@ -84,7 +84,7 @@ plot(WMDKlevjer, DSL_predicted,'.k')
 hold on
 plot([300 b], [300 b],'k')
 xlabel('Observed WMD [m]')
-ylabel('Predicted DSL depth [m]')
+ylabel('Predicted WMD [m]')
 xlim([300 b])
 ylim([300 b])
 
