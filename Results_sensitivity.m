@@ -10,9 +10,9 @@ OL(:,:,:,3) = SDA_Mz;
 OL(:,:,:,4) = SDA_Fz;
 OL(:,:,:,5) = SDA_Az;
 OL(:,:,:,6) = SDA_Jz;
-glob_OL = [SDAC_tot SDAP_tot SDAM_tot SDAF_tot SDAA_tot SDAJ_tot];
+glob_OL = cat(3,sum(SDA_Cz*P.dZ,3)', sum(SDA_Pz*P.dZ,3)', sum(SDA_Mz*P.dZ,3)',sum(SDA_Fz*P.dZ,3)',sum(SDA_Az*P.dZ,3)',sum(SDA_Jz*P.dZ,3)');
 
-glob_carcasse = [DeadC_tot DeadP_tot DeadM_tot DeadF_tot DeadA_tot DeadJ_tot];
+glob_carcasse = cat(3,sum(Dead_C*P.dZ,3)', sum(Dead_P*P.dZ,3)', sum(Dead_M*P.dZ,3)',sum(Dead_F*P.dZ,3)',sum(Dead_A*P.dZ,3)',sum(Dead_J*P.dZ,3)');
 
 
 
@@ -21,12 +21,12 @@ longitude = 0:2:358; %[0:2:178, -180:2:-2]; %What we will use for our runs
 latitude = -90:2:90;
 long_coord2 = mod(long_coord,360);
 long_shifted = [long_coord2(long_coord>=0),long_coord2(long_coord<0)];
-load Mask_geo.mat
+load Mask_geo2.mat
 
 %  Carbon_export;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%  CHOICES TO MAKE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-GEO = 'tot'; % choice is 'tot' = all globe, 'ST' subtropical gyres, 'T' tropics and upwelling zones, 'NA' North Atlantic, 'SO' Southern Ocean, 'NP North Pacific'
+GEO = 'SO'; % choice is 'tot' = all globe, 'ST' subtropical gyres, 'T' tropics and upwelling zones, 'NA' North Atlantic, 'SO' Southern Ocean, 'NP North Pacific'
 CONCERNED = {2,3,4,5,6,7}; % what functional groups we want
 PATHWAY = {'respiration','POC','OL','carcasse'}; %pathway - poc or respiration POC or respiration or other losses
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -172,8 +172,12 @@ Area = DX.*DY; % m^2
 
 glob_prod_fecal = sum(sum( Area.*TOT_fecal.*Mask_geo*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 glob_prod_respi = sum(sum( Area.*TOT_respi.*Mask_geo*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
-glob_prod_OL = sum(glob_OL(concerned-1)); % [PgC / yr]
-glob_prod_carcasse = sum(glob_carcasse(concerned-1)); % [PgC / yr]
+glob_prod_OL = sum(sum( Area.*glob_OL(:,:,concerned-1).*Mask_geo*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
+glob_prod_carcasse =  sum(sum( Area.*glob_carcasse(:,:,concerned-1).*Mask_geo*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr] sum(glob_carcasse(concerned-1)); % [PgC / yr]
+
+
+
+
 
 q = cat(2,q(:,long_coord>=0,:),q(:,long_coord<0,:)); % Because we need to have increasing longitudes for the interpolation
 

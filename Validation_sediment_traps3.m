@@ -4,7 +4,7 @@ load C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\data_jerome2.mat
 obs = FPOC_obs; obs(isnan(obs)) = 0;
 n_obs = obs./obs; n_obs(isnan(n_obs)) = 0; n_obs = sum(sum(sum(n_obs)));
 
-carc_considered= 1;
+carc_considered= 1:6;
 
 longitude = [0:2:178,-180:2:-2];
 
@@ -20,9 +20,9 @@ lon_traps = [];
 K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant  - just for alpha's calculation
 qrem = 1.1;%1.5; % [-] Q10 for remineralization rate of POC
 
-for lat_run=27:70%1:size(obs,1) %latitudes only between -38 and +48
+for lat_run=25:70%1:size(obs,1) %latitudes only between -38 and +48
     for long_run = 1:size(obs,2)
-        for z_run = 9:20 %1:size(obs,3) - for now only between 500 and 3300 m
+        for z_run =5:24%1:size(obs,3) -  9:20  for between 500 and 3300 m
             if obs(lat_run,long_run,z_run) > 0     
         
                 
@@ -104,7 +104,7 @@ MM = max([log10(POC_observed); log10(POC_computed)]);
 plot([mm MM], [mm MM], 'k')
 xlabel('Observed POC flux [mgC/m^2/day]')
 ylabel('Modeled POC flux [mgC / m^2 /day]')
-colormap('jet')
+colormap(cm_viridis)
 % colorbar
 % caxis([500 3300])
 st_dev = sqrt(1/size(POC_observed,1)*sum((POC_observed-POC_computed).^2))
