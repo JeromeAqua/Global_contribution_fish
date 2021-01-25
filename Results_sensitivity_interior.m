@@ -2,8 +2,40 @@ Validation_otherlosses_depth; % to have the other losses by depth for the other 
 Validation_carcasses_depth; % to have the creation terms for the degradation from carcasses
 Validation_Zeupho;
 Validation_active_transport2;
+Flux_below_carc;
+
+zeuphoresol = zeros(size(lat_coord,2),size(long_coord2,2));
+for i=1:size(lat_coord,2) %10
+    for j=1:size(long_coord2,2) %30
+        if squeeze(Glob_A(j,i,1,1)) ~=0
+            zeuphoresol(i,j) = interp2(X,Y,ZEUPHO',lat_coord(i),long_coord2(j));
+        end
+    end
+end
 
 alphafact = 1;
+
+
+
+for i=1:size(lat_coord,2) %10
+    for j=1:size(long_coord2,2) %30
+        if squeeze(Glob_A(j,i,1,1)) ~=0
+            SDA_Cz(j,i,P.zi<zeuphoresol(i,j)) = 0;
+            SDA_Pz(j,i,P.zi<zeuphoresol(i,j)) = 0;
+            SDA_Mz(j,i,P.zi<zeuphoresol(i,j)) = 0;
+            SDA_Fz(j,i,P.zi<zeuphoresol(i,j)) = 0;
+            SDA_Az(j,i,P.zi<zeuphoresol(i,j)) = 0;
+            SDA_Jz(j,i,P.zi<zeuphoresol(i,j)) = 0;
+            
+            Dead_C(j,i,P.zi<zeuphoresol(i,j)) = 0;
+            Dead_P(j,i,P.zi<zeuphoresol(i,j)) = 0;
+            Dead_M(j,i,P.zi<zeuphoresol(i,j)) = 0;
+            Dead_F(j,i,P.zi<zeuphoresol(i,j)) = 0;
+            Dead_A(j,i,P.zi<zeuphoresol(i,j)) = 0;
+            Dead_J(j,i,P.zi<zeuphoresol(i,j)) = 0;
+        end
+    end
+end
 
 OL = zeros(size(long_coord,2),size(lat_coord,2),P.n,6);
 OL(:,:,:,1) = SDA_Cz;
@@ -12,12 +44,8 @@ OL(:,:,:,3) = SDA_Mz;
 OL(:,:,:,4) = SDA_Fz;
 OL(:,:,:,5) = SDA_Az;
 OL(:,:,:,6) = SDA_Jz;
-
 glob_OL = cat(3,sum(SDA_Cz*P.dZ,3)', sum(SDA_Pz*P.dZ,3)', sum(SDA_Mz*P.dZ,3)',sum(SDA_Fz*P.dZ,3)',sum(SDA_Az*P.dZ,3)',sum(SDA_Jz*P.dZ,3)');
-
 glob_carcasse = cat(3,sum(Dead_C*P.dZ,3)', sum(Dead_P*P.dZ,3)', sum(Dead_M*P.dZ,3)',sum(Dead_F*P.dZ,3)',sum(Dead_A*P.dZ,3)',sum(Dead_J*P.dZ,3)');
-
-
 
 load Bottomalpha.mat %another one below
 longitude = 0:2:358; %[0:2:178, -180:2:-2]; %What we will use for our runs
@@ -150,6 +178,16 @@ q = double(q);
  
 z = [P.zi'; linspace(P.ZMAX+1,10000,200)'];
 
+for i=1:size(lat_coord,2) %10
+    for j=1:size(long_coord2,2) %30
+        if squeeze(Glob_A(j,i,1,1)) ~=0
+            q(i,j,z<zeuphoresol(i,j)) = 0;
+        end
+    end
+end
+
+            
+
 %just to multiply by the ratio with the actual things produced - correct
 %interpolation underestimation
 TOT_fecal = zeros(size(lat_coord,2),size(long_coord,2));
@@ -159,12 +197,15 @@ TOT_respi = TOT_fecal;
 % % % load Bottomalpha.mat
 for i=1:size(lat_coord,2)
     for j=1:size(long_coord,2)
-        dic = squeeze(DIC_glob(j,i,:,concerned-1)); % [gC / m2 / day]
+        dic = squeeze(DIC_glob(j,i,P.zi>zeuphoresol(i,j),concerned-1)); % [gC / m2 / day]
         TOT_respi(i,j) = sum(sum(dic,'omitnan'),'omitnan');
-        
-        doc = squeeze(DegPOC_glob(j,i,:,concerned)); % [gC / m3 / day]
+        doc = squeeze(DegPOC_glob(j,i,P.zi>zeuphoresol(i,j),concerned)); % [gC / m3 / day]
         TOT_fecala(i,j) = sum(sum(doc*P.dZ,'omitnan'),'omitnan');
-        TOT_fecalb(i,j) =  sum( doc(end,:)./alphaend(j,i).*P.SR(concerned),'omitnan'); % [gC / m2 / day]
+        if size(doc,1)>0
+            TOT_fecalb(i,j) =  sum( doc(end,:)./alphaend(j,i).*P.SR(concerned),'omitnan'); % [gC / m2 / day]
+        else
+            TOT_fecalb(i,j) = 0;
+        end
     end
 end
 TOT_fecal = TOT_fecala + TOT_fecalb;
@@ -180,7 +221,7 @@ Area = DX.*DY; % m^2
 glob_prod_fecal = sum(sum( Area.*TOT_fecal.*Mask_geo*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 glob_prod_respi = sum(sum( Area.*TOT_respi.*Mask_geo*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 glob_prod_OL = sum(sum( Area.*glob_OL(:,:,concerned-1).*Mask_geo*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
-glob_prod_carcasse =  sum(sum( Area.*glob_carcasse(:,:,concerned-1).*Mask_geo*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr] sum(glob_carcasse(concerned-1)); % [PgC / yr]
+glob_prod_carcasse = EZcarc(concerned-1) + sum(sum( Area.*glob_carcasse(:,:,concerned-1).*Mask_geo*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr] sum(glob_carcasse(concerned-1)); % [PgC / yr]
 
 
 
