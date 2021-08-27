@@ -25,7 +25,7 @@ long_plot = long_coord([idxlon:end,1:idxlon-1]);
 DSL_plot = [WMD_depth(:,idxlon:end), WMD_depth(:,1:idxlon-1)];
 
 figure
-% subplot(211)
+subplot(211)
 ax = axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
 ax.XTick = [-120 -60 0 60 120 180];
 ax.YTick = [-40 -20 0 20 40];
@@ -39,13 +39,14 @@ geoshow(lat, long,'Color','k')
 surfm(lat_coord, long_plot, DSL_plot,'AlphaData',~isnan(DSL_plot));%,'EdgeColor','none')
 hold on
 A = xlsread('C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\Klevjer2016.xls');
- LongKlevjer = A(:,5);
+LongKlevjer = A(:,5);
 LatKlevjer = A(:,6);
 WMDKlevjer = A(:,11);
 scatterm(LatKlevjer, LongKlevjer, 30, WMDKlevjer,'filled')
 hold on 
 % scatterm(LatKlevjer, LongKlevjer, 30, 'k')
-colormap('jet')
+cm_viridis=viridis(100);
+colormap(cm_viridis)
 w = colorbar;
 w.Location = 'southoutside';
 caxis([200 800])

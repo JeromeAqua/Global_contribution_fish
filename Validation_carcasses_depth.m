@@ -1,15 +1,21 @@
 %% Compute surplus to estimate the SDA
 % load global216.mat
+fact = 1; %for populations
+alphafact = .65/.75;
+SRfact = 1; %for SR AND scarc
+
+
+
 addpath C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\Colleen_biomass
 addpath C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\mesopelagic_biomass
 
 load mesopelagic_bio.mat % mesopelagic_bio.matmesopelagic_bio.mat
 load global_env_data.mat
 load plankton.mat
-load fishb.mat % fish.mat
+load fishc.mat % fish.mat
 load Latitudinal_irradiance.mat
 
-P.scarc = [300 500 2000 2000 3000 800]; % [m/day] sinking rate of carcasses for C P M F A J
+P.scarc = SRfact*[200 400 1000 1000 2000 500]; %300 500 2000 2000 3000 800]; % [m/day] sinking rate of carcasses for C P M F A J
 %  P.scarc(4) = 10^6;
 long_coord2 = mod(long_coord,360);
 
@@ -37,12 +43,12 @@ for i=1:size(lat_coord,2) %10
                 [~,lat_idx] = min(abs(lat-latitude));
                 [~,lon_idx] = min(abs(lon-longitude));
                 
-            P.C = max(10^-15,INZ(lat_idx,lon_idx))/P.ZMAX; % [gC m^-3] Mean concentration in the water column   
-            P.P = max(10^-15,LAZ(lat_idx,lon_idx))/P.ZMAX;
-            P.F = max(10^-15,FOR(lat_idx,lon_idx))/P.ZMAX;
-            P.M = max(10^-15,MESO(lat_idx,lon_idx))/P.ZMAX; 
-            P.A = max(10^-15,TOP(lat_idx,lon_idx))/P.ZMAX;
-%             P.J = 0.1; %no need to have J as it does not change
+            P.C = fact*max(10^-15,INZ(lat_idx,lon_idx))/P.ZMAX; % [gC m^-3] Mean concentration in the water column   
+            P.P = fact*max(10^-15,LAZ(lat_idx,lon_idx))/P.ZMAX;
+            P.F = fact*max(10^-15,FOR(lat_idx,lon_idx))/P.ZMAX;
+            P.M = fact*max(10^-15,MESO(lat_idx,lon_idx))/P.ZMAX; 
+            P.A = fact*max(10^-15,TOP(lat_idx,lon_idx))/P.ZMAX;
+            P.J = fact*0.1/P.ZMAX; %no need to have J as it does not change
             
             P.klight = KLIGHT(lat_idx,lon_idx);
             P.Lmax = interp1(lat_irradiance,I,lat); % [W/m^2] Mean annual surface irradiance during daytime
@@ -55,14 +61,14 @@ for i=1:size(lat_coord,2) %10
             Tref = mean(P.T);%(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
             Ko2 = 10*0.0224./K(P.T); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
 
-            P.alpha =0.5*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
+            P.alpha =alphafact*0.75*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
             P.alpha = repmat(P.alpha',1,7); % transformation so that it has the same size as D - easier if we want to have specific degradation rates later
                 
             Dead_C(j,i,:) = reshape(P.n*P.C*(P.sigma*sum(P.minimortC.*squeeze(Glob_C(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortC.*squeeze(Glob_C(j,i,:,:)),1)'),1,1,P.n); % [gC / m3 / day] How much carcasses are created per day
                      
-            Dead_P(j,i,:) = reshape(P.n*P.P*(P.sigma*sum((P.minimortP+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortP+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),1)'),1,1,P.n);
+            Dead_P(j,i,:) = reshape(P.n*P.P*(P.sigma*sum((P.minimortP+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortP+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),1)'),1,1,P.n);
               
-            Dead_M(j,i,:) = reshape(P.n*P.M*(P.sigma*sum((P.minimortM+0.01*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortM+0.01*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),1)'),1,1,P.n);
+            Dead_M(j,i,:) = reshape(P.n*P.M*(P.sigma*sum((P.minimortM+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortM+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),1)'),1,1,P.n);
             
             Dead_F(j,i,:) = reshape(P.n*P.F*(P.sigma*sum(P.minimortF.*squeeze(Glob_F(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortF.*squeeze(Glob_F(j,i,:,:)),1)'),1,1,P.n); 
                      
@@ -98,6 +104,12 @@ end
 
 
 %% Global numbers
+[xq,yq] = meshgrid(long_coord,lat_coord);
+DLON = 0*xq+1;
+DLAT = 0*yq+1;
+DX = (2*pi*6371e3/360)*DLON.*cos(deg2rad(yq))*(long_coord(2)-long_coord(1));
+DY = (2*pi*6371e3/360)*DLAT*(lat_coord(2)-lat_coord(1));
+Area = DX.*DY; % m^2
 
 DeadC_tot = sum(sum( Area.*sum(Dead_C*P.dZ,3)'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 DeadP_tot = sum(sum( Area.*sum(Dead_P*P.dZ,3)'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
@@ -106,6 +118,8 @@ DeadF_tot = sum(sum( Area.*sum(Dead_F*P.dZ,3)'*365,'omitnan' ),'omitnan')*10^-15
 DeadA_tot = sum(sum( Area.*sum(Dead_A*P.dZ,3)'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 DeadJ_tot = sum(sum( Area.*sum(Dead_J*P.dZ,3)'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 
+
+% glob_carcasse = [DeadC_tot DeadP_tot DeadM_tot DeadF_tot DeadA_tot DeadJ_tot];
 
 
 

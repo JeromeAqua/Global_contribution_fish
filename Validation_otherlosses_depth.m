@@ -18,6 +18,8 @@ SDA_Fz = SDA_Cz;
 SDA_Az = SDA_Cz;
 SDA_Jz = SDA_Cz;
 
+fact = 1;
+
 
 for i=1:size(lat_coord,2) %10
     for j=1:size(long_coord2,2) %30
@@ -29,13 +31,14 @@ for i=1:size(lat_coord,2) %10
             
                 [~,lat_idx] = min(abs(lat-latitude));
                 [~,lon_idx] = min(abs(lon-longitude));
+               
                 
-            P.C = max(10^-15,INZ(lat_idx,lon_idx))/P.ZMAX; % [gC m^-3] Mean concentration in the water column   
-            P.P = max(10^-15,LAZ(lat_idx,lon_idx))/P.ZMAX;
-            P.F = max(10^-15,FOR(lat_idx,lon_idx))/P.ZMAX;
-            P.M = max(10^-15,MESO(lat_idx,lon_idx))/P.ZMAX; 
-            P.A = max(10^-15,TOP(lat_idx,lon_idx))/P.ZMAX;
-%             P.J = 0.1; %no need to have J as it does not change
+            P.C = fact*max(10^-15,INZ(lat_idx,lon_idx))/P.ZMAX; % [gC m^-3] Mean concentration in the water column   
+            P.P = fact*max(10^-15,LAZ(lat_idx,lon_idx))/P.ZMAX;
+            P.F = fact*max(10^-15,FOR(lat_idx,lon_idx))/P.ZMAX;
+            P.M = fact*max(10^-15,MESO(lat_idx,lon_idx))/P.ZMAX; 
+            P.A = fact*max(10^-15,TOP(lat_idx,lon_idx))/P.ZMAX;
+            P.J = fact*0.1/P.ZMAX; %no need to have J as it does not change
             
             P.klight = KLIGHT(lat_idx,lon_idx);
             P.T = interp1(depth, squeeze(T(lat_idx,lon_idx,:)), P.zi); % [degree C] Temperature
@@ -63,7 +66,7 @@ for i=1:size(lat_coord,2) %10
             %%% For P %%%        
             sdap = Mpd(j,i)*P.fPd + Mpr(j,i)*P.fPR + Mpc(j,i)*P.fPR - sum(squeeze(DIC_glob(j,i,:,2))) -...
                    Mmp(j,i) - Mfp(j,i) - Mjp(j,i) -...
-                   sum(P.dZ*P.n*P.P*(P.sigma*sum((P.minimortP+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortP+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),1)'));
+                   sum(P.dZ*P.n*P.P*(P.sigma*sum((P.minimortP+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortP+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_P(j,i,:,:)),1)'));
               
             PPday = squeeze(Glob_Pday(j,i,:))/max(max(squeeze(Glob_Pnight(j,i,:))),max(squeeze(Glob_Pday(j,i,:)))); % [-] Fraction of P at z during day
             PPnight = squeeze(Glob_Pnight(j,i,:))/max(max(squeeze(Glob_Pnight(j,i,:))),max(squeeze(Glob_Pday(j,i,:)))); % [-]
@@ -78,7 +81,7 @@ for i=1:size(lat_coord,2) %10
             %%% For M %%%      
             sdam = Mmc(j,i)*P.fMC + Mmp(j,i)*P.fMC - sum(squeeze(DIC_glob(j,i,:,3))) -...
                    Mfm(j,i) - Mam(j,i) -...
-                   sum(P.dZ*P.n*P.M*(P.sigma*sum((P.minimortM+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortM+0.5*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),1)'));
+                   sum(P.dZ*P.n*P.M*(P.sigma*sum((P.minimortM+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),2)+(1-P.sigma)*sum((P.minimortM+0.1*(P.LD'+P.LN)/max(max(P.LD'+P.LN))).*squeeze(Glob_M(j,i,:,:)),1)'));
 
             MMday = squeeze(Glob_Mday(j,i,:))/max(max(squeeze(Glob_Mnight(j,i,:))),max(squeeze(Glob_Mday(j,i,:)))); % [-] Fraction of M at z during day
             MMnight = squeeze(Glob_Mnight(j,i,:))/max(max(squeeze(Glob_Mnight(j,i,:))),max(squeeze(Glob_Mday(j,i,:)))); % [-]
@@ -139,6 +142,12 @@ end
 
 
 %% Global numbers
+[xq,yq] = meshgrid(long_coord,lat_coord);
+DLON = 0*xq+1;
+DLAT = 0*yq+1;
+DX = (2*pi*6371e3/360)*DLON.*cos(deg2rad(yq))*(long_coord(2)-long_coord(1));
+DY = (2*pi*6371e3/360)*DLAT*(lat_coord(2)-lat_coord(1));
+Area = DX.*DY; % m^2
 
 SDAC_tot = sum(sum( Area.*sum(SDA_Cz*P.dZ,3)'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 SDAP_tot = sum(sum( Area.*sum(SDA_Pz*P.dZ,3)'*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]

@@ -8,7 +8,7 @@ carc_considered= 1:6;
 
 longitude = [0:2:178,-180:2:-2];
 
-add_on = P.ZMAX:200:5000; % [m]
+add_on = P.ZMAX:200:6000; % [m]
 Zdeep = [P.zi, add_on]; % [m] a deeper water column - to prevent extrapolations as NaN when the traps are deeper than P.ZMAX
 
 POC_observed = [];
@@ -19,13 +19,17 @@ lon_traps = [];
 
 K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant  - just for alpha's calculation
 qrem = 1.1;%1.5; % [-] Q10 for remineralization rate of POC
-
+compt = 0;
 for lat_run=25:70%1:size(obs,1) %latitudes only between -38 and +48
     for long_run = 1:size(obs,2)
-        for z_run =5:24%1:size(obs,3) -  9:20  for between 500 and 3300 m
+        for z_run =2:24%1:size(obs,3) -  9:20  for between 500 and 3300 m
             if obs(lat_run,long_run,z_run) > 0     
         
-                
+           compt = compt+1;
+           
+           if compt>55
+               a = 2;
+           end
             [~,lat_idx] = min(abs(latitude(lat_run)-latitude));
             [~,lon_idx] = min(abs(longitude(long_run)-longitude));    
                 
@@ -35,7 +39,7 @@ for lat_run=25:70%1:size(obs,1) %latitudes only between -38 and +48
             Tref = mean(P.T);%(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
             Ko2 = 10*0.0224./K(P.T); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
 
-            P.alpha =0.5*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
+            P.alpha =0.65*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
             P.alpha = repmat(P.alpha',1,7); % transformation so that it has the same size as D - easier if we want to have specific degradation rates later
                 
                 
@@ -61,10 +65,9 @@ for lat_run=25:70%1:size(obs,1) %latitudes only between -38 and +48
                 fluxdetr = [D_tempo;add_on_D].*P.SR; % [gC / m2 / day] Modeled flux at the querry location and at each depth
                 fluxcarc = [Carc_tempo;add_on_carc].*P.scarc(carc_considered); % [gC / m2 / day] Modeled flux of carcasses at the querry location and at each depth
                   
-%                 fluxcarc = 0;
                 flux = sum(fluxdetr,2) + sum(fluxcarc,2);
 
-                      f = interp1(Zdeep, flux', zt(z_run)); % [gC /m^2 /day]
+                f = interp1(Zdeep, flux', zt(z_run)); % [gC /m^2 /day]
 
                 POC_computed = [POC_computed; f];
             end
@@ -77,38 +80,40 @@ POC_computed = 10^3*POC_computed; % [mgC /m^2 /day]
 Z_traps = Z_traps';
 
 POC_observed = POC_observed(POC_computed~=0);
-POC_computed = POC_computed(POC_computed~=0);
 Z_traps = Z_traps(POC_computed~=0);
 lat_traps = lat_traps(POC_computed~=0);
 lon_traps = lon_traps(POC_computed~=0);
+POC_computed = POC_computed(POC_computed~=0);
 
 POC_observed = POC_observed(~isnan(POC_computed));
-POC_computed = POC_computed(~isnan(POC_computed));
 Z_traps = Z_traps(~isnan(POC_computed));
 lat_traps = lat_traps(~isnan(POC_computed));
 lon_traps = lon_traps(~isnan(POC_computed));
+POC_computed = POC_computed(~isnan(POC_computed));
 %%
 figure
 a = colormap(flipud(jet));
-subplot(221)
+% subplot(221)
 % for kkk=1:length(POC_observed)
 %     plot(POC_observed(kkk), POC_computed(kkk),'o','MarkerFaceColor', a(floor(64*Z_traps(kkk)/max(Z_traps)),:)) %k');%
 %     hold on
 % end
 
-scatter(log10(POC_observed),log10(POC_computed), 20, Z_traps, 'filled' )
+scatter((POC_observed),(POC_computed), 20, Z_traps, 'filled' )
 hold on
 
-mm = min([log10(POC_observed); log10(POC_computed)]);
-MM = max([log10(POC_observed); log10(POC_computed)]);
+mm = min([(POC_observed); (POC_computed)]);
+MM = max([(POC_observed); (POC_computed)]);
 plot([mm MM], [mm MM], 'k')
 xlabel('Observed POC flux [mgC/m^2/day]')
 ylabel('Modeled POC flux [mgC / m^2 /day]')
 colormap(cm_viridis)
-% colorbar
+colorbar
 % caxis([500 3300])
 st_dev = sqrt(1/size(POC_observed,1)*sum((POC_observed-POC_computed).^2))
 
+%%
+figure
 subplot(222)
 histogram(POC_observed-POC_computed,40)
 title('Difference between observed and modeled POC fluxes [mgC / m^2 / day]')

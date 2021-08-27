@@ -1,9 +1,9 @@
 Validation_otherlosses_depth; % to have the other losses by depth for the other losses
 Validation_carcasses_depth; % to have the creation terms for the degradation from carcasses
-Validation_Zeupho;
+% Validation_Zeupho;
 Validation_active_transport2;
 
-alphafact = 1;
+alphafact = .65/.75;
 
 OL = zeros(size(long_coord,2),size(lat_coord,2),P.n,6);
 OL(:,:,:,1) = SDA_Cz;
@@ -19,7 +19,7 @@ glob_carcasse = cat(3,sum(Dead_C*P.dZ,3)', sum(Dead_P*P.dZ,3)', sum(Dead_M*P.dZ,
 
 
 
-load Bottomalpha.mat %another one below
+load Bottomalpha_.75.mat %another one below
 longitude = 0:2:358; %[0:2:178, -180:2:-2]; %What we will use for our runs
 latitude = -90:2:90;
 long_coord2 = mod(long_coord,360);
@@ -291,11 +291,11 @@ TABLE(:,6) = TABLE(:,5)./TABLE(:,4);
 TABLE(:,9) = TABLE(:,8)./TABLE(:,7);
 TABLE(:,12) = TABLE(:,11)./TABLE(:,10);
 
-X = [{'Export below the euphotic zone is ', num2str(EZ), ' PgC/yr'};
-    {'Respiration below the euphotic zone is ', num2str(Byrespi), ' PgC/yr'};
-    {'Net excretion below the euphotic zone is', num2str(Byfecal), 'PgC/yr'}];
-    
-disp(X)
+% X = [{'Export below the euphotic zone is ', num2str(EZ), ' PgC/yr'};
+%     {'Respiration below the euphotic zone is ', num2str(Byrespi), ' PgC/yr'};
+%     {'Net excretion below the euphotic zone is', num2str(Byfecal), 'PgC/yr'}];
+%     
+% disp(X)
 
 disp(TABLE)
 
@@ -358,3 +358,8 @@ disp(TABLE)
 % w.Location = 'southoutside';
 % caxis([0 120])
 % title('Sinking flux of POC below the euphotic zone [mgC / m^2/day]')
+
+% TABLE(:,2)'
+% TABLE(:,2)'./Exp1
+% TABLE(:,8)'
+% TABLE(:,8)'./Exp2
