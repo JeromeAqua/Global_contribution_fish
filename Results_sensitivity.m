@@ -3,7 +3,7 @@ Validation_carcasses_depth; % to have the creation terms for the degradation fro
 % Validation_Zeupho;
 Validation_active_transport2;
 
-alphafact = .65/.75;
+alphafact =.3/.75;% .65/.75;
 
 OL = zeros(size(long_coord,2),size(lat_coord,2),P.n,6);
 OL(:,:,:,1) = SDA_Cz;
@@ -110,8 +110,10 @@ for C = 1:size(CONCERNED,2)
         q =  sum(DegPOC_glob(:,:,:,concerned),4,'omitnan'); 
         Dmean = D_glob(:,:,end,concerned); % [gC / m3]
         
+        
+        zfactor = @(z) max(10^-1, min(1, exp(-.001*(z-1000)))) ;
         factor_z = exp(-alphaend./reshape(P.SR(concerned)./squeeze(add_on(1,1,:)-P.ZMAX),1,1,size(add_on,3),size(P.SR(concerned),2))); % [-]
-        D_to_use = Dmean.*alphaend.*factor_z;%reshape(factor_z,1,1,size(add_on,3),size(P.SR(concerned),2)); % [gC m^-3 day^-1]
+        D_to_use = Dmean.*alphaend.*factor_z.*zfactor(add_on);%reshape(factor_z,1,1,size(add_on,3),size(P.SR(concerned),2)); % [gC m^-3 day^-1]
  
         q = cat(3,q, sum(D_to_use(:,:,1:end-1,:),4),sum(Dmean.*factor_z(:,:,end,:).*(alphaend+  reshape(P.SR(concerned)./squeeze(add_on(1,1,2)-add_on(1)),1,1,1,size(P.SR(concerned),2))     ),4,'omitnan'));
         
@@ -128,8 +130,9 @@ for C = 1:size(CONCERNED,2)
         q =  sum(Deg_carcasse(:,:,:,concerned-1),4,'omitnan'); 
         Deadmean = Dead_z(:,:,end,concerned-1); % [gC / m3]
         
+        zfactor = @(z) max(10^-1, min(1, exp(-.001*(z-1000)))) ;
         factor_z = exp(-alphaend./reshape(P.scarc(concerned-1)./squeeze(add_on(1,1,:)-P.ZMAX),1,1,size(add_on,3),size(P.scarc(concerned-1),2))); % [-]
-        D_to_use = Deadmean.*alphaend.*factor_z;%reshape(factor_z,1,1,size(add_on,3),size(P.SR(concerned),2)); % [gC m^-3 day^-1]
+        D_to_use = Deadmean.*alphaend.*factor_z.*zfactor(add_on);%reshape(factor_z,1,1,size(add_on,3),size(P.SR(concerned),2)); % [gC m^-3 day^-1]
  
         q = cat(3,q, sum(D_to_use(:,:,1:end-1,:),4),sum(Deadmean.*factor_z(:,:,end,:).*(alphaend +  reshape(P.scarc(concerned-1)./squeeze(add_on(1,1,2)-add_on(1)),1,1,1,size(P.scarc(concerned-1),2))     ),4,'omitnan'));
         

@@ -1,7 +1,7 @@
 %% Compute surplus to estimate the SDA
 % load global216.mat
 fact = 1; %for populations
-alphafact = .65/.75;
+alphafact = .3/.75;
 SRfact = 1; %for SR AND scarc
 
 
@@ -15,8 +15,8 @@ load plankton.mat
 load fishc.mat % fish.mat
 load Latitudinal_irradiance.mat
 
-P.scarc = SRfact*[200 400 1000 1000 2000 500]; %300 500 2000 2000 3000 800]; % [m/day] sinking rate of carcasses for C P M F A J
-%  P.scarc(4) = 10^6;
+P.scarc = SRfact*[50 200 400 2000 2000 800]; % [m/day] sinking rate of carcasses for C P M F A J
+
 long_coord2 = mod(long_coord,360);
 
 Dead_C = nan([size(Glob_FitC),P.n]);
@@ -30,7 +30,7 @@ Dead_z = nan([size(Glob_FitC),P.n,6]); % Carcasse concentration at each depth de
 Deg_carcasse = nan([size(Glob_FitC),P.n,6]); % creation rate of DIC thanks to carcasse degradation [gC / m3 / day]
 
 K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant  - just for alpha's calculation
-qrem = 1.1;%1.5; % [-] Q10 for remineralization rate of POC
+qrem = 2;%1.5; % [-] Q10 for remineralization rate of POC
 
 for i=1:size(lat_coord,2) %10
     for j=1:size(long_coord2,2) %30
@@ -58,10 +58,11 @@ for i=1:size(lat_coord,2) %10
             P.T = interp1(depth, squeeze(T(lat_idx,lon_idx,:)), P.zi); % [degree C] Temperature
             P.pO2 = interp1(depth, squeeze(pO2(lat_idx,lon_idx,:)), P.zi); % [kPa] oxygen partial pressure single(linspace(21,21,size(P.T,2)));%
                         
-            Tref = mean(P.T);%(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
+            Tref = P.T(1); % mean(P.T);%(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
             Ko2 = 10*0.0224./K(P.T); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
-
-            P.alpha =alphafact*0.75*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
+            zfactor = @(z) max(10^-1, min(1, exp(-10^-3*(z-1000)))) ;
+            
+            P.alpha =alphafact*0.75*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)).*zfactor(P.zi); % [day^-1] So far it's the same for all the detritus
             P.alpha = repmat(P.alpha',1,7); % transformation so that it has the same size as D - easier if we want to have specific degradation rates later
                 
             Dead_C(j,i,:) = reshape(P.n*P.C*(P.sigma*sum(P.minimortC.*squeeze(Glob_C(j,i,:,:)),2)+(1-P.sigma)*sum(P.minimortC.*squeeze(Glob_C(j,i,:,:)),1)'),1,1,P.n); % [gC / m3 / day] How much carcasses are created per day

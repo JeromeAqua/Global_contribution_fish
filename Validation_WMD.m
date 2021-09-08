@@ -48,7 +48,7 @@ hold on
 cm_viridis=viridis(100);
 colormap(cm_viridis)
 w = colorbar;
-w.Location = 'southoutside';
+% w.Location = 'southoutside';
 caxis([200 800])
 title('Computed WMD [m]')
 
