@@ -1,9 +1,5 @@
 %Validation - map of export flux below the euphotic zone
-Resp_eupho = zeros(size(lat_coord,2),size(long_coord,2));
-Resp_tot = Resp_eupho;
-Fecal_eupho = zeros(size(lat_coord,2),size(long_coord,2));
-Fecal_tot = Fecal_eupho; OL_tot = Fecal_tot; OL_eupho = OL_tot;
-Carc_tot = OL_tot; Carc_eupho = Carc_tot;
+
 
 Source_carc = cat(4, Dead_C, Dead_P, Dead_M, Dead_F, Dead_A, Dead_J); % [gC / m3 / day] How much carcasse is created per day
 
@@ -27,12 +23,22 @@ long_coord2 = mod(long_coord,360); %same axis but from 0 to 360
 [X,Y] = meshgrid(latitude,longitude2);
 
 tic
+Exp1 = [];
+Exp2 = [];
 
-index = 1:6;
+C = {1,2,3,4,5,6,1:6};
+Tab_Activeflux = zeros(7,4);
+for ccc = 1:7 %can be for loop here to have all the results
+    index = C{ccc};
+    Resp_eupho = zeros(size(lat_coord,2),size(long_coord,2));
+    Resp_tot = Resp_eupho;
+    Fecal_eupho = zeros(size(lat_coord,2),size(long_coord,2));
+    Fecal_tot = Fecal_eupho; OL_tot = Fecal_tot; OL_eupho = OL_tot;
+    Carc_tot = OL_tot; Carc_eupho = Carc_tot;
 for i=1:size(lat_coord,2) %10
     for j=1:size(long_coord2,2) %30
         
-        if squeeze(Glob_M(j,i,1,1)) ~=0 && ~isnan(squeeze(Glob_M(j,i,1,1)))
+        if squeeze(Glob_M(j,i,1,1)) ~=0 && ~isnan(squeeze(Glob_M(j,i,1,1))) %&& mask_SO(i,j)==1
             
              zeupho = interp2(X,Y,ZEUPHO',lat_coord(i),long_coord2(j));
 
@@ -48,7 +54,7 @@ for i=1:size(lat_coord,2) %10
 
              [~,idxz] = min(abs(P.zi-zeupho));
 
-             %%%%%%%%%%%%%%%%%%%%%%%%% RESPIRATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+             %%%%%%%%%%%%%%%%%%%%%%%% RESPIRATION %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
              R = squeeze(DIC_glob(j,i,:,index)); %Here last number to choose if we want to compute how much was created by each group
              
@@ -84,7 +90,10 @@ for i=1:size(lat_coord,2) %10
         end       
     end
 end
-toc
+% toc
+
+
+
 Fecal_tot = sum(sum( Area.*Fecal_tot*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 Byfecal = sum(sum( Area.*Fecal_eupho*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 
@@ -97,9 +106,25 @@ Bycarc = sum(sum( Area.*Carc_eupho*365,'omitnan' ),'omitnan')*10^-15; % [PgC / y
 OL_tot = sum(sum( Area.*OL_tot*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr
 ByOL = sum(sum( Area.*OL_eupho*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 
+Tab_Activeflux(ccc, 1) = Byfecal;
+Tab_Activeflux(ccc, 3) = Byrespi;
+Tab_Activeflux(ccc, 2) = Bycarc;
+Tab_Activeflux(ccc, 4) = ByOL;
+
+ disp({num2str(index), num2str(Byfecal), num2str(Bycarc)})
+Exp1 = [Exp1, Byrespi];
+Exp2 = [Exp2, ByOL];
+end
+
+% Exp1 = [Exp1, sum(Exp1)];
+% Exp2 = [Exp2, sum(Exp2)];
+% disp(Exp1)
+% disp(Exp2)
 %%
 Resp_eupho(Resp_eupho==0) = NaN;
 Fecal_eupho(Fecal_eupho==0) = NaN;
+OL_eupho(OL_eupho==0) = NaN;
+Carc_eupho(Carc_eupho==0) = NaN;
 Fecal_tot(Fecal_tot==0) = NaN;
 
 % idxlon = find(long_coord==20);
@@ -132,40 +157,70 @@ Fecal_tot(Fecal_tot==0) = NaN;
 % caxis([0 200])
 % title('Sinking flux of POC below the euphotic zone [mgC / m^2/day]')
 % % % % 
-idxlon = find(long_coord==20);
-long_plot = long_coord([idxlon:end,1:idxlon-1]);
-Resp_plot = [Resp_eupho(:,idxlon:end), Resp_eupho(:,1:idxlon-1)];
-Fecal_plot = [Fecal_eupho(:,idxlon:end), Fecal_eupho(:,1:idxlon-1)];
-fitMplot = [Glob_FitM(idxlon:end,:); Glob_FitM(1:idxlon-1,:)]';
-%Glob_Fitm = Glob_FitM; Glob_Fitm(:,1) = 1;
-% Resp_plot(:,340) = Resp_plot(:,339);
-% Fecal_plot(:,340) = Fecal_plot(:,339);
-
-% subplot(211)
-% axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
-% geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
-% box off
-% axis off
-% load coast
-% geoshow(lat, long,'Color','k')
-% surfm(lat_coord, long_plot, 10^3*Resp_plot,'AlphaData',~isnan(Resp_plot),'EdgeColor','none')
-% colorbar
-% % caxis([0 200])
-% title('Respiration of migrants below the euphotic zone [mgC / m^2/day]')
-% colormap(cm_viridis)
-
-% % % % subplot(212)
-% axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
-% geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
-% box off
-% axis off
-% load coast
-% geoshow(lat, long,'Color','k')
-% surfm(lat_coord, long_plot, 10^3*Fecal_plot,'AlphaData',~isnan(fitMplot),'EdgeColor','none')
-% colorbar
-% caxis([0 55])
-% title('Excretion below the euphotic zone due to feeding above the euphotic zone [mgC / m^2/day]')
-% colormap(cm_viridis)
+% % % idxlon = find(long_coord==20);
+% % % long_plot = long_coord([idxlon:end,1:idxlon-1]);
+% % % Resp_plot = [Resp_eupho(:,idxlon:end), Resp_eupho(:,1:idxlon-1)];
+% % % Fecal_plot = [Fecal_eupho(:,idxlon:end), Fecal_eupho(:,1:idxlon-1)];
+% % % Carc_plot = [Carc_eupho(:,idxlon:end), Carc_eupho(:,1:idxlon-1)];
+% % % OL_plot = [OL_eupho(:,idxlon:end), OL_eupho(:,1:idxlon-1)];
+% % % fitMplot = [Glob_FitM(idxlon:end,:); Glob_FitM(1:idxlon-1,:)]';
+% % % Glob_Fitm = Glob_FitM; Glob_Fitm(:,1) = 1;
+% % % Resp_plot(:,340) = Resp_plot(:,339);
+% % % Fecal_plot(:,340) = Fecal_plot(:,339);
+% % % OL_plot(:,340) = OL_plot(:,339);
+% % % Carc_plot(:,340) = Carc_plot(:,339);
+% % % figure
+% % % subplot(221)
+% % % axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+% % % geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+% % % box off
+% % % axis off
+% % % load coast
+% % % geoshow(lat, long,'Color','k')
+% % % surfm(lat_coord, long_plot, 10^3*Resp_plot,'AlphaData',~isnan(Resp_plot),'EdgeColor','none')
+% % % colorbar
+% % % caxis([0 200])
+% % % title('Respiration of migrants below the euphotic zone [mgC / m^2/day]')
+% % % colormap(cm_viridis)
+% % % 
+% % % subplot(222)
+% % % axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+% % % geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+% % % box off
+% % % axis off
+% % % load coast
+% % % geoshow(lat, long,'Color','k')
+% % % surfm(lat_coord, long_plot, 10^3*Fecal_plot,'AlphaData',~isnan(fitMplot),'EdgeColor','none')
+% % % colorbar
+% % % caxis([0 55])
+% % % title('Excretion below the euphotic zone due to feeding above the euphotic zone [mgC / m^2/day]')
+% % % colormap(cm_viridis)
+% % % 
+% % % subplot(223)
+% % % axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+% % % geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+% % % box off
+% % % axis off
+% % % load coast
+% % % geoshow(lat, long,'Color','k')
+% % % surfm(lat_coord, long_plot, 10^3*Carc_plot,'AlphaData',~isnan(fitMplot),'EdgeColor','none')
+% % % colorbar
+% % % caxis([0 55])
+% % % title('Carcasse excretion below the euphotic zone [mgC / m^2/day]')
+% % % colormap(cm_viridis)
+% % % 
+% % % subplot(224)
+% % % axesm('mollweid','Frame','on','MapLatLimit',[-50 50],'Origin', [0 -160 0],'FLineWidth',0.5);
+% % % geoshow('landareas.shp', 'FaceColor', [0.5 0.5 0.5]);
+% % % box off
+% % % axis off
+% % % load coast
+% % % geoshow(lat, long,'Color','k')
+% % % surfm(lat_coord, long_plot, 10^3*OL_plot,'AlphaData',~isnan(fitMplot),'EdgeColor','none')
+% % % colorbar
+% % % caxis([0 55])
+% % % title('Other losses below the euphotic zone [mgC / m^2/day]')
+% % % colormap(cm_viridis)
 
 
 % %% Total carbon exported actively below euphotic zone

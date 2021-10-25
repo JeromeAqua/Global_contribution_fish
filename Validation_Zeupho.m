@@ -27,11 +27,14 @@ DY = (2*pi*6371e3/360)*DLAT*(lat_coord(2)-lat_coord(1));
 Area = DX.*DY; % m^2
 
 EZcarc = zeros(1,6);
+C = {1,2,3,4,5,6,1:6};
 
+Tab_Passiveflux = zeros(7,2);
 disp({'func', 'fec', 'carc'})
-%  for carc_considered = 1:6
-% tic
-carc_considered = 1:6;
+  for ccc = 1:7
+      carc_considered = C{ccc};
+ tic
+
 for i=1:size(lat_coord,2) %10
     for j=1:size(long_coord2,2) %30
         
@@ -42,8 +45,8 @@ for i=1:size(lat_coord,2) %10
              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
              %%%%%%%%%%%%%%%%%%%%%%%%% SINKING FLUX %%%%%%%%%%%%%%%%%%%%%%%%%%%
              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-             s = P.SR(carc_considered+1).*squeeze(D_glob(j,i,:,carc_considered+1)); % [gC / m^2 / day] sinking flux of fecal pellets
-             s2 = P.scarc(carc_considered).*squeeze(Dead_z(j,i,:,carc_considered)); % [gC / m2 / day] % sinking flux of carcasses P.dZ*squeeze(SOURCE(j,i,:,carc_considered)-Deg_carcasse(j,i,:,carc_considered)); %
+             s = max(P.fminSR*P.SR(carc_considered+1), P.SR(carc_considered+1)-P.kz*squeeze(Glob_GZ(j,i,:,carc_considered))).*squeeze(D_glob(j,i,:,carc_considered+1)); % [gC / m^2 / day] sinking flux of fecal pellets
+             s2 = max(P.fminSR*P.scarc(carc_considered), P.scarc(carc_considered)-P.kz*squeeze(Glob_GZC(j,i,:,carc_considered))).*squeeze(Dead_z(j,i,:,carc_considered)); % [gC / m2 / day] % sinking flux of carcasses P.dZ*squeeze(SOURCE(j,i,:,carc_considered)-Deg_carcasse(j,i,:,carc_considered)); %
                
              s = sum(s(:,:),2);%2:end),2); % these two lines are just to look at sinking rates by functional groups
              s2 = sum(s2(:,:),2);%1:end),2);
@@ -58,9 +61,9 @@ for i=1:size(lat_coord,2) %10
     end
     
     end
-% toc
+ toc
        
-       
+ 
 EXPORT_POC_eupho(squeeze(Glob_A(:,:,1,1))'==0) = NaN;
 EXPORT_POC_euphoCARC(squeeze(Glob_A(:,:,1,1))'==0) = NaN;
 
@@ -80,7 +83,10 @@ disp({num2str(carc_considered),num2str(EZfectot), num2str(EZcarctot)})
 
 EZcarc(carc_considered) = sum(sum( Area.*EXPORT_POC_euphoCARC*365,'omitnan' ),'omitnan')*10^-15; % [PgC / yr]
 
-% end
+Tab_Passiveflux(ccc,1) = EZfectot;
+Tab_Passiveflux(ccc,2) = EZcarctot;
+
+ end
 %%
 figure
 subplot(221)

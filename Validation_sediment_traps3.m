@@ -8,7 +8,7 @@ carc_considered= 1:6;
 
 longitude = [0:2:178,-180:2:-2];
 
-add_on = P.ZMAX:200:6000; % [m]
+add_on = P.ZMAX+P.dZ:200:6000; % [m]
 Zdeep = [P.zi, add_on]; % [m] a deeper water column - to prevent extrapolations as NaN when the traps are deeper than P.ZMAX
 
 POC_observed = [];
@@ -22,7 +22,7 @@ qrem = 2; % [-] Q10 for remineralization rate of POC
 
 for lat_run=25:70%1:size(obs,1) %latitudes only between -38 and +48
     for long_run = 1:size(obs,2)
-        for z_run =2:24%1:size(obs,3) -  9:20  for between 500 and 3300 m
+        for z_run =9:24%1:size(obs,3) -  9:20  for between 500 and 3300 m
             if obs(lat_run,long_run,z_run) > 0     
         
             [~,lat_idx] = min(abs(latitude(lat_run)-latitude));
@@ -31,13 +31,18 @@ for lat_run=25:70%1:size(obs,1) %latitudes only between -38 and +48
             P.T = interp1(depth, squeeze(T(lat_idx,lon_idx,:)), P.zi); % [degree C] Temperature
             P.pO2 = interp1(depth, squeeze(pO2(lat_idx,lon_idx,:)), P.zi); % [kPa] oxygen partial pressure single(linspace(21,21,size(P.T,2)));%
                         
-            Tref =P.T(1); % mean(P.T);%(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
-            Ko2 = 10*0.0224./K(P.T); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
-            zfactor = @(z) max(10^-1, min(1, exp(-.001*(z-1000)))) ;
+            Tref =10; %P.T(1); % mean(P.T);%(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
+            Ko2 = 20*0.0224./K(P.T); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
+            zfactor = @(z) exp(-10^-4*z); % max(10^-1, min(1, exp(-.001*(z-1000)))) ;
             
-            P.alpha =0.3*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)) .*zfactor(P.zi); % [day^-1] So far it's the same for all the detritus
+            P.alpha =0.25*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
             P.alpha = repmat(P.alpha',1,7); % transformation so that it has the same size as D - easier if we want to have specific degradation rates later
-                
+            
+            Tdeep = interp1(depth, squeeze(T(lat_idx,lon_idx,:)), add_on); % [degree C] Temperature
+            Ko2deep = 20*0.0224./K(Tdeep); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
+            O2deep = interp1(depth, squeeze(pO2(lat_idx,lon_idx,:)), add_on); % [kPa] oxygen partial pressure single(linspace(21,21,size(P.T,2)));%
+            alphadeep = 0.25*qrem.^((Tdeep-Tref)/10).*(O2deep./(O2deep+Ko2deep)); % [day^-1] So far it's the same for all the detritus
+            alphadeep = repmat(alphadeep',1,7);
                 
                 poc = 12.01*exp(obs(lat_run,long_run,z_run)) * 10^-3 /365.25; % [gC / m^2 / day] Observed particle flux from sediment trap - from Lutz et al. 2007
                 POC_observed = [POC_observed; poc];
@@ -48,18 +53,25 @@ for lat_run=25:70%1:size(obs,1) %latitudes only between -38 and +48
                 [~,lat_run_model] = min(abs(latitude(lat_run)-lat_coord)); %index for the position, for the vector used for the global run
                 [~,lon_run_model] = min(abs(longitude(long_run)-long_coord));
                               
-                D_tempo = squeeze(D_glob(lon_run_model,lat_run_model,:,:)); % [gC / m3] Detritus concentration at the considered location
+                D_tempo = squeeze(D_glob(lon_run_model,lat_run_model,:,carc_considered+1)); % [gC / m3] Detritus concentration at the considered location
                 Carc_tempo = squeeze(Dead_z(lon_run_model,lat_run_model,:,carc_considered)); % [gC / m3] Carcasses concentration at the considered location
     
-                add_on_D =  repmat(D_tempo(end,:),size(add_on,2),1).*exp(-repmat(P.alpha(end,:)./P.SR,size(add_on,2),1).*repmat(zfactor(add_on'),1,7).*repmat(add_on'-P.zi(end),1,7)); % to add more depths if the sediment trap is deeper than our vertical resolution
-                add_on_carc =  repmat(Carc_tempo(end,:),size(add_on,2),1).*exp(-repmat(P.alpha(end,carc_considered+1)./P.scarc(carc_considered),size(add_on,2),1).*repmat(zfactor(add_on'),1,size(carc_considered,2)).*repmat(add_on'-P.zi(end),1,size(carc_considered,2))); % to add more depths if the sediment trap is deeper than our vertical resolution
+                add_on_D =  repmat(D_tempo(end,:),size(add_on,2),1).*... %alphadeep(:
+                            exp(-P.alpha(end,carc_considered+1)./max(P.fminSR*P.SR(carc_considered+1),P.SR(carc_considered+1) - P.kz*((add_on-add_on(1))'+squeeze(Glob_GZ(lon_run_model,lat_run_model,end,:))')).*...
+                            repmat(add_on'-P.zi(end),1,size(carc_considered,2))); % to add more depths if the sediment trap is deeper than our vertical resolution
+                add_on_carc =  repmat(Carc_tempo(end,:),size(add_on,2),1).*...
+                               exp(-P.alpha(end,carc_considered+1)./max(P.fminSR*P.scarc(carc_considered),P.scarc(carc_considered)-P.kz*((add_on-add_on(1))'+squeeze(Glob_GZC(lon_run_model,lat_run_model,end,carc_considered))')).*...
+                               repmat(add_on'-P.zi(end),1,size(carc_considered,2))); % to add more depths if the sediment trap is deeper than our vertical resolution
     
 %                 DegPOC = P.alpha.*D_tempo; % [gC m^-3 / day]
 %                 bottom = D_tempo(end,:).*P.SR; % [gC m^-2 day^-1] Faecal pellets going below ZMAX, they wont be remineralized so we count them as export
-%                 DegPOC_depth = bottom + cumsum(DegPOC,1,'reverse')*P.dZ; % [gC m^-2 day^-1] Degradation of faecal pellets below each depth - i.e. the export flux                
+%                 DegPOC_depth = bottom + cumsum(DegPOC,1,'reverse')*P.dZ; % [gC m^-2 day^-1] Degradation of faecal pellets below each depth - i.e. the export flux  
+
+                GZdeep = [squeeze(Glob_GZ(lon_run_model,lat_run_model,:,:));(add_on-add_on(1))'+squeeze(Glob_GZ(lon_run_model,lat_run_model,end,:))'];
+                GZCdeep = [squeeze(Glob_GZC(lon_run_model,lat_run_model,:,carc_considered));(add_on-add_on(1))'+squeeze(Glob_GZC(lon_run_model,lat_run_model,end,carc_considered))'];
                 
-                fluxdetr = [D_tempo;add_on_D].*P.SR; % [gC / m2 / day] Modeled flux at the querry location and at each depth
-                fluxcarc = [Carc_tempo;add_on_carc].*P.scarc(carc_considered); % [gC / m2 / day] Modeled flux of carcasses at the querry location and at each depth
+                fluxdetr = [D_tempo;add_on_D].*max(P.fminSR*P.SR(carc_considered+1),P.SR(carc_considered+1) - P.kz*(GZdeep)); %P.SR.*zfactor(Zdeep'); % [gC / m2 / day] Modeled flux at the querry location and at each depth
+                fluxcarc = [Carc_tempo;add_on_carc].*max(P.fminSR*P.scarc(carc_considered),P.scarc(carc_considered) - P.kz*(GZCdeep)); %P.scarc(carc_considered).*zfactor(Zdeep'); % [gC / m2 / day] Modeled flux of carcasses at the querry location and at each depth
                   
                 flux = sum(fluxdetr,2) + sum(fluxcarc,2);
 
@@ -95,11 +107,11 @@ a = colormap(flipud(jet));
 %     hold on
 % end
 
-scatter((POC_observed),(POC_computed), 20, Z_traps, 'filled' )
+scatter(log10(POC_observed),log10(POC_computed), 20,  Z_traps, 'filled' ) %abs(lat_traps),'filled') %
 hold on
 
-mm = min([(POC_observed); (POC_computed)]);
-MM = max([(POC_observed); (POC_computed)]);
+mm = -0.5;% min([log10(POC_observed); log10(POC_computed)]);
+MM =log10(25);% max([log10(POC_observed); log10(POC_computed)]);
 plot([mm MM], [mm MM], 'k')
 xlabel('Observed POC flux [mgC/m^2/day]')
 ylabel('Modeled POC flux [mgC / m^2 /day]')
@@ -107,6 +119,8 @@ colormap(cm_viridis)
 colorbar
 % caxis([500 3300])
 st_dev = sqrt(1/size(POC_observed,1)*sum((POC_observed-POC_computed).^2))
+xlim([mm MM])
+ylim([mm MM])
 
 %%
 figure

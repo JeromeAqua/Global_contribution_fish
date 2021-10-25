@@ -1,9 +1,9 @@
-profname = 'dcc R2019a';
-clust = parcluster(profname);
-clust.AdditionalProperties.ProcsPerNode = 0;
-clust.AdditionalProperties.MemUsage = '3GB';
-clust.AdditionalProperties.WallTime = '60:00';
-p = parpool(clust,100);
+% profname = 'dcc R2019a';
+% clust = parcluster(profname);
+% clust.AdditionalProperties.ProcsPerNode = 0;
+% clust.AdditionalProperties.MemUsage = '3GB';
+% clust.AdditionalProperties.WallTime = '60:00';
+% p = parpool(clust,100);
 
 
 %Replicator code
@@ -86,7 +86,7 @@ Mcr = zeros(size(YRUN));
 Mpr = Mcr; Mpc = Mpr; Mcd = Mpr; Mpd = Mcr; Mmc = Mpr; Mmp = Mcr; Mfm = Mcr; Mfp = Mcr;
 Mam = Mcr; Mjm = Mcr; Mjc = Mcr; Mjp = Mcr; Maj = Mjc; Maf = Mcr; Mfc = Mpr;
 
-McrT = zeros(size(YRUN,1)*size(YRUN,2));
+McrT = zeros(size(YRUN,1)*size(YRUN,2),1);
 MprT = McrT; MpcT = McrT; McdT = MprT; MpdT = McrT; MmcT = MprT; MmpT = McrT; MfmT = McrT; MfpT = McrT;
 MamT = McrT; MjmT = McrT; MjcT = McrT; MjpT = McrT; MajT = MjcT; MafT = McrT; MfcT = MprT;
 
@@ -104,10 +104,10 @@ DegPOC_globT = zeros(size(lat_coordTot,2),P.n,7);
 Glob_sourceT = zeros(size(lat_coordTot,2),P.n,6);
 Glob_DconsT = Glob_sourceT;
 
-parfor j=1:size(XRUN,1)*size(XRUN,2)
+for j=1:size(XRUN,1)*size(XRUN,2)
     
-    lat = lat_coordTot(j);%zlattest(j);
-    lon = long_coordTot(j);%zlongtest(j);
+    lat =  lat_coordTot(j);%zlattest(j);
+    lon =  long_coordTot(j);%zlongtest(j);
     
     [~,lat_idx] = min(abs(lat-latitude));
     [~,lon_idx] = min(abs(lon-longitude));

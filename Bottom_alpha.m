@@ -16,7 +16,7 @@ load C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\global_env_data.mat
 load C:\Users\jppi\Documents\MATLAB\Sandwich\Global_data\global_bio_data.mat
 
 K = @(temp) 0.381*exp(5.7018.*(25-temp)./(temp+273.15))*0.75; % [mg / L / kPa] Henry's constant
-qrem = 1.2;%1.5; % [-] Q10 for remineralization rate of POC
+qrem = 2;%1.5; % [-] Q10 for remineralization rate of POC
 
 alphaend = zeros(size(lat_coord,2),size(long_coord,2));
 alphaendT = zeros(size(XRUN,1)*size(XRUN,2),1);
@@ -34,10 +34,10 @@ for j=1:size(XRUN,1)*size(XRUN,2)
     P.zo = mldbar(lat_idx,lon_idx); % [m] MLD
     P.zm = P.zo/2; % [m] Sharpness of the transition to from the mixed layer to depleted layers
 
-    Tref = mean(P.T(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
-    Ko2 = 10*0.0224./K(P.T); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
+    Tref = 10; %mean(P.T(P.zi<200)); % [deg C] Reference temperature for the degradation rate of POC
+    Ko2 = 20*0.0224./K(P.T); % [kPa] Half-saturation constant in kPa, depth dependent as Henry's constant is temperature dependent
 
-    P.alpha = 0.5*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
+    P.alpha = 0.75*qrem.^((P.T-Tref)/10).*(P.pO2./(P.pO2+Ko2)); % [day^-1] So far it's the same for all the detritus
     
     alphaendT(j) = P.alpha(end);
 end
@@ -50,4 +50,4 @@ end
 
 alphaend = alphaend';
 
-save('Bottomalpha.mat','alphaend')
+save('Bottomalpha_.75b.mat','alphaend')
